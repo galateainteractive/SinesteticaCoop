@@ -39,7 +39,6 @@
         /* Botão Pause/Resume Específico */
         .btn-pause { border-color: #666; color: #ccc; display: none; margin-left: 5px; }
         .btn-pause:hover { background: #ccc; color: #000; }
-        .btn-pause.active { background: #fff; color: #000; } /* Estado visual ativo se quiser */
 
         .back-btn { margin-bottom: 20px; border-color: #888; color: #888; }
 
@@ -105,11 +104,10 @@
 
         // Controle de Audio
         let currentSource = null;
-        let startTime = 0;   // Quando o Play começou (Context Time)
-        let pausedAt = 0;    // Quanto tempo já tocou antes de pausar
+        let startTime = 0;   
+        let pausedAt = 0;    
         let isPaused = false;
         
-        // Dados para "Resume"
         let currentBuffer = null;
         let currentOffset = 0;
 
@@ -166,21 +164,15 @@
         // --- LÓGICA DE PLAY / PAUSE / RESUME ---
 
         function playFromStart(data, btnPlay, btnPause) {
-            // Se apertar play, sempre reinicia do zero, independente se está tocando ou pausado
             stopAudioInternal(); 
-
-            // Configura nova track ativa
             activeTrack = data;
             currentBuffer = data.buffer;
             currentOffset = data.offset;
-            pausedAt = 0; // Reinicia contador de pause
+            pausedAt = 0; 
             isPaused = false;
 
-            // UI Update
-            resetUI(); // Reseta outros botões
+            resetUI(); 
             btnPlay.textContent = "[ PLAYING ]";
-            
-            // Ativa botão de pause ao lado
             btnPause.style.display = "inline-block";
             btnPause.textContent = "[ PAUSE ]";
 
@@ -188,7 +180,7 @@
         }
 
         function togglePause(btnPause) {
-            if (!currentSource && !isPaused) return; // Segurança
+            if (!currentSource && !isPaused) return; 
 
             if (isPaused) {
                 // RESUME
@@ -208,22 +200,15 @@
         }
 
         function startSource(offsetTime) {
-            // Cria e configura o source
             currentSource = audioCtx.createBufferSource();
             currentSource.buffer = currentBuffer;
             currentSource.connect(analyser);
 
-            // Calcula ponto de inicio no buffer
             const actualStartPoint = currentOffset + offsetTime;
-            
             currentSource.start(0, actualStartPoint);
-            
-            // Marca o tempo de inicio do contexto para calcular progresso
             startTime = audioCtx.currentTime - offsetTime;
 
-            // Callback quando termina naturalmente
             currentSource.onended = () => {
-                // Só reseta a UI se não foi pausado manualmente
                 if (!isPaused) {
                     resetUI();
                     currentSource = null;
@@ -242,12 +227,10 @@
 
         function resetUI() {
             document.querySelectorAll('.btn').forEach(b => {
-                // Reset apenas os botões de Play principais
                 if (!b.classList.contains('back-btn') && !b.classList.contains('btn-pause')) {
                     b.textContent = "[ PLAY ]";
                 }
             });
-            // Esconde todos os botões de pause
             document.querySelectorAll('.btn-pause').forEach(b => b.style.display = "none");
             
             const cursor = document.getElementById('cursor-g');
@@ -285,17 +268,14 @@
                         ${isGroove ? '<div id="cursor-g" class="cursor-groove"></div>' : ''}
                     </div>`;
                 
-                // Botão Main (Play/Restart)
                 const btnPlay = document.createElement('button');
                 btnPlay.className = 'btn'; 
                 btnPlay.textContent = '[ PLAY ]';
                 
-                // Botão Pause/Resume (começa escondido)
                 const btnPause = document.createElement('button');
                 btnPause.className = 'btn btn-pause'; 
                 btnPause.textContent = '[ PAUSE ]';
 
-                // Lógica dos cliques
                 btnPlay.onclick = () => playFromStart(data, btnPlay, btnPause);
                 btnPause.onclick = () => togglePause(btnPause);
 
@@ -314,9 +294,9 @@
             ctx.clearRect(0,0,800,60);
             
             if(isGroove) {
-                // AJUSTE SOLICITADO: Linhas mais grossas
-                ctx.strokeStyle = '#555'; // Cor um pouco mais clara para destacar
-                ctx.lineWidth = 3;        // Grossura da linha aumentada
+                // Divisões grossas
+                ctx.strokeStyle = '#555';
+                ctx.lineWidth = 3;
                 
                 for(let i=1; i<divisions; i++) {
                     const x = (800 / divisions) * i;
@@ -324,7 +304,6 @@
                 }
             }
 
-            // Desenho da Waveform (volta para fino)
             ctx.lineWidth = 1; 
             ctx.strokeStyle = '#fff';
             const w = 800 / data.waveform.length;
@@ -339,45 +318,59 @@
         function animate() {
             requestAnimationFrame(animate);
             
-            // CURSOR APENAS NO GROOVE
+            // CURSOR
             if (activeTrack === grooveData && !isPaused && currentSource) {
                 const elapsed = audioCtx.currentTime - startTime;
                 const progress = elapsed / grooveData.buffer.duration;
                 const el = document.getElementById('cursor-g');
                 if(el) {
                     el.style.display = 'block';
-                    // Evita que o cursor passe do final visualmente
                     el.style.left = Math.min((progress * 800), 800) + 'px';
                 }
             }
 
-            // Master Scope
-            const scopeCanvas = document.getElementById('liveScope');
-            const sCtx = scopeCanvas.getContext('2d');
-            const dataArr = new Uint8Array(analyser.frequencyBinCount);
-            analyser.getByteTimeDomainData(dataArr);
-            sCtx.fillStyle = '#000'; sCtx.fillRect(0,0,250,50);
-            sCtx.strokeStyle = '#fff'; sCtx.lineWidth = 1;
-            sCtx.beginPath();
-            const slice = 250 / dataArr.length;
-            let x = 0;
-            for(let v of dataArr) {
-                const y = (v/128.0) * 25;
-                if(x===0) sCtx.moveTo(x,y); else sCtx.lineTo(x,y);
-                x += slice;
+            // MASTER SCOPE (Congela se pausado)
+            // Só desenha se NÃO estiver pausado e o áudio estiver ativo
+            if (!isPaused && currentSource) {
+                const scopeCanvas = document.getElementById('liveScope');
+                const sCtx = scopeCanvas.getContext('2d');
+                const dataArr = new Uint8Array(analyser.frequencyBinCount);
+                analyser.getByteTimeDomainData(dataArr);
+                
+                sCtx.fillStyle = '#000'; 
+                sCtx.fillRect(0,0,250,50);
+                
+                sCtx.strokeStyle = '#fff'; 
+                sCtx.lineWidth = 1;
+                sCtx.beginPath();
+                
+                const slice = 250 / dataArr.length;
+                let x = 0;
+                
+                for(let i = 0; i < dataArr.length; i++) {
+                    const v = dataArr[i];
+                    // Normaliza (v-128), aplica o GAIN, e recentraliza no canvas (25)
+                    // (25/128) é o fator de escala para caber na altura de 50px
+                    const y = ((v - 128) * visualGain * (25/128)) + 25;
+                    
+                    if(i===0) sCtx.moveTo(x,y); 
+                    else sCtx.lineTo(x,y);
+                    x += slice;
+                }
+                sCtx.stroke();
             }
-            sCtx.stroke();
         }
 
         document.getElementById('divisionSlider').oninput = (e) => {
             divisions = e.target.value;
             document.getElementById('divLabel').textContent = divisions;
-            render(); // Re-render para atualizar a grossura das linhas novas se mudar a divisao
+            render();
         };
         document.getElementById('gainSlider').oninput = (e) => {
             visualGain = e.target.value;
             document.getElementById('gainLabel').textContent = visualGain;
-            render();
+            render(); // Atualiza tracks estáticas
+            // O Scope atualiza automaticamente via animate()
         };
     </script>
 </body>
