@@ -2,52 +2,33 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8" />
-    <title>Sinestética Player - B&W Edition</title>
+    <title>Sinestética Player - B&W Pro</title>
     <style>
-        /* ESTILO MINIMALISTA PRETO E BRANCO */
         html, body { height: 100%; margin: 0; padding: 0; background: #000; color: #fff; font-family: 'Courier New', Courier, monospace; overflow: hidden; }
-        
         #menu-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; }
         #player-screen { display: none; height: 100%; padding: 20px; box-sizing: border-box; }
-
-        /* Menu P&B */
         .comp-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; padding: 20px; width: 80%; }
         .comp-card { border: 1px solid #fff; padding: 20px; cursor: pointer; transition: 0.3s; }
         .comp-card:hover { background: #fff; color: #000; }
-        
-        /* Layout Player */
         .main-layout { display: flex; flex-direction: column; height: 100%; }
         .top-panel { flex-shrink: 0; border-bottom: 1px solid #444; padding-bottom: 20px; }
         .tracks-scroll { flex: 1; overflow-y: auto; margin-top: 20px; padding-right: 10px; }
-
         .controls { display: flex; flex-wrap: wrap; gap: 30px; align-items: center; margin: 15px 0; border: 1px solid #444; padding: 15px; }
         .control-group { display: flex; flex-direction: column; gap: 8px; font-size: 11px; text-transform: uppercase; }
-        
-        /* Waveforms e Tracks */
         .track-row { display: flex; align-items: center; gap: 15px; background: #000; padding: 10px 0; border-bottom: 1px solid #222; }
         .track-label { width: 150px; font-size: 10px; color: #888; text-transform: uppercase; text-align: right; }
         .canvas-container { position: relative; width: 800px; height: 60px; }
         canvas { display: block; background: #000; border: 1px solid #333; }
+        .cursor-groove { position: absolute; top: 0; left: 0; width: 2px; height: 100%; background: #fff; pointer-events: none; display: none; z-index: 5; }
         
-        /* Cursor apenas para o Groove */
-        .cursor-groove { position: absolute; top: 0; left: 0; width: 1px; height: 100%; background: #fff; pointer-events: none; display: none; }
+        /* Botões */
+        .btn-action { cursor: pointer; padding: 8px 15px; font-size: 10px; border: 1px solid #fff; background: #000; color: #fff; text-transform: uppercase; width: 100px; text-align: center; }
+        .btn-action:hover { background: #fff; color: #000; }
+        .btn-restart { cursor: pointer; padding: 8px 10px; font-size: 9px; border: 1px solid #444; background: #000; color: #444; margin-left: 5px; }
+        .btn-restart:hover { border-color: #fff; color: #fff; }
+        .back-btn { margin-bottom: 20px; border: 1px solid #888; color: #888; background: none; cursor: pointer; }
         
-        /* Botões P&B */
-        .btn { cursor: pointer; padding: 8px 15px; font-size: 10px; border: 1px solid #fff; background: #000; color: #fff; text-transform: uppercase; transition: 0.2s; }
-        .btn:hover { background: #fff; color: #000; }
-        .btn-pause { border-color: #666; color: #666; display: none; margin-left: 5px; }
-        .btn-pause:hover { background: #666; color: #000; }
-        .back-btn { margin-bottom: 20px; border-color: #888; color: #888; }
-
-        /* Monitor Master */
-        #liveScope { width: 250px; height: 50px; border: 1px solid #444; }
-
         .loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: #000; display:none; align-items:center; justify-content:center; z-index:1000; }
-        
-        /* Scrollbar customizada P&B */
-        .tracks-scroll::-webkit-scrollbar { width: 5px; }
-        .tracks-scroll::-webkit-scrollbar-track { background: #000; }
-        .tracks-scroll::-webkit-scrollbar-thumb { background: #444; }
     </style>
 </head>
 <body>
@@ -62,7 +43,7 @@
     <div id="player-screen">
         <div class="main-layout">
             <div class="top-panel">
-                <button class="btn back-btn" onclick="window.location.reload()">[ BACK_TO_MENU ]</button>
+                <button class="back-btn" onclick="window.location.reload()">[ BACK_TO_MENU ]</button>
                 <h2 id="playing-title" style="margin:0; text-transform: uppercase; letter-spacing: 2px;">Composição</h2>
                 
                 <div class="controls">
@@ -72,18 +53,18 @@
                     </div>
                     <div class="control-group">
                         <label>Visual Gain: <span id="gainLabel">1.0</span></label>
-                        <input type="range" id="gainSlider" min="0.5" max="10" step="0.5" value="1" />
+                        <input type="range" id="gainSlider" min="0.5" max="15" step="0.5" value="1" />
                     </div>
                     <div class="control-group">
                         <canvas id="liveScope" width="250" height="50"></canvas>
-                        <span style="text-align:center; font-size: 9px; margin-top: 4px;">MASTER_SCOPE</span>
+                        <span style="text-align:center; font-size: 9px; margin-top: 4px;">MASTER_SCOPE (GAIN_SENSITIVE)</span>
                     </div>
                 </div>
                 <div id="grooveContainer"></div>
             </div>
 
             <div class="tracks-scroll">
-                <div id="tracksContainer" class="tracks-container"></div>
+                <div id="tracksContainer"></div>
             </div>
         </div>
     </div>
@@ -103,8 +84,6 @@
         let startTime = 0;
         let pausedAt = 0;
         let isPaused = false;
-        let currentBuffer = null;
-        let currentOffset = 0;
 
         window.onload = async () => {
             try {
@@ -117,7 +96,7 @@
                     card.onclick = () => startApp(m);
                     document.getElementById('comp-list').appendChild(card);
                 });
-            } catch (e) { console.error("Erro ao carregar catálogo."); }
+            } catch (e) { console.error("Erro no catálogo."); }
         };
 
         async function startApp(musica) {
@@ -129,7 +108,7 @@
 
                 const gRes = await fetch(`${musica.pasta}/${musica.grooveFile}`);
                 const gBuf = await audioCtx.decodeAudioData(await gRes.arrayBuffer());
-                grooveData = { label: "MAIN_GROOVE", buffer: gBuf, waveform: computeWave(gBuf), offset: 0 };
+                grooveData = { label: "MAIN_GROOVE", buffer: gBuf, waveform: computeWave(gBuf), offset: 0, isGroove: true };
 
                 trackData = [];
                 const jsonTracks = composition.dashboardSessions[0].tracks;
@@ -143,7 +122,8 @@
                                 label: t.presetName || `CLIP_${t.globalId}`,
                                 buffer: tBuf,
                                 waveform: computeWave(tBuf),
-                                offset: (t.startSample || 0) / tBuf.sampleRate
+                                offset: (t.startSample || 0) / tBuf.sampleRate,
+                                isGroove: false
                             });
                         }
                     } catch (e) {}
@@ -156,55 +136,56 @@
             document.getElementById('loading').style.display = 'none';
         }
 
-        function togglePlay(data, btnPlay, btnPause) {
-            if (activeTrack !== data) {
-                stopAudio();
-                activeTrack = data;
-                currentBuffer = data.buffer;
-                currentOffset = data.offset;
-                pausedAt = 0;
-            }
-
-            if (isPaused || !currentSource) {
-                currentSource = audioCtx.createBufferSource();
-                currentSource.buffer = currentBuffer;
-                currentSource.connect(analyser);
-                
-                const actualStart = currentOffset + pausedAt;
-                currentSource.start(0, actualStart);
-                startTime = audioCtx.currentTime - pausedAt;
-                
-                btnPlay.textContent = "[ PLAYING ]";
-                btnPause.style.display = "inline-block";
-                isPaused = false;
-
-                currentSource.onended = () => { if(!isPaused) resetUI(); };
-            }
-        }
-
-        function pauseAudio(btnPlay, btnPause) {
-            if (currentSource) {
+        function handleAction(data) {
+            const btn = document.getElementById(`btn-${data.isGroove ? 'g' : data.id}`);
+            
+            // Se já está tocando e clicou: PAUSA
+            if (activeTrack === data && currentSource && !isPaused) {
                 isPaused = true;
                 pausedAt = audioCtx.currentTime - startTime;
                 currentSource.stop();
                 currentSource = null;
-                btnPlay.textContent = "[ RESUME ]";
-                btnPause.style.display = "none";
+                btn.textContent = "[ RESUME ]";
+            } 
+            // Se estava pausado ou é uma nova track: PLAY/RESUME
+            else {
+                if (activeTrack !== data) {
+                    stopCurrent();
+                    activeTrack = data;
+                    pausedAt = 0;
+                }
+                playFrom(pausedAt);
+                btn.textContent = "[ PAUSE ]";
+                isPaused = false;
             }
         }
 
-        function stopAudio() {
+        function restartTrack(data) {
+            stopCurrent();
+            activeTrack = data;
+            pausedAt = 0;
+            isPaused = false;
+            playFrom(0);
+            document.getElementById(`btn-${data.isGroove ? 'g' : data.id}`).textContent = "[ PAUSE ]";
+        }
+
+        function playFrom(seconds) {
+            currentSource = audioCtx.createBufferSource();
+            currentSource.buffer = activeTrack.buffer;
+            currentSource.connect(analyser);
+            const actualStart = activeTrack.offset + seconds;
+            currentSource.start(0, actualStart);
+            startTime = audioCtx.currentTime - seconds;
+            currentSource.onended = () => { if(!isPaused) resetUI(); };
+        }
+
+        function stopCurrent() {
             if (currentSource) { try{currentSource.stop();}catch(e){} currentSource = null; }
             resetUI();
-            isPaused = false;
-            pausedAt = 0;
         }
 
         function resetUI() {
-            document.querySelectorAll('.btn').forEach(b => {
-                if(!b.classList.contains('back-btn') && b.textContent !== "[ RESUME ]") b.textContent = "[ PLAY ]";
-            });
-            document.querySelectorAll('.btn-pause').forEach(b => b.style.display = "none");
+            document.querySelectorAll('.btn-action').forEach(b => b.textContent = "[ PLAY ]");
             const cursor = document.getElementById('cursor-g');
             if(cursor) cursor.style.display = 'none';
         }
@@ -229,40 +210,45 @@
             const tCont = document.getElementById('tracksContainer');
             gCont.innerHTML = ''; tCont.innerHTML = '';
 
-            const drawRow = (data, cont, isGroove) => {
+            const drawRow = (data, cont) => {
+                const id = data.isGroove ? 'g' : data.id;
                 const row = document.createElement('div');
                 row.className = 'track-row';
-                row.innerHTML = `<div class="track-label">${data.label}</div>
+                row.innerHTML = `
+                    <div class="track-label">${data.label}</div>
                     <div class="canvas-container">
-                        <canvas id="canv-${isGroove?'g':data.id}" width="800" height="60"></canvas>
-                        ${isGroove ? '<div id="cursor-g" class="cursor-groove"></div>' : ''}
-                    </div>`;
-                
-                const btnPlay = document.createElement('button');
-                btnPlay.className = 'btn'; btnPlay.textContent = '[ PLAY ]';
-                
-                const btnPause = document.createElement('button');
-                btnPause.className = 'btn btn-pause'; btnPause.textContent = '[ PAUSE ]';
-
-                btnPlay.onclick = () => togglePlay(data, btnPlay, btnPause);
-                btnPause.onclick = () => pauseAudio(btnPlay, btnPause);
-
-                row.append(btnPlay, btnPause);
+                        <canvas id="canv-${id}" width="800" height="60"></canvas>
+                        ${data.isGroove ? '<div id="cursor-g" class="cursor-groove"></div>' : ''}
+                    </div>
+                    <button id="btn-${id}" class="btn-action" onclick='handleAction(${JSON.stringify({id: data.id, isGroove: data.isGroove})})'>[ PLAY ]</button>
+                    <button class="btn-restart" onclick='restartTrack(${JSON.stringify({id: data.id, isGroove: data.isGroove})})'>RESTART</button>
+                `;
                 cont.appendChild(row);
-                updateCanvas(data, isGroove);
+                updateCanvas(data);
             };
 
-            drawRow(grooveData, gCont, true);
-            trackData.forEach(t => drawRow(t, tCont, false));
+            drawRow(grooveData, gCont);
+            trackData.forEach(t => drawRow(t, tCont));
         }
 
-        function updateCanvas(data, isGroove) {
-            const canvas = document.getElementById(`canv-${isGroove?'g':data.id}`);
+        // Função auxiliar para passar o objeto correto no clique (já que JSON.stringify perde o buffer)
+        window.handleAction = (info) => {
+            const target = info.isGroove ? grooveData : trackData.find(t => t.id === info.id);
+            handleAction(target);
+        };
+        window.restartTrack = (info) => {
+            const target = info.isGroove ? grooveData : trackData.find(t => t.id === info.id);
+            restartTrack(target);
+        };
+
+        function updateCanvas(data) {
+            const canvas = document.getElementById(`canv-${data.isGroove ? 'g' : data.id}`);
             const ctx = canvas.getContext('2d');
             ctx.clearRect(0,0,800,60);
             
-            if(isGroove) {
-                ctx.strokeStyle = '#222';
+            if(data.isGroove) {
+                ctx.strokeStyle = '#444';
+                ctx.lineWidth = 2; // LINHAS DAS DIVISÕES MAIS GROSSAS
                 for(let i=1; i<divisions; i++) {
                     const x = (800 / divisions) * i;
                     ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 60); ctx.stroke();
@@ -270,6 +256,7 @@
             }
 
             ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 1;
             const w = 800 / data.waveform.length;
             ctx.beginPath();
             data.waveform.forEach((v, i) => {
@@ -282,14 +269,13 @@
         function animate() {
             requestAnimationFrame(animate);
             
-            // CURSOR APENAS NO GROOVE
-            if (activeTrack === grooveData && !isPaused && currentSource) {
+            if (activeTrack && activeTrack.isGroove && !isPaused && currentSource) {
                 const elapsed = audioCtx.currentTime - startTime;
-                const progress = elapsed / grooveData.buffer.duration;
+                const progress = elapsed / activeTrack.buffer.duration;
                 const el = document.getElementById('cursor-g');
                 if(el) {
                     el.style.display = 'block';
-                    el.style.left = (progress * 800) + 'px';
+                    el.style.left = (Math.min(progress, 1) * 800) + 'px';
                 }
             }
 
@@ -303,7 +289,9 @@
             const slice = 250 / dataArr.length;
             let x = 0;
             for(let v of dataArr) {
-                const y = (v/128.0) * 25;
+                // APLICA O GANHO VISUAL NO OSCILOSCÓPIO TAMBÉM
+                const vNormalized = (v / 128.0) - 1.0;
+                const y = 25 + (vNormalized * 25 * visualGain); 
                 if(x===0) sCtx.moveTo(x,y); else sCtx.lineTo(x,y);
                 x += slice;
             }
@@ -316,8 +304,8 @@
             render();
         };
         document.getElementById('gainSlider').oninput = (e) => {
-            visualGain = e.target.value;
-            document.getElementById('gainLabel').textContent = visualGain;
+            visualGain = parseFloat(e.target.value);
+            document.getElementById('gainLabel').textContent = visualGain.toFixed(1);
             render();
         };
     </script>
