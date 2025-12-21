@@ -27,10 +27,10 @@
         .track-info { display: flex; justify-content: space-between; align-items: center; }
         .track-label { font-size: 9px; color: #888; text-transform: uppercase; }
         
-        .canvas-container { position: relative; width: 100%; height: 80px; background: #050505; }
-        canvas { display: block; width: 100%; height: 100%; border: 1px solid #222; }
+        /* Container com padding para as divisões "saírem" da onda */
+        .canvas-container { position: relative; width: 100%; height: 100px; background: #000; display: flex; align-items: center; }
+        canvas { display: block; width: 100%; height: 100%; border: 1px solid #222; box-sizing: border-box; }
         
-        /* CURSOR BRANCO */
         .cursor-groove { position: absolute; top: 0; left: 0; width: 2px; height: 100%; background: #fff; pointer-events: none; display: none; z-index: 10; box-shadow: 0 0 5px #fff; }
         
         .btn-group { display: flex; gap: 5px; margin-top: 5px; }
@@ -107,8 +107,6 @@
         let isPaused = false;
         let currentBuffer = null;
         let currentOffset = 0;
-
-        // Armazena o último frame da onda para o Master Scope
         let lastWaveformData = null;
 
         window.onload = async () => {
@@ -272,59 +270,65 @@
             const h = canvas.height;
             ctx.clearRect(0,0,w,h);
             
+            // 1. Desenha as DIVISÕES (ultrapassando a altura da onda)
             if(isGroove) {
-                ctx.strokeStyle = '#555'; ctx.lineWidth = 6;
+                ctx.strokeStyle = '#fff'; // Divisões brancas
+                ctx.lineWidth = 1;        // Linhas finas para não poluir
+                ctx.setLineDash([5, 5]);  // Linha tracejada opcional (se quiser contínua, remova essa linha)
+                
                 for(let i=1; i<divisions; i++) {
                     const x = (w / divisions) * i;
-                    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+                    ctx.beginPath(); 
+                    ctx.moveTo(x, 0);       // Começa no topo absoluto
+                    ctx.lineTo(x, h);       // Vai até o fundo absoluto
+                    ctx.stroke();
                 }
+                ctx.setLineDash([]); // Reseta o tracejado
             }
 
-            ctx.lineWidth = 2; ctx.strokeStyle = '#fff';
+            // 2. Desenha a ONDA (com margem de segurança para não bater no topo/fundo)
+            ctx.lineWidth = 2; 
+            ctx.strokeStyle = '#fff';
             const step = w / data.waveform.length;
+            const waveHeightLimit = h * 0.7; // A onda ocupa apenas 70% da altura do canvas
+            
             ctx.beginPath();
             data.waveform.forEach((v, i) => {
-                const amp = v * (h/2) * visualGain;
-                ctx.moveTo(i*step, (h/2)-amp); ctx.lineTo(i*step, (h/2)+amp);
+                const amp = v * (waveHeightLimit/2) * visualGain;
+                ctx.moveTo(i*step, (h/2)-amp); 
+                ctx.lineTo(i*step, (h/2)+amp);
             });
             ctx.stroke();
         }
 
         function animate() {
             requestAnimationFrame(animate);
-            
-            // Lógica do Cursor
             if (activeTrack === grooveData && !isPaused && currentSource) {
                 const progress = (audioCtx.currentTime - startTime) / grooveData.buffer.duration;
                 const el = document.getElementById('cursor-g');
                 if(el) { el.style.display = 'block'; el.style.left = (Math.min(progress, 1) * 100) + '%'; }
             }
 
-            // MASTER SCOPE
             const scopeCanvas = document.getElementById('liveScope');
             const sCtx = scopeCanvas.getContext('2d');
             const dataArr = new Uint8Array(analyser.frequencyBinCount);
 
             if (!isPaused && currentSource) {
                 analyser.getByteTimeDomainData(dataArr);
-                lastWaveformData = new Uint8Array(dataArr); // Salva o frame atual
+                lastWaveformData = new Uint8Array(dataArr);
             } else if (isPaused && lastWaveformData) {
-                dataArr.set(lastWaveformData); // Usa o frame salvo
+                dataArr.set(lastWaveformData);
             } else {
-                // Se não há áudio tocando nem pausado, limpa e sai
                 sCtx.fillStyle = '#000'; sCtx.fillRect(0,0,scopeCanvas.width, scopeCanvas.height);
                 return;
             }
 
-            // Desenha a onda (ativa ou congelada)
             sCtx.fillStyle = '#000'; sCtx.fillRect(0,0,scopeCanvas.width, scopeCanvas.height);
             sCtx.strokeStyle = '#fff'; sCtx.lineWidth = 2;
             sCtx.beginPath();
-            
             const slice = scopeCanvas.width / dataArr.length;
             let x = 0;
             for(let i = 0; i < dataArr.length; i++) {
-                // Aplica o ganho visual no sinal (mesmo pausado)
                 const y = ((dataArr[i] - 128) * visualGain * (scopeCanvas.height/256)) + (scopeCanvas.height/2);
                 if(i===0) sCtx.moveTo(x,y); else sCtx.lineTo(x,y);
                 x += slice;
@@ -340,8 +344,7 @@
         document.getElementById('gainSlider').oninput = (e) => {
             visualGain = e.target.value;
             document.getElementById('gainLabel').textContent = visualGain;
-            render(); // Atualiza as waveforms estáticas
-            // O Scope atualiza no próximo requestAnimationFrame usando visualGain
+            render();
         };
     </script>
 </body>
