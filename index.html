@@ -30,13 +30,17 @@
         canvas { display: block; background: #000; border: 1px solid #333; }
         
         /* Cursor apenas para o Groove */
-        .cursor-groove { position: absolute; top: 0; left: 0; width: 1px; height: 100%; background: #fff; pointer-events: none; display: none; }
+        .cursor-groove { position: absolute; top: 0; left: 0; width: 2px; height: 100%; background: #fff; pointer-events: none; display: none; z-index: 10; }
         
         /* Botões P&B */
-        .btn { cursor: pointer; padding: 8px 15px; font-size: 10px; border: 1px solid #fff; background: #000; color: #fff; text-transform: uppercase; transition: 0.2s; }
+        .btn { cursor: pointer; padding: 8px 15px; font-size: 10px; border: 1px solid #fff; background: #000; color: #fff; text-transform: uppercase; transition: 0.1s; min-width: 80px; text-align: center; }
         .btn:hover { background: #fff; color: #000; }
-        .btn-pause { border-color: #666; color: #666; display: none; margin-left: 5px; }
-        .btn-pause:hover { background: #666; color: #000; }
+        
+        /* Botão Pause/Resume Específico */
+        .btn-pause { border-color: #666; color: #ccc; display: none; margin-left: 5px; }
+        .btn-pause:hover { background: #ccc; color: #000; }
+        .btn-pause.active { background: #fff; color: #000; } /* Estado visual ativo se quiser */
+
         .back-btn { margin-bottom: 20px; border-color: #888; color: #888; }
 
         /* Monitor Master */
@@ -99,10 +103,13 @@
         let visualGain = 1.0;
         let divisions = 4;
 
+        // Controle de Audio
         let currentSource = null;
-        let startTime = 0;
-        let pausedAt = 0;
+        let startTime = 0;   // Quando o Play começou (Context Time)
+        let pausedAt = 0;    // Quanto tempo já tocou antes de pausar
         let isPaused = false;
+        
+        // Dados para "Resume"
         let currentBuffer = null;
         let currentOffset = 0;
 
@@ -156,58 +163,98 @@
             document.getElementById('loading').style.display = 'none';
         }
 
-        function togglePlay(data, btnPlay, btnPause) {
-            if (activeTrack !== data) {
-                stopAudio();
-                activeTrack = data;
-                currentBuffer = data.buffer;
-                currentOffset = data.offset;
-                pausedAt = 0;
-            }
+        // --- LÓGICA DE PLAY / PAUSE / RESUME ---
 
-            if (isPaused || !currentSource) {
-                currentSource = audioCtx.createBufferSource();
-                currentSource.buffer = currentBuffer;
-                currentSource.connect(analyser);
-                
-                const actualStart = currentOffset + pausedAt;
-                currentSource.start(0, actualStart);
-                startTime = audioCtx.currentTime - pausedAt;
-                
-                btnPlay.textContent = "[ PLAYING ]";
-                btnPause.style.display = "inline-block";
+        function playFromStart(data, btnPlay, btnPause) {
+            // Se apertar play, sempre reinicia do zero, independente se está tocando ou pausado
+            stopAudioInternal(); 
+
+            // Configura nova track ativa
+            activeTrack = data;
+            currentBuffer = data.buffer;
+            currentOffset = data.offset;
+            pausedAt = 0; // Reinicia contador de pause
+            isPaused = false;
+
+            // UI Update
+            resetUI(); // Reseta outros botões
+            btnPlay.textContent = "[ PLAYING ]";
+            
+            // Ativa botão de pause ao lado
+            btnPause.style.display = "inline-block";
+            btnPause.textContent = "[ PAUSE ]";
+
+            startSource(0);
+        }
+
+        function togglePause(btnPause) {
+            if (!currentSource && !isPaused) return; // Segurança
+
+            if (isPaused) {
+                // RESUME
+                startSource(pausedAt);
                 isPaused = false;
-
-                currentSource.onended = () => { if(!isPaused) resetUI(); };
-            }
-        }
-
-        function pauseAudio(btnPlay, btnPause) {
-            if (currentSource) {
-                isPaused = true;
+                btnPause.textContent = "[ PAUSE ]";
+            } else {
+                // PAUSE
+                if(currentSource) {
+                    currentSource.stop();
+                    currentSource = null;
+                }
                 pausedAt = audioCtx.currentTime - startTime;
-                currentSource.stop();
-                currentSource = null;
-                btnPlay.textContent = "[ RESUME ]";
-                btnPause.style.display = "none";
+                isPaused = true;
+                btnPause.textContent = "[ RESUME ]";
             }
         }
 
-        function stopAudio() {
-            if (currentSource) { try{currentSource.stop();}catch(e){} currentSource = null; }
-            resetUI();
+        function startSource(offsetTime) {
+            // Cria e configura o source
+            currentSource = audioCtx.createBufferSource();
+            currentSource.buffer = currentBuffer;
+            currentSource.connect(analyser);
+
+            // Calcula ponto de inicio no buffer
+            const actualStartPoint = currentOffset + offsetTime;
+            
+            currentSource.start(0, actualStartPoint);
+            
+            // Marca o tempo de inicio do contexto para calcular progresso
+            startTime = audioCtx.currentTime - offsetTime;
+
+            // Callback quando termina naturalmente
+            currentSource.onended = () => {
+                // Só reseta a UI se não foi pausado manualmente
+                if (!isPaused) {
+                    resetUI();
+                    currentSource = null;
+                }
+            };
+        }
+
+        function stopAudioInternal() {
+            if (currentSource) {
+                try { currentSource.stop(); } catch(e){}
+                currentSource = null;
+            }
             isPaused = false;
             pausedAt = 0;
         }
 
         function resetUI() {
             document.querySelectorAll('.btn').forEach(b => {
-                if(!b.classList.contains('back-btn') && b.textContent !== "[ RESUME ]") b.textContent = "[ PLAY ]";
+                // Reset apenas os botões de Play principais
+                if (!b.classList.contains('back-btn') && !b.classList.contains('btn-pause')) {
+                    b.textContent = "[ PLAY ]";
+                }
             });
+            // Esconde todos os botões de pause
             document.querySelectorAll('.btn-pause').forEach(b => b.style.display = "none");
+            
             const cursor = document.getElementById('cursor-g');
             if(cursor) cursor.style.display = 'none';
         }
+
+        // ----------------------------------------
 
         function computeWave(buffer) {
             const data = buffer.getChannelData(0);
@@ -238,14 +285,19 @@
                         ${isGroove ? '<div id="cursor-g" class="cursor-groove"></div>' : ''}
                     </div>`;
                 
+                // Botão Main (Play/Restart)
                 const btnPlay = document.createElement('button');
-                btnPlay.className = 'btn'; btnPlay.textContent = '[ PLAY ]';
+                btnPlay.className = 'btn'; 
+                btnPlay.textContent = '[ PLAY ]';
                 
+                // Botão Pause/Resume (começa escondido)
                 const btnPause = document.createElement('button');
-                btnPause.className = 'btn btn-pause'; btnPause.textContent = '[ PAUSE ]';
+                btnPause.className = 'btn btn-pause'; 
+                btnPause.textContent = '[ PAUSE ]';
 
-                btnPlay.onclick = () => togglePlay(data, btnPlay, btnPause);
-                btnPause.onclick = () => pauseAudio(btnPlay, btnPause);
+                // Lógica dos cliques
+                btnPlay.onclick = () => playFromStart(data, btnPlay, btnPause);
+                btnPause.onclick = () => togglePause(btnPause);
 
                 row.append(btnPlay, btnPause);
                 cont.appendChild(row);
@@ -262,13 +314,18 @@
             ctx.clearRect(0,0,800,60);
             
             if(isGroove) {
-                ctx.strokeStyle = '#222';
+                // AJUSTE SOLICITADO: Linhas mais grossas
+                ctx.strokeStyle = '#555'; // Cor um pouco mais clara para destacar
+                ctx.lineWidth = 3;        // Grossura da linha aumentada
+                
                 for(let i=1; i<divisions; i++) {
                     const x = (800 / divisions) * i;
                     ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 60); ctx.stroke();
                 }
             }
 
+            // Desenho da Waveform (volta para fino)
+            ctx.lineWidth = 1; 
             ctx.strokeStyle = '#fff';
             const w = 800 / data.waveform.length;
             ctx.beginPath();
@@ -289,10 +346,12 @@
                 const el = document.getElementById('cursor-g');
                 if(el) {
                     el.style.display = 'block';
-                    el.style.left = (progress * 800) + 'px';
+                    // Evita que o cursor passe do final visualmente
+                    el.style.left = Math.min((progress * 800), 800) + 'px';
                 }
             }
 
+            // Master Scope
             const scopeCanvas = document.getElementById('liveScope');
             const sCtx = scopeCanvas.getContext('2d');
             const dataArr = new Uint8Array(analyser.frequencyBinCount);
@@ -313,7 +372,7 @@
         document.getElementById('divisionSlider').oninput = (e) => {
             divisions = e.target.value;
             document.getElementById('divLabel').textContent = divisions;
-            render();
+            render(); // Re-render para atualizar a grossura das linhas novas se mudar a divisao
         };
         document.getElementById('gainSlider').oninput = (e) => {
             visualGain = e.target.value;
