@@ -2,81 +2,96 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8" />
-    <title>Sinestética Player - B&W Edition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Sinestética Player - Mobile Edition</title>
     <style>
         /* ESTILO MINIMALISTA PRETO E BRANCO */
-        html, body { height: 100%; margin: 0; padding: 0; background: #000; color: #fff; font-family: 'Courier New', Courier, monospace; overflow: hidden; }
+        html, body { height: 100%; margin: 0; padding: 0; background: #000; color: #fff; font-family: 'Courier New', Courier, monospace; overflow-x: hidden; }
         
-        #menu-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; }
-        #player-screen { display: none; height: 100%; padding: 20px; box-sizing: border-box; }
+        #menu-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100%; text-align: center; padding: 20px; box-sizing: border-box; }
+        #player-screen { display: none; height: 100%; padding: 10px; box-sizing: border-box; }
 
-        .comp-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; padding: 20px; width: 80%; }
+        /* Menu Responsivo */
+        .comp-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; width: 100%; max-width: 800px; margin-top: 30px; }
         .comp-card { border: 1px solid #fff; padding: 20px; cursor: pointer; transition: 0.3s; }
         .comp-card:hover { background: #fff; color: #000; }
         
+        /* Layout Player */
         .main-layout { display: flex; flex-direction: column; height: 100%; }
-        .top-panel { flex-shrink: 0; border-bottom: 1px solid #444; padding-bottom: 20px; }
-        .tracks-scroll { flex: 1; overflow-y: auto; margin-top: 20px; padding-right: 10px; }
+        .top-panel { flex-shrink: 0; border-bottom: 2px solid #444; padding-bottom: 15px; }
+        .tracks-scroll { flex: 1; overflow-y: auto; margin-top: 10px; -webkit-overflow-scrolling: touch; }
 
-        .controls { display: flex; flex-wrap: wrap; gap: 30px; align-items: center; margin: 15px 0; border: 1px solid #444; padding: 15px; }
-        .control-group { display: flex; flex-direction: column; gap: 8px; font-size: 11px; text-transform: uppercase; }
+        /* Controles Mobile */
+        .controls { display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-start; margin: 10px 0; border: 1px solid #333; padding: 10px; justify-content: space-between; }
+        .control-group { display: flex; flex-direction: column; gap: 5px; font-size: 10px; text-transform: uppercase; flex: 1; min-width: 120px; }
         
-        .track-row { display: flex; align-items: center; gap: 15px; background: #000; padding: 10px 0; border-bottom: 1px solid #222; }
-        .track-label { width: 150px; font-size: 10px; color: #888; text-transform: uppercase; text-align: right; }
-        .canvas-container { position: relative; width: 800px; height: 60px; }
-        canvas { display: block; background: #000; border: 1px solid #333; }
+        input[type=range] { width: 100%; height: 30px; }
+
+        /* Waveforms Responsivas */
+        .track-row { display: flex; flex-direction: column; gap: 8px; background: #000; padding: 15px 0; border-bottom: 1px solid #222; }
+        .track-info { display: flex; justify-content: space-between; align-items: center; }
+        .track-label { font-size: 9px; color: #888; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60%; }
+        
+        .canvas-container { position: relative; width: 100%; height: 80px; background: #050505; }
+        canvas { display: block; width: 100%; height: 100%; border: 1px solid #222; }
         
         .cursor-groove { position: absolute; top: 0; left: 0; width: 2px; height: 100%; background: #fff; pointer-events: none; display: none; z-index: 10; }
         
-        .btn { cursor: pointer; padding: 8px 15px; font-size: 10px; border: 1px solid #fff; background: #000; color: #fff; text-transform: uppercase; transition: 0.1s; min-width: 90px; text-align: center; }
-        .btn:hover { background: #fff; color: #000; }
+        /* Botões Mobile */
+        .btn-group { display: flex; gap: 5px; margin-top: 5px; }
+        .btn { cursor: pointer; padding: 12px 10px; font-size: 10px; border: 1px solid #fff; background: #000; color: #fff; text-transform: uppercase; flex: 1; text-align: center; -webkit-tap-highlight-color: transparent; }
+        .btn:active { background: #fff; color: #000; }
         
-        .btn-pause { border-color: #666; color: #ccc; display: none; margin-left: 5px; }
-        .btn-pause:hover { background: #ccc; color: #000; }
+        .btn-pause { border-color: #666; color: #ccc; display: none; }
+        .back-btn { width: 100%; margin-bottom: 15px; border-color: #888; color: #888; }
 
-        .back-btn { margin-bottom: 20px; border-color: #888; color: #888; }
-        #liveScope { width: 250px; height: 50px; border: 1px solid #444; }
+        #liveScope { width: 100%; height: 60px; border: 1px solid #444; }
+
         .loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: #000; display:none; align-items:center; justify-content:center; z-index:1000; }
-        
-        .tracks-scroll::-webkit-scrollbar { width: 5px; }
-        .tracks-scroll::-webkit-scrollbar-track { background: #000; }
-        .tracks-scroll::-webkit-scrollbar-thumb { background: #444; }
+
+        @media (min-width: 768px) {
+            .track-row { flex-direction: row; align-items: center; }
+            .track-info { display: contents; }
+            .track-label { width: 150px; text-align: right; margin-right: 15px; }
+            .canvas-container { width: 600px; }
+            .btn-group { margin-top: 0; }
+            .btn { flex: none; min-width: 100px; }
+        }
     </style>
 </head>
 <body>
 
-    <div id="loading" class="loading-overlay"><h2>LOADING_DATA...</h2></div>
+    <div id="loading" class="loading-overlay"><h2>LOADING...</h2></div>
 
     <div id="menu-screen">
-        <h1 style="letter-spacing: 10px; text-transform: uppercase;">Sinestética</h1>
+        <h1 style="letter-spacing: 5px; text-transform: uppercase; font-size: 24px;">SINESTÉTICA</h1>
         <div id="comp-list" class="comp-list"></div>
     </div>
 
     <div id="player-screen">
         <div class="main-layout">
             <div class="top-panel">
-                <button class="btn back-btn" onclick="window.location.reload()">[ BACK_TO_MENU ]</button>
-                <h2 id="playing-title" style="margin:0; text-transform: uppercase; letter-spacing: 2px;">Composição</h2>
+                <button class="btn back-btn" onclick="window.location.reload()">[ BACK TO MENU ]</button>
+                <h2 id="playing-title" style="margin:0 0 10px 0; text-transform: uppercase; letter-spacing: 1px; font-size: 14px; text-align: center;"></h2>
                 
                 <div class="controls">
                     <div class="control-group">
-                        <label>Divisions: <span id="divLabel">4</span></label>
+                        <label>Divs: <span id="divLabel">4</span></label>
                         <input type="range" id="divisionSlider" min="2" max="16" step="1" value="4" />
                     </div>
                     <div class="control-group">
-                        <label>Visual Gain: <span id="gainLabel">1.0</span></label>
+                        <label>Gain: <span id="gainLabel">1.0</span></label>
                         <input type="range" id="gainSlider" min="0.5" max="10" step="0.5" value="1" />
                     </div>
-                    <div class="control-group">
-                        <canvas id="liveScope" width="250" height="50"></canvas>
-                        <span style="text-align:center; font-size: 9px; margin-top: 4px;">MASTER_SCOPE</span>
+                    <div class="control-group" style="min-width: 100%; margin-top: 10px;">
+                        <canvas id="liveScope" height="60"></canvas>
                     </div>
                 </div>
                 <div id="grooveContainer"></div>
             </div>
 
             <div class="tracks-scroll">
-                <div id="tracksContainer" class="tracks-container"></div>
+                <div id="tracksContainer"></div>
             </div>
         </div>
     </div>
@@ -96,7 +111,6 @@
         let startTime = 0;   
         let pausedAt = 0;    
         let isPaused = false;
-        
         let currentBuffer = null;
         let currentOffset = 0;
 
@@ -107,8 +121,8 @@
                 musicas.forEach(m => {
                     const card = document.createElement('div');
                     card.className = 'comp-card';
-                    card.innerHTML = `<h3>${m.nome}</h3><p style="font-size:10px; opacity:0.5">${m.pasta}</p>`;
-                    card.onclick = () => startApp(m);
+                    card.innerHTML = `<h3>${m.nome}</h3><p style="font-size:9px; opacity:0.5">${m.pasta}</p>`;
+                    card.onclick = () => { audioCtx.resume(); startApp(m); };
                     document.getElementById('comp-list').appendChild(card);
                 });
             } catch (e) { console.error("Erro ao carregar catálogo."); }
@@ -123,7 +137,7 @@
 
                 const gRes = await fetch(`${musica.pasta}/${musica.grooveFile}`);
                 const gBuf = await audioCtx.decodeAudioData(await gRes.arrayBuffer());
-                grooveData = { label: "MAIN_GROOVE", buffer: gBuf, waveform: computeWave(gBuf), offset: 0 };
+                grooveData = { label: "MASTER_GROOVE", buffer: gBuf, waveform: computeWave(gBuf), offset: 0 };
 
                 trackData = [];
                 const jsonTracks = composition.dashboardSessions[0].tracks;
@@ -150,38 +164,25 @@
             document.getElementById('loading').style.display = 'none';
         }
 
-        // --- LÓGICA REFEITA PARA EVITAR SOBREPOSIÇÃO ---
-
         function playFromStart(data, btnPlay, btnPause) {
-            // Mata qualquer som anterior imediatamente
             stopAudioInternal(); 
-
-            // Limpa UI de todos os botões antes de ativar o novo
             resetUI();
-
             activeTrack = data;
             currentBuffer = data.buffer;
             currentOffset = data.offset;
-            
             btnPlay.textContent = "[ PLAYING ]";
-            btnPause.style.display = "inline-block";
-            btnPause.textContent = "[ PAUSE ]";
-
+            btnPause.style.display = "block";
             startSource(0);
         }
 
         function togglePause(btnPause) {
             if (!currentBuffer) return; 
-
             if (isPaused) {
                 startSource(pausedAt);
                 isPaused = false;
                 btnPause.textContent = "[ PAUSE ]";
             } else {
-                if(currentSource) {
-                    currentSource.stop();
-                    currentSource = null;
-                }
+                if(currentSource) { currentSource.stop(); currentSource = null; }
                 pausedAt = audioCtx.currentTime - startTime;
                 isPaused = true;
                 btnPause.textContent = "[ RESUME ]";
@@ -189,73 +190,37 @@
         }
 
         function startSource(offsetTime) {
-            // Garante que não há dois processos de áudio no mesmo canal
-            if (currentSource) {
-                try { currentSource.stop(); } catch(e){}
-            }
-
+            if (currentSource) { try { currentSource.stop(); } catch(e){} }
             currentSource = audioCtx.createBufferSource();
             currentSource.buffer = currentBuffer;
             currentSource.connect(analyser);
-
             const actualStartPoint = currentOffset + offsetTime;
-            
-            // Proteção para não tentar tocar além da duração do buffer
-            if (actualStartPoint >= currentBuffer.duration) {
-                resetUI();
-                return;
-            }
-
+            if (actualStartPoint >= currentBuffer.duration) { resetUI(); return; }
             currentSource.start(0, actualStartPoint);
             startTime = audioCtx.currentTime - offsetTime;
-
-            currentSource.onended = () => {
-                // Só reseta se o som acabou por si só (não foi pause/restart)
-                if (!isPaused && currentSource) {
-                    const elapsed = audioCtx.currentTime - startTime;
-                    if (elapsed >= (currentBuffer.duration - 0.1)) {
-                        resetUI();
-                        currentSource = null;
-                    }
-                }
-            };
+            currentSource.onended = () => { if (!isPaused && currentSource) resetUI(); };
         }
 
         function stopAudioInternal() {
-            if (currentSource) {
-                try { 
-                    currentSource.onended = null; // Remove listener para evitar loops de UI
-                    currentSource.stop(); 
-                } catch(e){}
-                currentSource = null;
-            }
+            if (currentSource) { try { currentSource.onended = null; currentSource.stop(); } catch(e){} currentSource = null; }
             isPaused = false;
             pausedAt = 0;
         }
 
         function resetUI() {
-            // Reseta todos os labels de Play e esconde os Pauses
             document.querySelectorAll('.btn').forEach(b => {
-                if (!b.classList.contains('back-btn') && !b.classList.contains('btn-pause')) {
-                    b.textContent = "[ PLAY ]";
-                }
+                if (!b.classList.contains('back-btn') && !b.classList.contains('btn-pause')) b.textContent = "[ PLAY ]";
             });
-            document.querySelectorAll('.btn-pause').forEach(b => {
-                b.style.display = "none";
-                b.textContent = "[ PAUSE ]";
-            });
-            
+            document.querySelectorAll('.btn-pause').forEach(b => { b.style.display = "none"; b.textContent = "[ PAUSE ]"; });
             const cursor = document.getElementById('cursor-g');
             if(cursor) cursor.style.display = 'none';
         }
 
-        // --- VISUALIZAÇÃO ---
-
         function computeWave(buffer) {
             const data = buffer.getChannelData(0);
-            const step = Math.ceil(data.length / 800);
-            const wave = new Float32Array(800);
-            for(let i=0; i<800; i++) {
+            const step = Math.ceil(data.length / 400); // Menos pontos para mobile
+            const wave = new Float32Array(400);
+            for(let i=0; i<400; i++) {
                 let max = 0;
                 for(let j=0; j<step; j++) {
                     const v = Math.abs(data[i*step+j]);
@@ -274,24 +239,26 @@
             const drawRow = (data, cont, isGroove) => {
                 const row = document.createElement('div');
                 row.className = 'track-row';
-                row.innerHTML = `<div class="track-label">${data.label}</div>
+                row.innerHTML = `
+                    <div class="track-info">
+                        <div class="track-label">${data.label}</div>
+                    </div>
                     <div class="canvas-container">
-                        <canvas id="canv-${isGroove?'g':data.id}" width="800" height="60"></canvas>
+                        <canvas id="canv-${isGroove?'g':data.id}" width="800" height="160"></canvas>
                         ${isGroove ? '<div id="cursor-g" class="cursor-groove"></div>' : ''}
-                    </div>`;
+                    </div>
+                    <div class="btn-group"></div>`;
                 
                 const btnPlay = document.createElement('button');
-                btnPlay.className = 'btn'; 
-                btnPlay.textContent = '[ PLAY ]';
+                btnPlay.className = 'btn'; btnPlay.textContent = '[ PLAY ]';
                 
                 const btnPause = document.createElement('button');
-                btnPause.className = 'btn btn-pause'; 
-                btnPause.textContent = '[ PAUSE ]';
+                btnPause.className = 'btn btn-pause'; btnPause.textContent = '[ PAUSE ]';
 
                 btnPlay.onclick = () => playFromStart(data, btnPlay, btnPause);
                 btnPause.onclick = () => togglePause(btnPause);
 
-                row.append(btnPlay, btnPause);
+                row.querySelector('.btn-group').append(btnPlay, btnPause);
                 cont.appendChild(row);
                 updateCanvas(data, isGroove);
             };
@@ -303,62 +270,49 @@
         function updateCanvas(data, isGroove) {
             const canvas = document.getElementById(`canv-${isGroove?'g':data.id}`);
             const ctx = canvas.getContext('2d');
-            ctx.clearRect(0,0,800,60);
+            const w = canvas.width;
+            const h = canvas.height;
+            ctx.clearRect(0,0,w,h);
             
             if(isGroove) {
-                ctx.strokeStyle = '#555';
-                ctx.lineWidth = 3;
+                ctx.strokeStyle = '#555'; ctx.lineWidth = 6;
                 for(let i=1; i<divisions; i++) {
-                    const x = (800 / divisions) * i;
-                    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 60); ctx.stroke();
+                    const x = (w / divisions) * i;
+                    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
                 }
             }
 
-            ctx.lineWidth = 1; 
-            ctx.strokeStyle = '#fff';
-            const w = 800 / data.waveform.length;
+            ctx.lineWidth = 2; ctx.strokeStyle = '#fff';
+            const step = w / data.waveform.length;
             ctx.beginPath();
             data.waveform.forEach((v, i) => {
-                const h = v * 30 * visualGain;
-                ctx.moveTo(i*w, 30-h); ctx.lineTo(i*w, 30+h);
+                const amp = v * (h/2) * visualGain;
+                ctx.moveTo(i*step, (h/2)-amp); ctx.lineTo(i*step, (h/2)+amp);
             });
             ctx.stroke();
         }
 
         function animate() {
             requestAnimationFrame(animate);
-            
             if (activeTrack === grooveData && !isPaused && currentSource) {
-                const elapsed = audioCtx.currentTime - startTime;
-                const progress = elapsed / grooveData.buffer.duration;
+                const progress = (audioCtx.currentTime - startTime) / grooveData.buffer.duration;
                 const el = document.getElementById('cursor-g');
-                if(el) {
-                    el.style.display = 'block';
-                    el.style.left = Math.min((progress * 800), 800) + 'px';
-                }
+                if(el) { el.style.display = 'block'; el.style.left = (Math.min(progress, 1) * 100) + '%'; }
             }
 
-            // MASTER SCOPE
             const scopeCanvas = document.getElementById('liveScope');
             const sCtx = scopeCanvas.getContext('2d');
-            
             if (!isPaused && currentSource) {
                 const dataArr = new Uint8Array(analyser.frequencyBinCount);
                 analyser.getByteTimeDomainData(dataArr);
-                
-                sCtx.fillStyle = '#000'; 
-                sCtx.fillRect(0,0,250,50);
-                sCtx.strokeStyle = '#fff'; 
-                sCtx.lineWidth = 1;
+                sCtx.fillStyle = '#000'; sCtx.fillRect(0,0,scopeCanvas.width, scopeCanvas.height);
+                sCtx.strokeStyle = '#fff'; sCtx.lineWidth = 2;
                 sCtx.beginPath();
-                
-                const slice = 250 / dataArr.length;
+                const slice = scopeCanvas.width / dataArr.length;
                 let x = 0;
                 for(let i = 0; i < dataArr.length; i++) {
-                    const v = dataArr[i];
-                    const y = ((v - 128) * visualGain * (25/128)) + 25;
-                    if(i===0) sCtx.moveTo(x,y); 
-                    else sCtx.lineTo(x,y);
+                    const y = ((dataArr[i] - 128) * visualGain * (scopeCanvas.height/256)) + (scopeCanvas.height/2);
+                    if(i===0) sCtx.moveTo(x,y); else sCtx.lineTo(x,y);
                     x += slice;
                 }
                 sCtx.stroke();
