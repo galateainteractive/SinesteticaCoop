@@ -1,188 +1,64 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8" />
-    <title>Sinestética Web Player</title>
+    <title>Sinestética Player Pro - Menu & Sync</title>
     <style>
-        html, body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            background: #111;
-            color: #eee;
-            font-family: sans-serif;
-            overflow: hidden;
-        }
+        html, body { height: 100%; margin: 0; padding: 0; background: #111; color: #eee; font-family: sans-serif; overflow: hidden; }
+        #menu-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; }
+        #player-screen { display: none; height: 100%; padding: 16px; box-sizing: border-box; }
+        .comp-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; padding: 20px; max-width: 1000px; }
+        .comp-card { background: #222; border: 1px solid #444; padding: 20px; cursor: pointer; border-radius: 8px; transition: 0.2s; }
+        .comp-card:hover { border-color: #007bff; background: #2a2a2a; }
+        
+        .main-layout { display: flex; flex-direction: column; height: 100%; }
+        .top-panel { flex-shrink: 0; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .tracks-scroll { flex: 1; overflow-y: auto; margin-top: 16px; padding-right: 10px; }
 
-        /* Telas */
-        #menu-screen {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            text-align: center;
-        }
-
-        #player-screen {
-            display: none;
-            height: 100%;
-            padding: 16px;
-            box-sizing: border-box;
-        }
-
-        /* Menu */
-        .comp-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            padding: 20px;
-            max-width: 1000px;
-        }
-
-        .comp-card {
-            background: #222;
-            border: 1px solid #444;
-            padding: 20px;
-            cursor: pointer;
-            border-radius: 8px;
-            transition: 0.2s;
-        }
-
-            .comp-card:hover {
-                border-color: #007bff;
-                background: #2a2a2a;
-                transform: translateY(-3px);
-            }
-
-        /* Player Layout */
-        .main-layout {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-
-        .top-panel {
-            flex-shrink: 0;
-            border-bottom: 1px solid #333;
-            padding-bottom: 10px;
-        }
-
-        .tracks-scroll {
-            flex: 1;
-            overflow-y: auto;
-            margin-top: 16px;
-            padding-right: 10px;
-        }
-
-        .controls {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            align-items: center;
-            margin: 10px 0;
-        }
-
-        .divider-control {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 13px;
-        }
-
-        /* Tracks */
-        .tracks-container {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .track-row {
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-            background: #1a1a1a;
-            padding: 10px;
-            border-radius: 4px;
-        }
-
-        .track-label {
-            width: 150px;
-            font-size: 11px;
-            color: #aaa;
-            text-align: right;
-            word-wrap: break-word;
-        }
-
-        canvas {
-            background: #000;
-            border: 1px solid #333;
-            display: block;
-        }
-
-        #liveScope {
-            width: 400px;
-            height: 100px;
-        }
-
-        .btn {
-            cursor: pointer;
-            padding: 5px 12px;
-            font-size: 12px;
-            background: #333;
-            color: white;
-            border: 1px solid #555;
-            border-radius: 3px;
-        }
-
-            .btn:hover {
-                background: #444;
-            }
-
-        .back-btn {
-            margin-bottom: 15px;
-            background: #c0392b;
-            border: none;
-        }
-
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.9);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
+        .controls { display: flex; flex-wrap: wrap; gap: 20px; align-items: center; margin: 10px 0; background: #1a1a1a; padding: 10px; border-radius: 8px; }
+        .control-group { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #aaa; }
+        
+        .track-row { display: flex; align-items: flex-start; gap: 10px; background: #1a1a1a; padding: 10px; border-radius: 4px; margin-bottom: 8px; position: relative; }
+        .track-label { width: 140px; font-size: 11px; color: #888; text-align: right; }
+        .canvas-container { position: relative; width: 800px; height: 60px; }
+        canvas { display: block; background: #000; border: 1px solid #333; }
+        .cursor { position: absolute; top: 0; left: 0; width: 2px; height: 100%; background: red; pointer-events: none; display: none; }
+        
+        .btn { cursor: pointer; padding: 6px 12px; font-size: 11px; border-radius: 4px; border: 1px solid #444; background: #333; color: white; transition: 0.2s; }
+        .btn:hover { background: #444; }
+        .btn.playing { background: #27ae60; border-color: #2ecc71; }
+        .btn-pause { background: #d35400; display: none; }
+        .back-btn { background: #c0392b; border: none; margin-bottom: 15px; }
+        .loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.95); display:none; align-items:center; justify-content:center; z-index:1000; }
     </style>
 </head>
 <body>
 
-    <div id="loading" class="loading-overlay"><h2>Carregando Áudio...</h2></div>
+    <div id="loading" class="loading-overlay"><h2>Sincronizando Áudio...</h2></div>
 
     <div id="menu-screen">
         <h1>Sinestética Player</h1>
-        <p>Escolha uma composição para iniciar</p>
         <div id="comp-list" class="comp-list"></div>
     </div>
 
     <div id="player-screen">
         <div class="main-layout">
             <div class="top-panel">
-                <button class="btn back-btn" onclick="window.location.reload()">← Voltar ao Menu</button>
-                <h2 id="playing-title" style="margin:0">Composição</h2>
-
+                <button class="btn back-btn" onclick="window.location.reload()">← VOLTAR AO MENU</button>
+                <h2 id="playing-title" style="margin:0 0 10px 0">Composição</h2>
+                
                 <div class="controls">
-                    <div class="divider-control">
-                        <span>Osciloscópio (Tempo Real):</span>
-                        <canvas id="liveScope" width="400" height="100"></canvas>
+                    <div class="control-group">
+                        <label>DIVISÕES (GROOVE): <span id="divLabel">4</span></label>
+                        <input type="range" id="divisionSlider" min="2" max="16" step="1" value="4" />
                     </div>
-                    <div class="divider-control">
-                        <span>Ganho Visual:</span>
-                        <input type="range" id="gainSlider" min="0.5" max="10" step="0.1" value="1" />
+                    <div class="control-group">
+                        <label>GANHO VISUAL: <span id="gainLabel">1.0</span></label>
+                        <input type="range" id="gainSlider" min="0.5" max="10" step="0.5" value="1" />
+                    </div>
+                    <div class="control-group">
+                        <canvas id="liveScope" width="300" height="60"></canvas>
+                        <span style="text-align:center">MONITOR MASTER</span>
                     </div>
                 </div>
                 <div id="grooveContainer" class="tracks-container"></div>
@@ -197,190 +73,253 @@
     <script>
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         const analyser = audioCtx.createAnalyser();
-        analyser.fftSize = 2048;
         analyser.connect(audioCtx.destination);
-        const scopeData = new Uint8Array(analyser.fftSize);
-
+        
         let composition = null;
         let grooveData = null;
         let trackData = [];
-        let playingSources = [];
+        let activeTrack = null; // Para saber quem está tocando
         let visualGain = 1.0;
+        let divisions = 4;
 
-        // --- INICIALIZAÇÃO ---
+        // Estado do Player
+        let currentSource = null;
+        let startTime = 0;       // Quando o play foi dado
+        let pausedAt = 0;        // Momento em segundos onde pausou
+        let isPaused = false;
+        let currentBuffer = null;
+        let currentOffset = 0;   // Offset inicial do arquivo (da composição)
+
+        // --- CARREGAMENTO ---
         window.onload = async () => {
             try {
                 const res = await fetch('composicoes.json');
                 const musicas = await res.json();
-                const list = document.getElementById('comp-list');
                 musicas.forEach(m => {
                     const card = document.createElement('div');
                     card.className = 'comp-card';
                     card.innerHTML = `<h3>${m.nome}</h3><p>${m.pasta}</p>`;
                     card.onclick = () => startApp(m);
-                    list.appendChild(card);
+                    document.getElementById('comp-list').appendChild(card);
                 });
-            } catch (err) {
-                alert("Erro ao carregar composicoes.json. Verifique se o arquivo existe na raiz.");
-            }
+            } catch (e) { alert("Erro ao ler composicoes.json"); }
         };
 
-        // --- CARREGADOR INTELIGENTE ---
         async function startApp(musica) {
             document.getElementById('loading').style.display = 'flex';
-            if (audioCtx.state === 'suspended') await audioCtx.resume();
-
             try {
-                // 1. Carrega o JSON da pasta
                 const resJson = await fetch(`${musica.pasta}/settings.json`);
                 composition = await resJson.json();
                 document.getElementById('playing-title').textContent = musica.nome;
 
-                // 2. Carrega o Groove (definido manualmente no composicoes.json)
-                const grooveRes = await fetch(`${musica.pasta}/${musica.grooveFile}`);
-                const grooveBuf = await grooveRes.arrayBuffer();
-                const decodedGroove = await audioCtx.decodeAudioData(grooveBuf);
-                grooveData = {
-                    label: "GROOVE PRINCIPAL",
-                    buffer: decodedGroove,
-                    waveform: computeWaveform(decodedGroove.getChannelData(0), 800)
-                };
+                // Groove
+                const gRes = await fetch(`${musica.pasta}/${musica.grooveFile}`);
+                const gBuf = await audioCtx.decodeAudioData(await gRes.arrayBuffer());
+                grooveData = { label: "GROOVE", buffer: gBuf, waveform: computeWave(gBuf), offset: 0 };
 
-                // 3. Carrega as Tracks (Lógica clip_X.wav)
-                const jsonTracks = composition.dashboardSessions[0].tracks;
+                // Tracks (clip_X.wav)
                 trackData = [];
-
-                const trackPromises = jsonTracks.map(async (t) => {
-                    const fileName = `clip_${t.globalId}.wav`;
+                const jsonTracks = composition.dashboardSessions[0].tracks;
+                for (let t of jsonTracks) {
                     try {
-                        const trackRes = await fetch(`${musica.pasta}/${fileName}`);
-                        if (!trackRes.ok) return; // Pula se o arquivo não existir
-
-                        const tBuf = await trackRes.arrayBuffer();
-                        const decoded = await audioCtx.decodeAudioData(tBuf);
-
-                        trackData.push({
-                            id: t.globalId,
-                            label: t.presetName || `Clip ${t.globalId}`,
-                            buffer: decoded,
-                            waveform: computeWaveform(decoded.getChannelData(0), 800),
-                            offset: (t.startSample || 0) / decoded.sampleRate
-                        });
-                    } catch (e) { console.warn(`Pulei: ${fileName}`); }
-                });
-
-                await Promise.all(trackPromises);
-
-                // Ordenar por ID para ficar bonito
-                trackData.sort((a, b) => a.id - b.id);
-
-                renderInterface();
-                drawScope();
+                        const tRes = await fetch(`${musica.pasta}/clip_${t.globalId}.wav`);
+                        if (tRes.ok) {
+                            const tBuf = await audioCtx.decodeAudioData(await tRes.arrayBuffer());
+                            trackData.push({
+                                id: t.globalId,
+                                label: t.presetName || `Clip ${t.globalId}`,
+                                buffer: tBuf,
+                                waveform: computeWave(tBuf),
+                                offset: (t.startSample || 0) / tBuf.sampleRate
+                            });
+                        }
+                    } catch (e) {}
+                }
+                render();
+                animate();
                 document.getElementById('menu-screen').style.display = 'none';
                 document.getElementById('player-screen').style.display = 'block';
+            } catch (err) { alert("Erro ao carregar arquivos."); }
+            document.getElementById('loading').style.display = 'none';
+        }
 
-            } catch (err) {
-                console.error(err);
-                alert("Erro ao carregar arquivos da pasta. Verifique nomes e caminhos.");
-            } finally {
-                document.getElementById('loading').style.display = 'none';
+        // --- LÓGICA DE PLAYBACK (PAUSE/RESUME) ---
+        function togglePlay(data, btnPlay, btnPause) {
+            // Se já está tocando ESTA track, e clicou no Play: não faz nada.
+            // Se clicou no Play de OUTRA track: para tudo e começa a nova.
+            if (activeTrack !== data) {
+                stopAudio();
+                activeTrack = data;
+                currentBuffer = data.buffer;
+                currentOffset = data.offset;
+                pausedAt = 0;
+            }
+
+            if (isPaused || !currentSource) {
+                playAt(pausedAt);
+                btnPlay.textContent = "TOCANDO...";
+                btnPlay.classList.add('playing');
+                btnPause.style.display = "block";
+                isPaused = false;
             }
         }
 
-        // --- ÁUDIO E DESENHO ---
-        function computeWaveform(channelData, numPoints) {
-            const step = Math.ceil(channelData.length / numPoints);
-            const result = new Float32Array(numPoints);
-            for (let i = 0; i < numPoints; i++) {
+        function playAt(seconds) {
+            currentSource = audioCtx.createBufferSource();
+            currentSource.buffer = currentBuffer;
+            currentSource.connect(analyser);
+            
+            // O tempo real de início dentro do arquivo é: offset da composição + onde pausamos
+            const actualStart = currentOffset + seconds;
+            currentSource.start(0, actualStart);
+            startTime = audioCtx.currentTime - seconds;
+            
+            currentSource.onended = () => { if(!isPaused) resetUI(); };
+        }
+
+        function pauseAudio(btnPlay, btnPause) {
+            if (currentSource) {
+                isPaused = true;
+                pausedAt = audioCtx.currentTime - startTime;
+                currentSource.stop();
+                currentSource = null;
+                btnPlay.textContent = "RESUME";
+                btnPlay.classList.remove('playing');
+                btnPause.style.display = "none";
+            }
+        }
+
+        function stopAudio() {
+            if (currentSource) { currentSource.stop(); currentSource = null; }
+            resetUI();
+            isPaused = false;
+            pausedAt = 0;
+        }
+
+        function resetUI() {
+            document.querySelectorAll('.btn').forEach(b => {
+                b.classList.remove('playing');
+                if(b.textContent !== "RESUME") b.textContent = "PLAY";
+            });
+            document.querySelectorAll('.btn-pause').forEach(b => b.style.display = "none");
+            document.querySelectorAll('.cursor').forEach(c => c.style.display = "none");
+        }
+
+        // --- RENDERIZAÇÃO ---
+        function computeWave(buffer) {
+            const data = buffer.getChannelData(0);
+            const step = Math.ceil(data.length / 800);
+            const wave = new Float32Array(800);
+            for(let i=0; i<800; i++) {
                 let max = 0;
-                for (let j = 0; j < step; j++) {
-                    const v = Math.abs(channelData[i * step + j]);
-                    if (v > max) max = v;
+                for(let j=0; j<step; j++) {
+                    const v = Math.abs(data[i*step+j]);
+                    if(v > max) max = v;
                 }
-                result[i] = max;
+                wave[i] = max;
             }
-            return result;
+            return wave;
         }
 
-        function renderInterface() {
+        function render() {
             const gCont = document.getElementById('grooveContainer');
             const tCont = document.getElementById('tracksContainer');
             gCont.innerHTML = ''; tCont.innerHTML = '';
 
-            const createRow = (data, container, isGroove) => {
+            const drawRow = (data, cont, isGroove) => {
                 const row = document.createElement('div');
                 row.className = 'track-row';
-                const label = document.createElement('div');
-                label.className = 'track-label';
-                label.textContent = data.label;
-
-                const canvas = document.createElement('canvas');
-                canvas.width = 800; canvas.height = 60;
-                drawWave(canvas, data.waveform);
-
+                row.innerHTML = `<div class="track-label">${data.label}</div>
+                    <div class="canvas-container">
+                        <canvas id="canv-${isGroove?'g':data.id}" width="800" height="60"></canvas>
+                        <div id="cursor-${isGroove?'g':data.id}" class="cursor"></div>
+                    </div>`;
+                
                 const btnPlay = document.createElement('button');
-                btnPlay.className = 'btn';
-                btnPlay.textContent = 'PLAY';
-                btnPlay.onclick = () => playAudio(data.buffer, isGroove ? 0 : data.offset);
+                btnPlay.className = 'btn'; btnPlay.textContent = 'PLAY';
+                
+                const btnPause = document.createElement('button');
+                btnPause.className = 'btn btn-pause'; btnPause.textContent = 'PAUSE';
 
-                row.append(label, canvas, btnPlay);
-                container.appendChild(row);
+                btnPlay.onclick = () => togglePlay(data, btnPlay, btnPause);
+                btnPause.onclick = () => pauseAudio(btnPlay, btnPause);
+
+                row.append(btnPlay, btnPause);
+                cont.appendChild(row);
+                updateCanvas(data, isGroove);
             };
 
-            createRow(grooveData, gCont, true);
-            trackData.forEach(t => createRow(t, tCont, false));
+            drawRow(grooveData, gCont, true);
+            trackData.forEach(t => drawRow(t, tCont, false));
         }
 
-        function drawWave(canvas, waveform) {
+        function updateCanvas(data, isGroove) {
+            const canvas = document.getElementById(`canv-${isGroove?'g':data.id}`);
             const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, 800, 60);
-            ctx.strokeStyle = '#00bcff';
+            ctx.clearRect(0,0,800,60);
+            
+            // Desenha divisões apenas no Groove
+            if(isGroove) {
+                ctx.strokeStyle = '#333';
+                for(let i=1; i<divisions; i++) {
+                    const x = (800 / divisions) * i;
+                    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 60); ctx.stroke();
+                }
+            }
+
+            ctx.strokeStyle = isGroove ? '#00bcff' : '#aaa';
+            const w = 800 / data.waveform.length;
             ctx.beginPath();
-            const w = 800 / waveform.length;
-            waveform.forEach((v, i) => {
+            data.waveform.forEach((v, i) => {
                 const h = v * 30 * visualGain;
-                ctx.moveTo(i * w, 30 - h);
-                ctx.lineTo(i * w, 30 + h);
+                ctx.moveTo(i*w, 30-h); ctx.lineTo(i*w, 30+h);
             });
             ctx.stroke();
         }
 
-        function playAudio(buffer, offset) {
-            stopAll();
-            const src = audioCtx.createBufferSource();
-            src.buffer = buffer;
-            src.connect(analyser);
-            src.start(0, offset);
-            playingSources.push(src);
-        }
-
-        function stopAll() {
-            playingSources.forEach(s => { try { s.stop(); } catch (e) { } });
-            playingSources = [];
-        }
-
-        function drawScope() {
-            requestAnimationFrame(drawScope);
-            analyser.getByteTimeDomainData(scopeData);
-            const canvas = document.getElementById('liveScope');
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#000'; ctx.fillRect(0, 0, 400, 100);
-            ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
-            ctx.beginPath();
-            const sliceWidth = 400 / scopeData.length;
-            let x = 0;
-            for (let i = 0; i < scopeData.length; i++) {
-                const v = scopeData[i] / 128.0;
-                const y = v * 50;
-                if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-                x += sliceWidth;
+        // Loop de Animação (Cursor e Osciloscópio)
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // 1. Atualiza Cursor se algo estiver tocando
+            if (activeTrack && !isPaused && currentSource) {
+                const elapsed = audioCtx.currentTime - startTime;
+                const progress = elapsed / activeTrack.buffer.duration;
+                const cursorId = `cursor-${activeTrack === grooveData ? 'g' : activeTrack.id}`;
+                const el = document.getElementById(cursorId);
+                if(el) {
+                    el.style.display = 'block';
+                    el.style.left = (progress * 800) + 'px';
+                }
             }
-            ctx.stroke();
+
+            // 2. Osciloscópio Master
+            const scopeCanvas = document.getElementById('liveScope');
+            const sCtx = scopeCanvas.getContext('2d');
+            const dataArr = new Uint8Array(analyser.frequencyBinCount);
+            analyser.getByteTimeDomainData(dataArr);
+            sCtx.fillStyle = '#000'; sCtx.fillRect(0,0,300,60);
+            sCtx.strokeStyle = '#0f0'; sCtx.beginPath();
+            const slice = 300 / dataArr.length;
+            let x = 0;
+            for(let v of dataArr) {
+                const y = (v/128.0) * 30;
+                if(x===0) sCtx.moveTo(x,y); else sCtx.lineTo(x,y);
+                x += slice;
+            }
+            sCtx.stroke();
         }
 
+        // Controles de Slider
+        document.getElementById('divisionSlider').oninput = (e) => {
+            divisions = e.target.value;
+            document.getElementById('divLabel').textContent = divisions;
+            render();
+        };
         document.getElementById('gainSlider').oninput = (e) => {
             visualGain = e.target.value;
-            renderInterface();
+            document.getElementById('gainLabel').textContent = visualGain;
+            render();
         };
     </script>
 </body>
