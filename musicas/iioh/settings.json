@@ -1,0 +1,36 @@
+{
+    "compositionName": "iioh",
+    "isMetronome": false,
+    "bpm": 120.0,
+    "numberOfBars": 1,
+    "grooveName": "groove",
+    "numberOfGrooves": 1,
+    "grooveClipNames": [],
+    "numberOfSinesteticasPerGroove": [],
+    "maxPlayerHeight": 2.0,
+    "sourceGrooveSetName": "Indus",
+    "dashboardSessions": [
+        {
+            "sessionId": 0,
+            "grooveIndex": 0,
+            "grooveVolume": 1.0,
+            "isGrooveMuted": false,
+            "tracks": [
+                {
+                    "globalId": 1,
+                    "startSample": 768,
+                    "generatorType": 1,
+                    "presetName": "SineStutterR"
+                },
+                {
+                    "globalId": 2,
+                    "startSample": 24064,
+                    "generatorType": 1,
+                    "presetName": "SineStutterR"
+                }
+            ]
+        }
+    ],
+    "continuousTracks": [],
+    "presetNames": []
+}

@@ -1,0 +1,198 @@
+{
+    "compositionName": "copi",
+    "isMetronome": false,
+    "bpm": 120.0,
+    "numberOfBars": 1,
+    "grooveName": "groove",
+    "numberOfGrooves": 1,
+    "grooveClipNames": [],
+    "numberOfSinesteticasPerGroove": [],
+    "maxPlayerHeight": 2.0,
+    "sourceGrooveSetName": "Indus",
+    "dashboardSessions": [
+        {
+            "sessionId": 0,
+            "grooveIndex": 0,
+            "grooveVolume": 1.0,
+            "isGrooveMuted": false,
+            "tracks": [
+                {
+                    "globalId": 1,
+                    "startSample": 33792,
+                    "generatorType": 1,
+                    "presetName": "SineStutterR"
+                },
+                {
+                    "globalId": 2,
+                    "startSample": 34304,
+                    "generatorType": 1,
+                    "presetName": "MiauMetal"
+                },
+                {
+                    "globalId": 3,
+                    "startSample": 74240,
+                    "generatorType": 1,
+                    "presetName": "QuaseQuadradoR"
+                },
+                {
+                    "globalId": 6,
+                    "startSample": 512,
+                    "generatorType": 1,
+                    "presetName": "SenoR"
+                }
+            ]
+        },
+        {
+            "sessionId": 1,
+            "grooveIndex": 0,
+            "grooveVolume": 1.0,
+            "isGrooveMuted": false,
+            "tracks": [
+                {
+                    "globalId": 1,
+                    "startSample": 33792,
+                    "generatorType": 1,
+                    "presetName": ""
+                },
+                {
+                    "globalId": 2,
+                    "startSample": 34304,
+                    "generatorType": 1,
+                    "presetName": ""
+                },
+                {
+                    "globalId": 3,
+                    "startSample": 74240,
+                    "generatorType": 1,
+                    "presetName": ""
+                },
+                {
+                    "globalId": 6,
+                    "startSample": 512,
+                    "generatorType": 1,
+                    "presetName": ""
+                }
+            ]
+        },
+        {
+            "sessionId": 2,
+            "grooveIndex": 0,
+            "grooveVolume": 1.0,
+            "isGrooveMuted": false,
+            "tracks": [
+                {
+                    "globalId": 1,
+                    "startSample": 33792,
+                    "generatorType": 1,
+                    "presetName": ""
+                },
+                {
+                    "globalId": 2,
+                    "startSample": 34304,
+                    "generatorType": 1,
+                    "presetName": ""
+                },
+                {
+                    "globalId": 3,
+                    "startSample": 74240,
+                    "generatorType": 1,
+                    "presetName": ""
+                },
+                {
+                    "globalId": 6,
+                    "startSample": 512,
+                    "generatorType": 1,
+                    "presetName": ""
+                },
+                {
+                    "globalId": 7,
+                    "startSample": 59904,
+                    "generatorType": 1,
+                    "presetName": "SenoR"
+                },
+                {
+                    "globalId": 8,
+                    "startSample": 60928,
+                    "generatorType": 1,
+                    "presetName": "SenoR"
+                },
+                {
+                    "globalId": 9,
+                    "startSample": 70656,
+                    "generatorType": 1,
+                    "presetName": "SenoR"
+                },
+                {
+                    "globalId": 10,
+                    "startSample": 13056,
+                    "generatorType": 1,
+                    "presetName": "SenoR"
+                }
+            ]
+        },
+        {
+            "sessionId": 3,
+            "grooveIndex": 0,
+            "grooveVolume": 1.0,
+            "isGrooveMuted": false,
+            "tracks": [
+                {
+                    "globalId": 1,
+                    "startSample": 33792,
+                    "generatorType": 1,
+                    "presetName": ""
+                },
+                {
+                    "globalId": 2,
+                    "startSample": 34304,
+                    "generatorType": 1,
+                    "presetName": ""
+                },
+                {
+                    "globalId": 3,
+                    "startSample": 74240,
+                    "generatorType": 1,
+                    "presetName": ""
+                },
+                {
+                    "globalId": 6,
+                    "startSample": 512,
+                    "generatorType": 1,
+                    "presetName": ""
+                },
+                {
+                    "globalId": 7,
+                    "startSample": 59904,
+                    "generatorType": 1,
+                    "presetName": ""
+                },
+                {
+                    "globalId": 8,
+                    "startSample": 60928,
+                    "generatorType": 1,
+                    "presetName": ""
+                },
+                {
+                    "globalId": 9,
+                    "startSample": 70656,
+                    "generatorType": 1,
+                    "presetName": ""
+                },
+                {
+                    "globalId": 10,
+                    "startSample": 13056,
+                    "generatorType": 1,
+                    "presetName": ""
+                }
+            ]
+        }
+    ],
+    "continuousTracks": [],
+    "presetNames": [
+        "SineStutterR",
+        "MiauMetal",
+        "QuaseQuadradoR",
+        "COA Pluck Tom",
+        "SenoR"
+    ]
+}

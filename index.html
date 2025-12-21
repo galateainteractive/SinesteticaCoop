@@ -1,0 +1,387 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <title>Sinestética Web Player</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background: #111;
+            color: #eee;
+            font-family: sans-serif;
+            overflow: hidden;
+        }
+
+        /* Telas */
+        #menu-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+        }
+
+        #player-screen {
+            display: none;
+            height: 100%;
+            padding: 16px;
+            box-sizing: border-box;
+        }
+
+        /* Menu */
+        .comp-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            max-width: 1000px;
+        }
+
+        .comp-card {
+            background: #222;
+            border: 1px solid #444;
+            padding: 20px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: 0.2s;
+        }
+
+            .comp-card:hover {
+                border-color: #007bff;
+                background: #2a2a2a;
+                transform: translateY(-3px);
+            }
+
+        /* Player Layout */
+        .main-layout {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .top-panel {
+            flex-shrink: 0;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+
+        .tracks-scroll {
+            flex: 1;
+            overflow-y: auto;
+            margin-top: 16px;
+            padding-right: 10px;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            margin: 10px 0;
+        }
+
+        .divider-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        /* Tracks */
+        .tracks-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .track-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            background: #1a1a1a;
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        .track-label {
+            width: 150px;
+            font-size: 11px;
+            color: #aaa;
+            text-align: right;
+            word-wrap: break-word;
+        }
+
+        canvas {
+            background: #000;
+            border: 1px solid #333;
+            display: block;
+        }
+
+        #liveScope {
+            width: 400px;
+            height: 100px;
+        }
+
+        .btn {
+            cursor: pointer;
+            padding: 5px 12px;
+            font-size: 12px;
+            background: #333;
+            color: white;
+            border: 1px solid #555;
+            border-radius: 3px;
+        }
+
+            .btn:hover {
+                background: #444;
+            }
+
+        .back-btn {
+            margin-bottom: 15px;
+            background: #c0392b;
+            border: none;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loading" class="loading-overlay"><h2>Carregando Áudio...</h2></div>
+
+    <div id="menu-screen">
+        <h1>Sinestética Player</h1>
+        <p>Escolha uma composição para iniciar</p>
+        <div id="comp-list" class="comp-list"></div>
+    </div>
+
+    <div id="player-screen">
+        <div class="main-layout">
+            <div class="top-panel">
+                <button class="btn back-btn" onclick="window.location.reload()">← Voltar ao Menu</button>
+                <h2 id="playing-title" style="margin:0">Composição</h2>
+
+                <div class="controls">
+                    <div class="divider-control">
+                        <span>Osciloscópio (Tempo Real):</span>
+                        <canvas id="liveScope" width="400" height="100"></canvas>
+                    </div>
+                    <div class="divider-control">
+                        <span>Ganho Visual:</span>
+                        <input type="range" id="gainSlider" min="0.5" max="10" step="0.1" value="1" />
+                    </div>
+                </div>
+                <div id="grooveContainer" class="tracks-container"></div>
+            </div>
+
+            <div class="tracks-scroll">
+                <div id="tracksContainer" class="tracks-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 2048;
+        analyser.connect(audioCtx.destination);
+        const scopeData = new Uint8Array(analyser.fftSize);
+
+        let composition = null;
+        let grooveData = null;
+        let trackData = [];
+        let playingSources = [];
+        let visualGain = 1.0;
+
+        // --- INICIALIZAÇÃO ---
+        window.onload = async () => {
+            try {
+                const res = await fetch('composicoes.json');
+                const musicas = await res.json();
+                const list = document.getElementById('comp-list');
+                musicas.forEach(m => {
+                    const card = document.createElement('div');
+                    card.className = 'comp-card';
+                    card.innerHTML = `<h3>${m.nome}</h3><p>${m.pasta}</p>`;
+                    card.onclick = () => startApp(m);
+                    list.appendChild(card);
+                });
+            } catch (err) {
+                alert("Erro ao carregar composicoes.json. Verifique se o arquivo existe na raiz.");
+            }
+        };
+
+        // --- CARREGADOR INTELIGENTE ---
+        async function startApp(musica) {
+            document.getElementById('loading').style.display = 'flex';
+            if (audioCtx.state === 'suspended') await audioCtx.resume();
+
+            try {
+                // 1. Carrega o JSON da pasta
+                const resJson = await fetch(`${musica.pasta}/settings.json`);
+                composition = await resJson.json();
+                document.getElementById('playing-title').textContent = musica.nome;
+
+                // 2. Carrega o Groove (definido manualmente no composicoes.json)
+                const grooveRes = await fetch(`${musica.pasta}/${musica.grooveFile}`);
+                const grooveBuf = await grooveRes.arrayBuffer();
+                const decodedGroove = await audioCtx.decodeAudioData(grooveBuf);
+                grooveData = {
+                    label: "GROOVE PRINCIPAL",
+                    buffer: decodedGroove,
+                    waveform: computeWaveform(decodedGroove.getChannelData(0), 800)
+                };
+
+                // 3. Carrega as Tracks (Lógica clip_X.wav)
+                const jsonTracks = composition.dashboardSessions[0].tracks;
+                trackData = [];
+
+                const trackPromises = jsonTracks.map(async (t) => {
+                    const fileName = `clip_${t.globalId}.wav`;
+                    try {
+                        const trackRes = await fetch(`${musica.pasta}/${fileName}`);
+                        if (!trackRes.ok) return; // Pula se o arquivo não existir
+
+                        const tBuf = await trackRes.arrayBuffer();
+                        const decoded = await audioCtx.decodeAudioData(tBuf);
+
+                        trackData.push({
+                            id: t.globalId,
+                            label: t.presetName || `Clip ${t.globalId}`,
+                            buffer: decoded,
+                            waveform: computeWaveform(decoded.getChannelData(0), 800),
+                            offset: (t.startSample || 0) / decoded.sampleRate
+                        });
+                    } catch (e) { console.warn(`Pulei: ${fileName}`); }
+                });
+
+                await Promise.all(trackPromises);
+
+                // Ordenar por ID para ficar bonito
+                trackData.sort((a, b) => a.id - b.id);
+
+                renderInterface();
+                drawScope();
+                document.getElementById('menu-screen').style.display = 'none';
+                document.getElementById('player-screen').style.display = 'block';
+
+            } catch (err) {
+                console.error(err);
+                alert("Erro ao carregar arquivos da pasta. Verifique nomes e caminhos.");
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        // --- ÁUDIO E DESENHO ---
+        function computeWaveform(channelData, numPoints) {
+            const step = Math.ceil(channelData.length / numPoints);
+            const result = new Float32Array(numPoints);
+            for (let i = 0; i < numPoints; i++) {
+                let max = 0;
+                for (let j = 0; j < step; j++) {
+                    const v = Math.abs(channelData[i * step + j]);
+                    if (v > max) max = v;
+                }
+                result[i] = max;
+            }
+            return result;
+        }
+
+        function renderInterface() {
+            const gCont = document.getElementById('grooveContainer');
+            const tCont = document.getElementById('tracksContainer');
+            gCont.innerHTML = ''; tCont.innerHTML = '';
+
+            const createRow = (data, container, isGroove) => {
+                const row = document.createElement('div');
+                row.className = 'track-row';
+                const label = document.createElement('div');
+                label.className = 'track-label';
+                label.textContent = data.label;
+
+                const canvas = document.createElement('canvas');
+                canvas.width = 800; canvas.height = 60;
+                drawWave(canvas, data.waveform);
+
+                const btnPlay = document.createElement('button');
+                btnPlay.className = 'btn';
+                btnPlay.textContent = 'PLAY';
+                btnPlay.onclick = () => playAudio(data.buffer, isGroove ? 0 : data.offset);
+
+                row.append(label, canvas, btnPlay);
+                container.appendChild(row);
+            };
+
+            createRow(grooveData, gCont, true);
+            trackData.forEach(t => createRow(t, tCont, false));
+        }
+
+        function drawWave(canvas, waveform) {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, 800, 60);
+            ctx.strokeStyle = '#00bcff';
+            ctx.beginPath();
+            const w = 800 / waveform.length;
+            waveform.forEach((v, i) => {
+                const h = v * 30 * visualGain;
+                ctx.moveTo(i * w, 30 - h);
+                ctx.lineTo(i * w, 30 + h);
+            });
+            ctx.stroke();
+        }
+
+        function playAudio(buffer, offset) {
+            stopAll();
+            const src = audioCtx.createBufferSource();
+            src.buffer = buffer;
+            src.connect(analyser);
+            src.start(0, offset);
+            playingSources.push(src);
+        }
+
+        function stopAll() {
+            playingSources.forEach(s => { try { s.stop(); } catch (e) { } });
+            playingSources = [];
+        }
+
+        function drawScope() {
+            requestAnimationFrame(drawScope);
+            analyser.getByteTimeDomainData(scopeData);
+            const canvas = document.getElementById('liveScope');
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#000'; ctx.fillRect(0, 0, 400, 100);
+            ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
+            ctx.beginPath();
+            const sliceWidth = 400 / scopeData.length;
+            let x = 0;
+            for (let i = 0; i < scopeData.length; i++) {
+                const v = scopeData[i] / 128.0;
+                const y = v * 50;
+                if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+                x += sliceWidth;
+            }
+            ctx.stroke();
+        }
+
+        document.getElementById('gainSlider').oninput = (e) => {
+            visualGain = e.target.value;
+            renderInterface();
+        };
+    </script>
+</body>
+</html>
