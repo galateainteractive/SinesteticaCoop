@@ -3,50 +3,44 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Sinestética Player - Mobile Edition</title>
+    <title>Sinestética Player - B&W Final</title>
     <style>
-        /* ESTILO MINIMALISTA PRETO E BRANCO */
         html, body { height: 100%; margin: 0; padding: 0; background: #000; color: #fff; font-family: 'Courier New', Courier, monospace; overflow-x: hidden; }
         
         #menu-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100%; text-align: center; padding: 20px; box-sizing: border-box; }
         #player-screen { display: none; height: 100%; padding: 10px; box-sizing: border-box; }
 
-        /* Menu Responsivo */
         .comp-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; width: 100%; max-width: 800px; margin-top: 30px; }
         .comp-card { border: 1px solid #fff; padding: 20px; cursor: pointer; transition: 0.3s; }
         .comp-card:hover { background: #fff; color: #000; }
         
-        /* Layout Player */
         .main-layout { display: flex; flex-direction: column; height: 100%; }
-        .top-panel { flex-shrink: 0; border-bottom: 2px solid #444; padding-bottom: 15px; }
+        .top-panel { flex-shrink: 0; border-bottom: 2px solid #333; padding-bottom: 15px; }
         .tracks-scroll { flex: 1; overflow-y: auto; margin-top: 10px; -webkit-overflow-scrolling: touch; }
 
-        /* Controles Mobile */
-        .controls { display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-start; margin: 10px 0; border: 1px solid #333; padding: 10px; justify-content: space-between; }
+        .controls { display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-start; margin: 10px 0; border: 1px solid #222; padding: 10px; justify-content: space-between; }
         .control-group { display: flex; flex-direction: column; gap: 5px; font-size: 10px; text-transform: uppercase; flex: 1; min-width: 120px; }
         
-        input[type=range] { width: 100%; height: 30px; }
+        input[type=range] { width: 100%; height: 30px; accent-color: #fff; cursor: pointer; }
 
-        /* Waveforms Responsivas */
         .track-row { display: flex; flex-direction: column; gap: 8px; background: #000; padding: 15px 0; border-bottom: 1px solid #222; }
         .track-info { display: flex; justify-content: space-between; align-items: center; }
-        .track-label { font-size: 9px; color: #888; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60%; }
+        .track-label { font-size: 9px; color: #888; text-transform: uppercase; }
         
         .canvas-container { position: relative; width: 100%; height: 80px; background: #050505; }
         canvas { display: block; width: 100%; height: 100%; border: 1px solid #222; }
         
-        .cursor-groove { position: absolute; top: 0; left: 0; width: 2px; height: 100%; background: #fff; pointer-events: none; display: none; z-index: 10; }
+        /* CURSOR BRANCO */
+        .cursor-groove { position: absolute; top: 0; left: 0; width: 2px; height: 100%; background: #fff; pointer-events: none; display: none; z-index: 10; box-shadow: 0 0 5px #fff; }
         
-        /* Botões Mobile */
         .btn-group { display: flex; gap: 5px; margin-top: 5px; }
-        .btn { cursor: pointer; padding: 12px 10px; font-size: 10px; border: 1px solid #fff; background: #000; color: #fff; text-transform: uppercase; flex: 1; text-align: center; -webkit-tap-highlight-color: transparent; }
+        .btn { cursor: pointer; padding: 12px 10px; font-size: 10px; border: 1px solid #fff; background: #000; color: #fff; text-transform: uppercase; flex: 1; text-align: center; }
         .btn:active { background: #fff; color: #000; }
         
         .btn-pause { border-color: #666; color: #ccc; display: none; }
-        .back-btn { width: 100%; margin-bottom: 15px; border-color: #888; color: #888; }
+        .back-btn { width: 100%; margin-bottom: 15px; border-color: #444; color: #888; }
 
-        #liveScope { width: 100%; height: 60px; border: 1px solid #444; }
-
+        #liveScope { width: 100%; height: 60px; border: 1px solid #333; }
         .loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: #000; display:none; align-items:center; justify-content:center; z-index:1000; }
 
         @media (min-width: 768px) {
@@ -113,6 +107,9 @@
         let isPaused = false;
         let currentBuffer = null;
         let currentOffset = 0;
+
+        // Armazena o último frame da onda para o Master Scope
+        let lastWaveformData = null;
 
         window.onload = async () => {
             try {
@@ -205,6 +202,7 @@
             if (currentSource) { try { currentSource.onended = null; currentSource.stop(); } catch(e){} currentSource = null; }
             isPaused = false;
             pausedAt = 0;
+            lastWaveformData = null;
         }
 
         function resetUI() {
@@ -218,7 +216,7 @@
 
         function computeWave(buffer) {
             const data = buffer.getChannelData(0);
-            const step = Math.ceil(data.length / 400); // Menos pontos para mobile
+            const step = Math.ceil(data.length / 400); 
             const wave = new Float32Array(400);
             for(let i=0; i<400; i++) {
                 let max = 0;
@@ -294,29 +292,44 @@
 
         function animate() {
             requestAnimationFrame(animate);
+            
+            // Lógica do Cursor
             if (activeTrack === grooveData && !isPaused && currentSource) {
                 const progress = (audioCtx.currentTime - startTime) / grooveData.buffer.duration;
                 const el = document.getElementById('cursor-g');
                 if(el) { el.style.display = 'block'; el.style.left = (Math.min(progress, 1) * 100) + '%'; }
             }
 
+            // MASTER SCOPE
             const scopeCanvas = document.getElementById('liveScope');
             const sCtx = scopeCanvas.getContext('2d');
+            const dataArr = new Uint8Array(analyser.frequencyBinCount);
+
             if (!isPaused && currentSource) {
-                const dataArr = new Uint8Array(analyser.frequencyBinCount);
                 analyser.getByteTimeDomainData(dataArr);
+                lastWaveformData = new Uint8Array(dataArr); // Salva o frame atual
+            } else if (isPaused && lastWaveformData) {
+                dataArr.set(lastWaveformData); // Usa o frame salvo
+            } else {
+                // Se não há áudio tocando nem pausado, limpa e sai
                 sCtx.fillStyle = '#000'; sCtx.fillRect(0,0,scopeCanvas.width, scopeCanvas.height);
-                sCtx.strokeStyle = '#fff'; sCtx.lineWidth = 2;
-                sCtx.beginPath();
-                const slice = scopeCanvas.width / dataArr.length;
-                let x = 0;
-                for(let i = 0; i < dataArr.length; i++) {
-                    const y = ((dataArr[i] - 128) * visualGain * (scopeCanvas.height/256)) + (scopeCanvas.height/2);
-                    if(i===0) sCtx.moveTo(x,y); else sCtx.lineTo(x,y);
-                    x += slice;
-                }
-                sCtx.stroke();
+                return;
             }
+
+            // Desenha a onda (ativa ou congelada)
+            sCtx.fillStyle = '#000'; sCtx.fillRect(0,0,scopeCanvas.width, scopeCanvas.height);
+            sCtx.strokeStyle = '#fff'; sCtx.lineWidth = 2;
+            sCtx.beginPath();
+            
+            const slice = scopeCanvas.width / dataArr.length;
+            let x = 0;
+            for(let i = 0; i < dataArr.length; i++) {
+                // Aplica o ganho visual no sinal (mesmo pausado)
+                const y = ((dataArr[i] - 128) * visualGain * (scopeCanvas.height/256)) + (scopeCanvas.height/2);
+                if(i===0) sCtx.moveTo(x,y); else sCtx.lineTo(x,y);
+                x += slice;
+            }
+            sCtx.stroke();
         }
 
         document.getElementById('divisionSlider').oninput = (e) => {
@@ -327,7 +340,8 @@
         document.getElementById('gainSlider').oninput = (e) => {
             visualGain = e.target.value;
             document.getElementById('gainLabel').textContent = visualGain;
-            render();
+            render(); // Atualiza as waveforms estáticas
+            // O Scope atualiza no próximo requestAnimationFrame usando visualGain
         };
     </script>
 </body>
