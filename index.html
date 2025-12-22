@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Sinestética Player - Final Boxed Layout</title>
+    <title>Sinestética Player - Tactical Overlay</title>
     <style>
         /* --- ESTILO BRUTALISTA HIGH CONTRAST --- */
         html, body { height: 100%; margin: 0; padding: 0; background: #000; color: #fff; font-family: 'Courier New', Courier, monospace; overflow-x: hidden; }
@@ -18,26 +18,32 @@
         .main-layout { display: flex; flex-direction: column; height: 100%; }
         
         /* --- PAINEL SUPERIOR (ESCURO / MASTER) --- */
-        .top-panel { flex-shrink: 0; border-bottom: 4px solid #fff; padding: 15px; background: #000; z-index: 10; }
+        .top-panel { flex-shrink: 0; border-bottom: 4px solid #fff; padding: 15px; background: #000; z-index: 10; position: relative; }
         
+        /* Header Nav */
+        .nav-header { display: flex; justify-content: space-between; margin-bottom: 15px; }
+        .back-btn { background: #000; color: #888; border: 1px solid #444; padding: 5px 10px; cursor: pointer; font-family: inherit; text-transform: uppercase; font-size: 10px; }
+        .help-btn { background: #000; color: #fff; border: 1px solid #fff; padding: 5px 12px; cursor: pointer; font-family: inherit; font-weight: bold; font-size: 14px; }
+        .help-btn:hover { background: #fff; color: #000; }
+
         /* Canvas do Topo (Groove) */
         .top-panel .canvas-container { position: relative; width: 100%; height: 100px; background: #000; display: flex; align-items: center; }
-        .top-panel canvas { border: 2px solid #fff; background: #000; } /* Caixa Branca no fundo Preto */
+        .top-panel canvas { border: 2px solid #fff; background: #000; } 
 
         /* --- ÁREA DE SCROLL (CLARA / TRACKS) --- */
         .tracks-scroll { 
             flex: 1; 
             overflow-y: auto; 
-            background: #e0e0e0; /* Fundo Cinza para contraste */
+            background: #e0e0e0; 
             color: #000; 
             padding: 15px;
             -webkit-overflow-scrolling: touch;
+            position: relative;
         }
 
         .tracks-scroll::-webkit-scrollbar { width: 12px; background: #000; border-left: 1px solid #333; }
         .tracks-scroll::-webkit-scrollbar-thumb { background: #fff; border: 2px solid #000; }
 
-        /* Canvas das Tracks (CORREÇÃO APLICADA AQUI) */
         .tracks-scroll .canvas-container { 
             position: relative; 
             width: 100%; 
@@ -47,12 +53,12 @@
         }
         
         .tracks-scroll canvas { 
-            border: 2px solid #000; /* Borda Sólida Preta -> A "Caixa" */
-            background: #fff;       /* Fundo Branco Puro -> Destaca do cinza */
+            border: 2px solid #000; /* Borda Sólida Preta */
+            background: #fff;       /* Fundo Branco */
             display: block;
         }
 
-        /* --- CONTROLES E BOTÕES --- */
+        /* --- CONTROLES --- */
         .controls { display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-start; margin: 10px 0; border: 1px solid #222; padding: 10px; justify-content: space-between; }
         .control-group { display: flex; flex-direction: column; gap: 5px; font-size: 10px; text-transform: uppercase; flex: 1; min-width: 120px; }
         
@@ -80,11 +86,46 @@
         .tracks-scroll .btn:active { background: #000; color: #fff; }
 
         .btn-pause { border-color: #666; color: #ccc; display: none; }
-        .back-btn { width: 100%; margin-bottom: 15px; border-color: #444; color: #888; background: #000; }
 
         /* LIVE SCOPE ESTILO */
         #liveScope { width: 100%; height: 80px; border: 1px solid #555; background: #000; }
         .loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: #000; display:none; align-items:center; justify-content:center; z-index:1000; color: #fff; }
+
+        /* --- TACTICAL OVERLAY (HELP) --- */
+        #help-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); /* Fundo escuro semi-transparente */
+            z-index: 999;
+            display: none; /* Escondido por padrão */
+            overflow-y: auto;
+            color: #fff;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .help-box {
+            border: 1px dashed #fff;
+            padding: 15px;
+            margin-bottom: 20px;
+            background: rgba(0,0,0,0.5);
+            position: relative;
+        }
+        
+        .help-box h3 { margin: 0 0 5px 0; color: #ffff00; text-transform: uppercase; font-size: 14px; border-bottom: 1px solid #555; padding-bottom: 5px; }
+        .help-box p { font-size: 11px; line-height: 1.4; margin: 5px 0; color: #ccc; }
+        .help-box strong { color: #fff; }
+        
+        .help-arrow { font-size: 20px; position: absolute; color: #ffff00; }
+
+        .cheat-sheet {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10px;
+            margin-top: 10px;
+            color: #aaa;
+        }
+        .cheat-sheet td, .cheat-sheet th { border: 1px solid #444; padding: 4px; text-align: left; }
+        .cheat-sheet th { color: #fff; }
 
         @media (min-width: 768px) {
             .track-row { flex-direction: row; align-items: center; }
@@ -100,6 +141,51 @@
 
     <div id="loading" class="loading-overlay"><h2>LOADING...</h2></div>
 
+    <div id="help-overlay" onclick="toggleHelp()">
+        <div style="text-align:center; margin-bottom: 20px;">
+            <h1 style="border: 2px solid #fff; display:inline-block; padding: 10px;">MANUAL DE CAMPO</h1>
+            <p style="font-size: 10px; margin-top:5px;">[ TOQUE NA TELA PARA FECHAR ]</p>
+        </div>
+
+        <div class="help-box" style="margin-top: 80px;">
+            <h3>1. SINTONIA FINA (OSCILOSCÓPIO)</h3>
+            <p><strong>A FÍSICA DO SOM:</strong> O som viaja a 343 m/s. Use a régua do gráfico para decifrar a ALTURA (Pitch) para o Player VR.</p>
+            <p><strong>DICA TÁTICA:</strong> Se a onda for muito longa, ela não cabe na sala. Se for curta, ela rebate rápido.</p>
+            
+            <table class="cheat-sheet">
+                <tr><th>Onda (m)</th><th>Frequência</th><th>Som</th></tr>
+                <tr><td>> 3.0m</td><td>~100Hz</td><td>GRAVE (Baixo)</td></tr>
+                <tr><td>~ 1.5m</td><td>~220Hz</td><td>MÉDIO-GRAVE</td></tr>
+                <tr><td>~ 0.8m</td><td>~440Hz</td><td>MÉDIO (Lá)</td></tr>
+                <tr><td>< 0.3m</td><td>1kHz+</td><td>AGUDO (Fino)</td></tr>
+            </table>
+        </div>
+
+        <div class="help-box">
+            <h3>2. RITMO & DIVISÃO (DIVS)</h3>
+            <p>Use o slider <strong>DIVS</strong> para fatiar o tempo.</p>
+            <p><strong>CO-OP:</strong> Você pode <em>cantarolar</em> o ritmo ("Tu-tá-tu-tá") ou ser técnico: "O som começa na segunda linha pontilhada da divisão 4".</p>
+        </div>
+
+        <div class="help-box">
+            <h3>3. TIMBRE & FORMA (TRACKS)</h3>
+            <p>A forma da onda é a "Assinatura" do instrumento.</p>
+            <ul>
+                <li><strong>Redonda:</strong> Suave (Flauta, Assobio).</li>
+                <li><strong>Quadrada/Reta:</strong> Digital, Robótico.</li>
+                <li><strong>Serrilhada/Pontuda:</strong> Áspero, Distorcido.</li>
+                <li><strong>Espetada (Curta):</strong> Batida seca, Percussão.</li>
+            </ul>
+        </div>
+        
+        <div class="help-box">
+            <h3>4. DURAÇÃO (AS CAIXAS)</h3>
+            <p>A borda preta é o limite do tempo.</p>
+            <p><strong>CHEIO:</strong> Som contínuo (Sustained). O VR deve segurar a nota.</p>
+            <p><strong>ESPAÇO VAZIO:</strong> Som curto (Staccato). O VR deve dar apenas um toque.</p>
+        </div>
+    </div>
+
     <div id="menu-screen">
         <h1 style="letter-spacing: 5px; text-transform: uppercase; font-size: 24px;">SINESTÉTICA</h1>
         <div id="comp-list" class="comp-list"></div>
@@ -108,7 +194,11 @@
     <div id="player-screen">
         <div class="main-layout">
             <div class="top-panel">
-                <button class="btn back-btn" onclick="window.location.reload()">[ BACK TO MENU ]</button>
+                <div class="nav-header">
+                    <button class="back-btn" onclick="window.location.reload()">[ BACK TO MENU ]</button>
+                    <button class="help-btn" onclick="toggleHelp()">[ ? ]</button>
+                </div>
+
                 <h2 id="playing-title" style="margin:0 0 10px 0; text-transform: uppercase; letter-spacing: 1px; font-size: 14px; text-align: center;"></h2>
                 
                 <div class="controls">
@@ -151,6 +241,11 @@
         let currentBuffer = null;
         let currentOffset = 0;
         let lastWaveformData = null;
+
+        function toggleHelp() {
+            const el = document.getElementById('help-overlay');
+            el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+        }
 
         window.onload = async () => {
             try {
@@ -313,7 +408,6 @@
             const h = canvas.height;
             ctx.clearRect(0,0,w,h);
             
-            // LÓGICA DE COR: Branco no Groove (Preto), Preto nas Tracks (Branco)
             const mainColor = isGroove ? '#fff' : '#000';
 
             // 1. Desenha as DIVISÕES
@@ -332,7 +426,7 @@
                 ctx.setLineDash([]); 
             }
 
-            // 2. Desenha a ONDA (PREVIEW ESTÁTICO)
+            // 2. Desenha a ONDA
             ctx.lineWidth = 2; 
             ctx.strokeStyle = mainColor;
             const step = w / data.waveform.length;
@@ -350,20 +444,19 @@
         function animate() {
             requestAnimationFrame(animate);
 
-            // --- CURSOR DO GROOVE ---
+            // CURSOR
             if (activeTrack === grooveData && !isPaused && currentSource) {
                 const progress = (audioCtx.currentTime - startTime) / grooveData.buffer.duration;
                 const el = document.getElementById('cursor-g');
                 if(el) { el.style.display = 'block'; el.style.left = (Math.min(progress, 1) * 100) + '%'; }
             }
 
-            // --- OSCILOSCÓPIO / RÉGUA FÍSICA ---
+            // OSCILOSCÓPIO
             const scopeCanvas = document.getElementById('liveScope');
             const sCtx = scopeCanvas.getContext('2d');
             const w = scopeCanvas.width;
             const h = scopeCanvas.height;
             
-            // Pega os dados do áudio
             const dataArr = new Uint8Array(analyser.frequencyBinCount);
             
             if (!isPaused && currentSource) {
@@ -372,16 +465,14 @@
             } else if (isPaused && lastWaveformData) {
                 dataArr.set(lastWaveformData);
             } else {
-                // Se parado, limpa (preto)
                 sCtx.fillStyle = '#000'; sCtx.fillRect(0,0,w,h);
                 return;
             }
 
-            // 1. Limpa o fundo (Preto absoluto)
             sCtx.fillStyle = '#000'; 
             sCtx.fillRect(0,0,w,h);
 
-            // --- DESENHO DA RÉGUA FÍSICA (HIGH CONTRAST) ---
+            // RÉGUA FÍSICA
             const SPEED_OF_SOUND = 343; // m/s
             const totalSeconds = dataArr.length / audioCtx.sampleRate; 
             const totalMeters = totalSeconds * SPEED_OF_SOUND;
@@ -391,42 +482,32 @@
             sCtx.font = "bold 10px Courier New";
             sCtx.textAlign = "left";
 
-            // Loop para desenhar marcas de metro
             for(let m = 1; m < totalMeters; m++) {
                 const xPos = m * pixelsPerMeter;
-                
-                // Linha Vertical (Cinza Médio)
                 sCtx.strokeStyle = '#555'; 
                 sCtx.beginPath();
                 sCtx.moveTo(xPos, 0);
                 sCtx.lineTo(xPos, h);
                 sCtx.stroke();
-
-                // Texto (Branco Sujo)
                 sCtx.fillStyle = '#ddd';
                 sCtx.fillText(m + "m", xPos + 4, h - 5);
             }
             
-            // Label da Escala Total
             sCtx.textAlign = "right";
-            sCtx.fillStyle = "#fffacd"; // Amarelo Claro
+            sCtx.fillStyle = "#fffacd"; 
             sCtx.fillText(`AIR DISTANCE: ${totalMeters.toFixed(2)}m`, w - 5, 12);
 
-            // --- DESENHO DA ONDA (BRANCO PURO) ---
+            // ONDA
             sCtx.strokeStyle = '#fff'; 
             sCtx.lineWidth = 2;
             sCtx.beginPath();
-            
             const slice = w / dataArr.length;
             let x = 0;
-            
             for(let i = 0; i < dataArr.length; i++) {
                 const v = dataArr[i] / 128.0; 
                 const yCorrected = (h/2) + ((dataArr[i] - 128) / 128) * (h/2) * visualGain;
-
                 if(i===0) sCtx.moveTo(x, yCorrected); 
                 else sCtx.lineTo(x, yCorrected);
-                
                 x += slice;
             }
             sCtx.stroke();
