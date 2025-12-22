@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Sinestética Player - Final Manual</title>
+    <title>Sinestética Player - Physics Manual</title>
     <style>
         /* --- ESTILO BRUTALISTA HIGH CONTRAST --- */
         html, body { height: 100%; margin: 0; padding: 0; background: #000; color: #fff; font-family: 'Courier New', Courier, monospace; overflow-x: hidden; }
@@ -161,9 +161,10 @@
         </div>
 
         <div class="help-box">
-            <h3>1. A CONSTANTE 343 (AFINAÇÃO)</h3>
-            <p><strong>FÍSICA DO SOM:</strong> O gráfico superior simula o som viajando no ar. A velocidade do som é de <strong>343 m/s</strong>.</p>
-            <p>Para descobrir a nota exata sem ouvir, usamos a matemática: dividimos a Velocidade pelo Comprimento da onda (a distância da repetição no gráfico).</p>
+            <h3>1. A FÍSICA DO SOM (343 m/s)</h3>
+            <p><strong>ESTIMATIVA DE ALTURA:</strong> O gráfico superior simula o som viajando no ar. Use a régua para comparar se o som é mais <strong>Grave</strong> ou mais <strong>Agudo</strong>.</p>
+            
+            <p><strong>COMPRIMENTO DE ONDA:</strong> Observe a repetição do desenho. Meça na régua a distância física de <strong>um ciclo completo</strong> da onda.</p>
             
             <div class="help-formula">
                 FREQ (Hz) = 343 ÷ COMPRIMENTO (m)
@@ -177,7 +178,12 @@
                 <tr><td>A3 (Lá)</td><td>220 Hz</td><td>~ 1.56m</td></tr>
                 <tr><td>C4 (Dó Médio)</td><td>261 Hz</td><td>~ 1.31m</td></tr>
             </table>
-            <p style="font-size:10px; margin-top:5px; color:#888;">*Quanto MAIOR a onda (metros), mais GRAVE o som.</p>
+            
+            <p style="font-size:10px; margin-top:8px; border-top:1px dashed #555; padding-top:5px;">
+                <strong>LÓGICA DAS OITAVAS:</strong><br>
+                Se o comprimento da onda <strong>DOBRAR</strong>, a nota cai uma oitava (fica mais grave).<br>
+                Se o comprimento cair pela <strong>METADE</strong>, a nota sobe uma oitava (fica mais aguda).
+            </p>
         </div>
 
         <div class="help-box">
@@ -195,7 +201,7 @@
         <div class="help-box">
             <h3>4. VISUAL GAIN (ZOOM)</h3>
             <p>O slider <strong>GAIN</strong> é um microscópio visual.</p>
-            <p><strong>NOTA:</strong> Ele NÃO aumenta o volume do áudio. Ele apenas amplia o desenho da onda para que você enxergue detalhes em sons muito baixos.</p>
+            <p><strong>NOTA:</strong> Ele NÃO aumenta o volume do áudio. Ele apenas amplia o desenho da onda para que você enxergue a repetição e a forma em sons muito baixos.</p>
         </div>
     </div>
 
