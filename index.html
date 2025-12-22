@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Sinestética Player - Tactical Overlay</title>
+    <title>Sinestética Player - Tactical Coop</title>
     <style>
         /* --- ESTILO BRUTALISTA HIGH CONTRAST --- */
         html, body { height: 100%; margin: 0; padding: 0; background: #000; color: #fff; font-family: 'Courier New', Courier, monospace; overflow-x: hidden; }
@@ -94,9 +94,9 @@
         /* --- TACTICAL OVERLAY (HELP) --- */
         #help-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); /* Fundo escuro semi-transparente */
+            background: rgba(0,0,0,0.92); /* Fundo bem escuro */
             z-index: 999;
-            display: none; /* Escondido por padrão */
+            display: none;
             overflow-y: auto;
             color: #fff;
             padding: 20px;
@@ -104,18 +104,17 @@
         }
 
         .help-box {
-            border: 1px dashed #fff;
+            border: 1px solid #fff;
             padding: 15px;
             margin-bottom: 20px;
-            background: rgba(0,0,0,0.5);
+            background: rgba(20,20,20,0.95);
             position: relative;
         }
         
-        .help-box h3 { margin: 0 0 5px 0; color: #ffff00; text-transform: uppercase; font-size: 14px; border-bottom: 1px solid #555; padding-bottom: 5px; }
-        .help-box p { font-size: 11px; line-height: 1.4; margin: 5px 0; color: #ccc; }
-        .help-box strong { color: #fff; }
-        
-        .help-arrow { font-size: 20px; position: absolute; color: #ffff00; }
+        .help-box h3 { margin: 0 0 10px 0; color: #ffff00; text-transform: uppercase; font-size: 14px; border-bottom: 1px solid #555; padding-bottom: 5px; letter-spacing: 1px; }
+        .help-box p { font-size: 11px; line-height: 1.5; margin: 8px 0; color: #ddd; }
+        .help-box strong { color: #fff; font-weight: bold; }
+        .help-formula { background: #333; padding: 5px; font-family: monospace; text-align: center; margin: 10px 0; border: 1px solid #555; font-size: 12px; color: #8f8; }
 
         .cheat-sheet {
             width: 100%;
@@ -123,9 +122,11 @@
             font-size: 10px;
             margin-top: 10px;
             color: #aaa;
+            font-family: monospace;
         }
-        .cheat-sheet td, .cheat-sheet th { border: 1px solid #444; padding: 4px; text-align: left; }
-        .cheat-sheet th { color: #fff; }
+        .cheat-sheet td, .cheat-sheet th { border: 1px solid #444; padding: 6px 4px; text-align: center; }
+        .cheat-sheet th { color: #fff; background: #222; }
+        .cheat-sheet tr:nth-child(even) { background: #111; }
 
         @media (min-width: 768px) {
             .track-row { flex-direction: row; align-items: center; }
@@ -143,46 +144,58 @@
 
     <div id="help-overlay" onclick="toggleHelp()">
         <div style="text-align:center; margin-bottom: 20px;">
-            <h1 style="border: 2px solid #fff; display:inline-block; padding: 10px;">MANUAL DE CAMPO</h1>
-            <p style="font-size: 10px; margin-top:5px;">[ TOQUE NA TELA PARA FECHAR ]</p>
+            <h1 style="border: 2px solid #fff; display:inline-block; padding: 10px; font-size: 18px;">MANUAL DE CAMPO</h1>
+            <p style="font-size: 10px; margin-top:5px; color:#888;">[ TOQUE NA TELA PARA FECHAR ]</p>
         </div>
 
         <div class="help-box" style="margin-top: 80px;">
-            <h3>1. SINTONIA FINA (OSCILOSCÓPIO)</h3>
-            <p><strong>A FÍSICA DO SOM:</strong> O som viaja a 343 m/s. Use a régua do gráfico para decifrar a ALTURA (Pitch) para o Player VR.</p>
-            <p><strong>DICA TÁTICA:</strong> Se a onda for muito longa, ela não cabe na sala. Se for curta, ela rebate rápido.</p>
+            <h3>1. FÍSICA DO SOM (CÁLCULO)</h3>
+            <p>O <strong>Comprimento de Onda</strong> (o tamanho da repetição da forma no gráfico) define a frequência.</p>
+            <p><strong>QUANTO MAIS GRAVE = MAIOR A ONDA.</strong></p>
             
+            <div class="help-formula">
+                Freq (Hz) = 343 ÷ Comprimento (m)
+            </div>
+            
+            <p style="margin-top:10px; font-size:10px; text-transform:uppercase; color:#aaa;">Tabela de Referência (Oitava 3):</p>
             <table class="cheat-sheet">
-                <tr><th>Onda (m)</th><th>Frequência</th><th>Som</th></tr>
-                <tr><td>> 3.0m</td><td>~100Hz</td><td>GRAVE (Baixo)</td></tr>
-                <tr><td>~ 1.5m</td><td>~220Hz</td><td>MÉDIO-GRAVE</td></tr>
-                <tr><td>~ 0.8m</td><td>~440Hz</td><td>MÉDIO (Lá)</td></tr>
-                <tr><td>< 0.3m</td><td>1kHz+</td><td>AGUDO (Fino)</td></tr>
+                <tr><th>NOTA</th><th>FREQ (Hz)</th><th>COMPRIMENTO (m)</th></tr>
+                <tr><td>C3 (Dó)</td><td>130.81</td><td>~ 2.62m</td></tr>
+                <tr><td>D3 (Ré)</td><td>146.83</td><td>~ 2.33m</td></tr>
+                <tr><td>E3 (Mi)</td><td>164.81</td><td>~ 2.08m</td></tr>
+                <tr><td>F3 (Fá)</td><td>174.61</td><td>~ 1.96m</td></tr>
+                <tr><td>G3 (Sol)</td><td>196.00</td><td>~ 1.75m</td></tr>
+                <tr><td>A3 (Lá)</td><td>220.00</td><td>~ 1.56m</td></tr>
+                <tr><td>B3 (Si)</td><td>246.94</td><td>~ 1.39m</td></tr>
             </table>
+            <p style="font-size:10px; margin-top:5px; border-top:1px solid #444; padding-top:5px;">
+                <strong>REGRA DA OITAVA:</strong><br>
+                Oitava Acima = Dobro da Frequência (Metade do tamanho).<br>
+                Oitava Abaixo = Metade da Frequência (Dobro do tamanho).
+            </p>
         </div>
 
         <div class="help-box">
-            <h3>2. RITMO & DIVISÃO (DIVS)</h3>
-            <p>Use o slider <strong>DIVS</strong> para fatiar o tempo.</p>
-            <p><strong>CO-OP:</strong> Você pode <em>cantarolar</em> o ritmo ("Tu-tá-tu-tá") ou ser técnico: "O som começa na segunda linha pontilhada da divisão 4".</p>
-        </div>
-
-        <div class="help-box">
-            <h3>3. TIMBRE & FORMA (TRACKS)</h3>
-            <p>A forma da onda é a "Assinatura" do instrumento.</p>
+            <h3>2. SINCRONIA & RITMO (DIVS)</h3>
+            <p><strong>CENÁRIO:</strong> O Player VR ouve um loop circular constante. Você (Mobile) só ouve quando aperta o play.</p>
+            <p><strong>MISSÃO:</strong> Use as linhas tracejadas do <strong>MASTER GROOVE</strong> (no topo) para mapear o tempo.</p>
             <ul>
-                <li><strong>Redonda:</strong> Suave (Flauta, Assobio).</li>
-                <li><strong>Quadrada/Reta:</strong> Digital, Robótico.</li>
-                <li><strong>Serrilhada/Pontuda:</strong> Áspero, Distorcido.</li>
-                <li><strong>Espetada (Curta):</strong> Batida seca, Percussão.</li>
+                <li>Identifique onde é o <strong>Tempo 1</strong>.</li>
+                <li>Veja em qual linha da grade (Divisão) cada Track entra.</li>
+                <li>Cante o ritmo para o VR ("Tu-tá-tu-tá") ou dê coordenadas: <em>"O som entra na terceira divisão do compasso"</em>.</li>
             </ul>
         </div>
-        
+
         <div class="help-box">
-            <h3>4. DURAÇÃO (AS CAIXAS)</h3>
-            <p>A borda preta é o limite do tempo.</p>
-            <p><strong>CHEIO:</strong> Som contínuo (Sustained). O VR deve segurar a nota.</p>
-            <p><strong>ESPAÇO VAZIO:</strong> Som curto (Staccato). O VR deve dar apenas um toque.</p>
+            <h3>3. ASSINATURA TÍMBRICA</h3>
+            <p>Cada som possui uma forma visual única (um desenho).</p>
+            <p>Descreva a geometria da onda para o VR encontrar o timbre correto:</p>
+            <ul>
+                <li>É uma onda lisa e redonda?</li>
+                <li>É quadrada e "digital"?</li>
+                <li>É pontuda e agressiva?</li>
+                <li>O som começa forte e some rápido (triângulo)?</li>
+            </ul>
         </div>
     </div>
 
