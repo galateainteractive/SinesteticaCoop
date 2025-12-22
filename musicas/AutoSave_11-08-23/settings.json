@@ -1,0 +1,70 @@
+{
+    "compositionName": "AutoSave_11-08-23",
+    "isMetronome": false,
+    "bpm": 90.0,
+    "numberOfBars": 1,
+    "grooveName": "groove",
+    "numberOfGrooves": 1,
+    "grooveClipNames": [],
+    "numberOfSinesteticasPerGroove": [],
+    "maxPlayerHeight": 2.0,
+    "sourceGrooveSetName": "Jazzy",
+    "dashboardSessions": [
+        {
+            "sessionId": 0,
+            "grooveIndex": 1,
+            "grooveVolume": 1.0,
+            "isGrooveMuted": false,
+            "tracks": [
+                {
+                    "globalId": 12,
+                    "startSample": 27648,
+                    "generatorType": 1,
+                    "presetName": "SineStutterR"
+                },
+                {
+                    "globalId": 13,
+                    "startSample": 31232,
+                    "generatorType": 1,
+                    "presetName": "SineStutterR"
+                },
+                {
+                    "globalId": 14,
+                    "startSample": 61952,
+                    "generatorType": 1,
+                    "presetName": "SineStutterR"
+                },
+                {
+                    "globalId": 15,
+                    "startSample": 0,
+                    "generatorType": 1,
+                    "presetName": "QuaseQuadradoR"
+                },
+                {
+                    "globalId": 22,
+                    "startSample": 13312,
+                    "generatorType": 1,
+                    "presetName": "MiauMetal"
+                },
+                {
+                    "globalId": 30,
+                    "startSample": 1024,
+                    "generatorType": 1,
+                    "presetName": "SerraDancanteR"
+                },
+                {
+                    "globalId": 33,
+                    "startSample": 13824,
+                    "generatorType": 1,
+                    "presetName": "FlinR"
+                }
+            ]
+        }
+    ],
+    "continuousTracks": [],
+    "presetNames": [
+        "SerraDancanteR",
+        "FlinR",
+        "SineStutterR"
+    ]
+}
