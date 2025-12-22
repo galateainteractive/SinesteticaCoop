@@ -1,8 +1,13 @@
 [
     {
-        "nome": "Minha Composição 1",
+        "nome": "Minha ComposiÃ§Ã£o 1",
         "pasta": "musicas/copi",
         "grooveFile": "indus_120bpm_00.wav"
+    },
+    {
+        "nome": "AutoSave_21-29-55",
+        "pasta": "musicas/AutoSave_21-29-55",
+        "grooveFile": "ByTheWayGrv2.wav"
     },
     {
         "nome": "Experimento 2",
