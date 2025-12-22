@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Sinestética Player - Physics Scope High Vis</title>
+    <title>Sinestética Player - Final Boxed Layout</title>
     <style>
         /* --- ESTILO BRUTALISTA HIGH CONTRAST --- */
         html, body { height: 100%; margin: 0; padding: 0; background: #000; color: #fff; font-family: 'Courier New', Courier, monospace; overflow-x: hidden; }
@@ -17,14 +17,18 @@
         
         .main-layout { display: flex; flex-direction: column; height: 100%; }
         
-        /* PAINEL SUPERIOR (ESCURO) */
+        /* --- PAINEL SUPERIOR (ESCURO / MASTER) --- */
         .top-panel { flex-shrink: 0; border-bottom: 4px solid #fff; padding: 15px; background: #000; z-index: 10; }
         
-        /* ÁREA DE SCROLL (CLARA/INVERTIDA) */
+        /* Canvas do Topo (Groove) */
+        .top-panel .canvas-container { position: relative; width: 100%; height: 100px; background: #000; display: flex; align-items: center; }
+        .top-panel canvas { border: 2px solid #fff; background: #000; } /* Caixa Branca no fundo Preto */
+
+        /* --- ÁREA DE SCROLL (CLARA / TRACKS) --- */
         .tracks-scroll { 
             flex: 1; 
             overflow-y: auto; 
-            background: #e0e0e0; 
+            background: #e0e0e0; /* Fundo Cinza para contraste */
             color: #000; 
             padding: 15px;
             -webkit-overflow-scrolling: touch;
@@ -33,24 +37,34 @@
         .tracks-scroll::-webkit-scrollbar { width: 12px; background: #000; border-left: 1px solid #333; }
         .tracks-scroll::-webkit-scrollbar-thumb { background: #fff; border: 2px solid #000; }
 
+        /* Canvas das Tracks (CORREÇÃO APLICADA AQUI) */
+        .tracks-scroll .canvas-container { 
+            position: relative; 
+            width: 100%; 
+            height: 100px; 
+            display: flex; 
+            align-items: center; 
+        }
+        
+        .tracks-scroll canvas { 
+            border: 2px solid #000; /* Borda Sólida Preta -> A "Caixa" */
+            background: #fff;       /* Fundo Branco Puro -> Destaca do cinza */
+            display: block;
+        }
+
+        /* --- CONTROLES E BOTÕES --- */
         .controls { display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-start; margin: 10px 0; border: 1px solid #222; padding: 10px; justify-content: space-between; }
         .control-group { display: flex; flex-direction: column; gap: 5px; font-size: 10px; text-transform: uppercase; flex: 1; min-width: 120px; }
         
         input[type=range] { width: 100%; height: 30px; accent-color: #fff; cursor: pointer; }
 
-        /* TRACK ROWS */
-        .track-row { display: flex; flex-direction: column; gap: 8px; padding: 15px 0; border-bottom: 2px solid #000; }
+        .track-row { display: flex; flex-direction: column; gap: 8px; padding: 15px 0; border-bottom: 2px solid #999; }
         
-        /* Canvas contexts */
-        .tracks-scroll .canvas-container { background: transparent; border-color: #000; }
-        .tracks-scroll canvas { border-color: #000; }
-        .top-panel .canvas-container { position: relative; width: 100%; height: 100px; background: #000; display: flex; align-items: center; }
-        .top-panel canvas { border: 1px solid #222; }
-
         canvas { display: block; width: 100%; height: 100%; box-sizing: border-box; }
         
         .track-info { display: flex; justify-content: space-between; align-items: center; }
         .track-label { font-size: 9px; text-transform: uppercase; font-weight: bold; }
+        
         .tracks-scroll .track-label { color: #000; }
         .top-panel .track-label { color: #888; }
         
@@ -358,9 +372,8 @@
             } else if (isPaused && lastWaveformData) {
                 dataArr.set(lastWaveformData);
             } else {
-                // Se parado, limpa
+                // Se parado, limpa (preto)
                 sCtx.fillStyle = '#000'; sCtx.fillRect(0,0,w,h);
-                // Desenha a grade mesmo parado? Não, mantém preto minimalista.
                 return;
             }
 
@@ -368,40 +381,40 @@
             sCtx.fillStyle = '#000'; 
             sCtx.fillRect(0,0,w,h);
 
-            // --- DESENHO DA RÉGUA FÍSICA (AGORA MAIS EVIDENTE) ---
+            // --- DESENHO DA RÉGUA FÍSICA (HIGH CONTRAST) ---
             const SPEED_OF_SOUND = 343; // m/s
             const totalSeconds = dataArr.length / audioCtx.sampleRate; 
             const totalMeters = totalSeconds * SPEED_OF_SOUND;
             const pixelsPerMeter = w / totalMeters;
 
             sCtx.lineWidth = 1;
-            sCtx.font = "bold 10px Courier New"; // Fonte em Negrito
+            sCtx.font = "bold 10px Courier New";
             sCtx.textAlign = "left";
 
             // Loop para desenhar marcas de metro
             for(let m = 1; m < totalMeters; m++) {
                 const xPos = m * pixelsPerMeter;
                 
-                // Linha Vertical (Cinza Médio - Mais visível)
+                // Linha Vertical (Cinza Médio)
                 sCtx.strokeStyle = '#555'; 
                 sCtx.beginPath();
                 sCtx.moveTo(xPos, 0);
                 sCtx.lineTo(xPos, h);
                 sCtx.stroke();
 
-                // Texto (Branco Sujo - Alto Contraste)
+                // Texto (Branco Sujo)
                 sCtx.fillStyle = '#ddd';
                 sCtx.fillText(m + "m", xPos + 4, h - 5);
             }
             
-            // Label da Escala Total (Amarelo Pálido para destaque técnico)
+            // Label da Escala Total
             sCtx.textAlign = "right";
-            sCtx.fillStyle = "#fffacd"; // LemonChiffon
+            sCtx.fillStyle = "#fffacd"; // Amarelo Claro
             sCtx.fillText(`AIR DISTANCE: ${totalMeters.toFixed(2)}m`, w - 5, 12);
 
             // --- DESENHO DA ONDA (BRANCO PURO) ---
             sCtx.strokeStyle = '#fff'; 
-            sCtx.lineWidth = 2; // Onda mais grossa
+            sCtx.lineWidth = 2;
             sCtx.beginPath();
             
             const slice = w / dataArr.length;
@@ -409,7 +422,6 @@
             
             for(let i = 0; i < dataArr.length; i++) {
                 const v = dataArr[i] / 128.0; 
-                // Ajuste fino de renderização
                 const yCorrected = (h/2) + ((dataArr[i] - 128) / 128) * (h/2) * visualGain;
 
                 if(i===0) sCtx.moveTo(x, yCorrected); 
