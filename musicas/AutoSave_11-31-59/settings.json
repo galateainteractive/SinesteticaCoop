@@ -1,0 +1,74 @@
+{
+    "compositionName": "AutoSave_11-31-59",
+    "isMetronome": false,
+    "bpm": 90.0,
+    "numberOfBars": 1,
+    "grooveName": "groove",
+    "numberOfGrooves": 1,
+    "grooveClipNames": [],
+    "numberOfSinesteticasPerGroove": [],
+    "maxPlayerHeight": 2.0,
+    "sourceGrooveSetName": "Jazzy",
+    "dashboardSessions": [
+        {
+            "sessionId": 0,
+            "grooveIndex": 0,
+            "grooveVolume": 1.0,
+            "isGrooveMuted": false,
+            "tracks": [
+                {
+                    "globalId": 2,
+                    "startSample": 1024,
+                    "generatorType": 1,
+                    "presetName": "SineStutterR"
+                },
+                {
+                    "globalId": 6,
+                    "startSample": 512,
+                    "generatorType": 1,
+                    "presetName": "SineStutterR"
+                },
+                {
+                    "globalId": 8,
+                    "startSample": 30720,
+                    "generatorType": 1,
+                    "presetName": "SineStutterR"
+                },
+                {
+                    "globalId": 14,
+                    "startSample": 1024,
+                    "generatorType": 1,
+                    "presetName": "QuaseQuadradoR"
+                },
+                {
+                    "globalId": 15,
+                    "startSample": 12800,
+                    "generatorType": 1,
+                    "presetName": "FlinR"
+                },
+                {
+                    "globalId": 20,
+                    "startSample": 57856,
+                    "generatorType": 1,
+                    "presetName": "PengR"
+                },
+                {
+                    "globalId": 22,
+                    "startSample": 1024,
+                    "generatorType": 1,
+                    "presetName": "MiauMetal"
+                }
+            ]
+        }
+    ],
+    "continuousTracks": [],
+    "presetNames": [
+        "SineStutterR",
+        "QuaseQuadradoR",
+        "PatchoulyR",
+        "FlinR",
+        "SerraDancanteR",
+        "PengR",
+        "MiauMetal"
+    ]
+}
