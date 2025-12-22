@@ -339,40 +339,98 @@
         }
 
         function animate() {
-            requestAnimationFrame(animate);
-            if (activeTrack === grooveData && !isPaused && currentSource) {
-                const progress = (audioCtx.currentTime - startTime) / grooveData.buffer.duration;
-                const el = document.getElementById('cursor-g');
-                if(el) { el.style.display = 'block'; el.style.left = (Math.min(progress, 1) * 100) + '%'; }
-            }
+    requestAnimationFrame(animate);
 
-            const scopeCanvas = document.getElementById('liveScope');
-            const sCtx = scopeCanvas.getContext('2d');
-            const dataArr = new Uint8Array(analyser.frequencyBinCount);
+    // --- CURSOR DO GROOVE ---
+    if (activeTrack === grooveData && !isPaused && currentSource) {
+        const progress = (audioCtx.currentTime - startTime) / grooveData.buffer.duration;
+        const el = document.getElementById('cursor-g');
+        if(el) { el.style.display = 'block'; el.style.left = (Math.min(progress, 1) * 100) + '%'; }
+    }
 
-            if (!isPaused && currentSource) {
-                analyser.getByteTimeDomainData(dataArr);
-                lastWaveformData = new Uint8Array(dataArr);
-            } else if (isPaused && lastWaveformData) {
-                dataArr.set(lastWaveformData);
-            } else {
-                sCtx.fillStyle = '#000'; sCtx.fillRect(0,0,scopeCanvas.width, scopeCanvas.height);
-                return;
-            }
+    // --- OSCILOSCÓPIO (SCOPE) ---
+    const scopeCanvas = document.getElementById('liveScope');
+    const sCtx = scopeCanvas.getContext('2d');
+    const w = scopeCanvas.width;
+    const h = scopeCanvas.height;
+    
+    // Pega os dados do áudio
+    const dataArr = new Uint8Array(analyser.frequencyBinCount);
+    
+    if (!isPaused && currentSource) {
+        analyser.getByteTimeDomainData(dataArr);
+        lastWaveformData = new Uint8Array(dataArr);
+    } else if (isPaused && lastWaveformData) {
+        dataArr.set(lastWaveformData);
+    } else {
+        // Se estiver parado e sem dados, limpa e sai
+        sCtx.fillStyle = '#000'; sCtx.fillRect(0,0,w,h);
+        return;
+    }
 
-            // Osciloscópio (sempre no fundo preto)
-            sCtx.fillStyle = '#000'; sCtx.fillRect(0,0,scopeCanvas.width, scopeCanvas.height);
-            sCtx.strokeStyle = '#fff'; sCtx.lineWidth = 2;
-            sCtx.beginPath();
-            const slice = scopeCanvas.width / dataArr.length;
-            let x = 0;
-            for(let i = 0; i < dataArr.length; i++) {
-                const y = ((dataArr[i] - 128) * visualGain * (scopeCanvas.height/256)) + (scopeCanvas.height/2);
-                if(i===0) sCtx.moveTo(x,y); else sCtx.lineTo(x,y);
-                x += slice;
-            }
-            sCtx.stroke();
-        }
+    // 1. Limpa o fundo (Preto)
+    sCtx.fillStyle = '#000'; 
+    sCtx.fillRect(0,0,w,h);
+
+    // --- DESENHO DA RÉGUA FÍSICA (METROS) ---
+    // A mágica acontece aqui:
+    const SPEED_OF_SOUND = 343; // m/s
+    // Quanto tempo (em segundos) esse buffer representa?
+    const totalSeconds = dataArr.length / audioCtx.sampleRate; 
+    // Quantos metros esse tempo representa?
+    const totalMeters = totalSeconds * SPEED_OF_SOUND;
+    
+    // Quantos pixels vale 1 metro?
+    const pixelsPerMeter = w / totalMeters;
+
+    sCtx.fillStyle = '#444'; // Cor do texto da régua
+    sCtx.strokeStyle = '#222'; // Cor da linha da régua (bem sutil)
+    sCtx.lineWidth = 1;
+    sCtx.font = "9px Courier New";
+    sCtx.textAlign = "left";
+
+    // Loop para desenhar cada marca de 1 metro
+    for(let m = 1; m < totalMeters; m++) {
+        const xPos = m * pixelsPerMeter;
+        
+        // Linha vertical
+        sCtx.beginPath();
+        sCtx.moveTo(xPos, 0);
+        sCtx.lineTo(xPos, h);
+        sCtx.stroke();
+
+        // Texto "1m", "2m", etc.
+        sCtx.fillText(m + "m", xPos + 2, h - 2);
+    }
+    
+    // Label indicando a escala total no canto superior direito
+    sCtx.textAlign = "right";
+    sCtx.fillStyle = "#666";
+    sCtx.fillText(`SCALE: ${totalMeters.toFixed(1)}m (AIR)`, w - 2, 10);
+
+    // --- DESENHO DA ONDA ---
+    sCtx.strokeStyle = '#fff'; 
+    sCtx.lineWidth = 2;
+    sCtx.beginPath();
+    
+    const slice = w / dataArr.length;
+    let x = 0;
+    
+    for(let i = 0; i < dataArr.length; i++) {
+        const v = dataArr[i] / 128.0; // Normaliza entre 0 e 2
+        const y = v * (h/2); // Escala para a altura do canvas (centrado seria h/2, mas o byteData vem com offset)
+        
+        // Ajuste fino para centralizar: (v - 1) é o desvio do centro.
+        // y = (h/2) + (v-1)*(h/2)*visualGain
+        const yCorrected = (h/2) + ((dataArr[i] - 128) / 128) * (h/2) * visualGain;
+
+        if(i===0) sCtx.moveTo(x, yCorrected); 
+        else sCtx.lineTo(x, yCorrected);
+        
+        x += slice;
+    }
+    sCtx.stroke();
+}
 
         document.getElementById('divisionSlider').oninput = (e) => {
             divisions = e.target.value;
@@ -387,3 +445,4 @@
     </script>
 </body>
 </html>
+
