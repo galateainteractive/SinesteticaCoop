@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Sinestética Player - Tactical Coop</title>
+    <title>Sinestética Player - Final Manual</title>
     <style>
         /* --- ESTILO BRUTALISTA HIGH CONTRAST --- */
         html, body { height: 100%; margin: 0; padding: 0; background: #000; color: #fff; font-family: 'Courier New', Courier, monospace; overflow-x: hidden; }
@@ -17,20 +17,18 @@
         
         .main-layout { display: flex; flex-direction: column; height: 100%; }
         
-        /* --- PAINEL SUPERIOR (ESCURO / MASTER) --- */
+        /* --- PAINEL SUPERIOR --- */
         .top-panel { flex-shrink: 0; border-bottom: 4px solid #fff; padding: 15px; background: #000; z-index: 10; position: relative; }
         
-        /* Header Nav */
         .nav-header { display: flex; justify-content: space-between; margin-bottom: 15px; }
         .back-btn { background: #000; color: #888; border: 1px solid #444; padding: 5px 10px; cursor: pointer; font-family: inherit; text-transform: uppercase; font-size: 10px; }
         .help-btn { background: #000; color: #fff; border: 1px solid #fff; padding: 5px 12px; cursor: pointer; font-family: inherit; font-weight: bold; font-size: 14px; }
         .help-btn:hover { background: #fff; color: #000; }
 
-        /* Canvas do Topo (Groove) */
         .top-panel .canvas-container { position: relative; width: 100%; height: 100px; background: #000; display: flex; align-items: center; }
         .top-panel canvas { border: 2px solid #fff; background: #000; } 
 
-        /* --- ÁREA DE SCROLL (CLARA / TRACKS) --- */
+        /* --- ÁREA DE SCROLL --- */
         .tracks-scroll { 
             flex: 1; 
             overflow-y: auto; 
@@ -53,8 +51,8 @@
         }
         
         .tracks-scroll canvas { 
-            border: 2px solid #000; /* Borda Sólida Preta */
-            background: #fff;       /* Fundo Branco */
+            border: 2px solid #000; 
+            background: #fff;       
             display: block;
         }
 
@@ -87,14 +85,14 @@
 
         .btn-pause { border-color: #666; color: #ccc; display: none; }
 
-        /* LIVE SCOPE ESTILO */
+        /* LIVE SCOPE */
         #liveScope { width: 100%; height: 80px; border: 1px solid #555; background: #000; }
         .loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: #000; display:none; align-items:center; justify-content:center; z-index:1000; color: #fff; }
 
         /* --- TACTICAL OVERLAY (HELP) --- */
         #help-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.92); /* Fundo bem escuro */
+            background: rgba(0,0,0,0.92);
             z-index: 999;
             display: none;
             overflow-y: auto;
@@ -103,18 +101,24 @@
             box-sizing: border-box;
         }
 
+        .help-section { margin-bottom: 30px; border-bottom: 1px dashed #444; padding-bottom: 20px; }
+        
         .help-box {
             border: 1px solid #fff;
             padding: 15px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             background: rgba(20,20,20,0.95);
             position: relative;
         }
         
-        .help-box h3 { margin: 0 0 10px 0; color: #ffff00; text-transform: uppercase; font-size: 14px; border-bottom: 1px solid #555; padding-bottom: 5px; letter-spacing: 1px; }
+        .help-title-main { color: #fff; font-size: 16px; margin: 0 0 10px 0; text-transform: uppercase; border: 2px solid #fff; display: inline-block; padding: 5px 10px; }
+        .help-subtitle { color: #aaa; font-size: 11px; margin-top: 5px; margin-bottom: 15px; max-width: 600px; }
+
+        .help-box h3 { margin: 0 0 10px 0; color: #ffff00; text-transform: uppercase; font-size: 13px; border-bottom: 1px solid #555; padding-bottom: 5px; letter-spacing: 1px; }
         .help-box p { font-size: 11px; line-height: 1.5; margin: 8px 0; color: #ddd; }
         .help-box strong { color: #fff; font-weight: bold; }
-        .help-formula { background: #333; padding: 5px; font-family: monospace; text-align: center; margin: 10px 0; border: 1px solid #555; font-size: 12px; color: #8f8; }
+        
+        .help-formula { background: #222; padding: 8px; font-family: monospace; text-align: center; margin: 10px 0; border: 1px solid #666; font-size: 11px; color: #0f0; }
 
         .cheat-sheet {
             width: 100%;
@@ -143,59 +147,55 @@
     <div id="loading" class="loading-overlay"><h2>LOADING...</h2></div>
 
     <div id="help-overlay" onclick="toggleHelp()">
-        <div style="text-align:center; margin-bottom: 20px;">
-            <h1 style="border: 2px solid #fff; display:inline-block; padding: 10px; font-size: 18px;">MANUAL DE CAMPO</h1>
-            <p style="font-size: 10px; margin-top:5px; color:#888;">[ TOQUE NA TELA PARA FECHAR ]</p>
+        <div class="help-section" style="text-align:left; margin-top: 10px;">
+            <h1 class="help-title-main">PROTOCOLO DE COMUNICAÇÃO</h1>
+            <p class="help-subtitle">
+                SUA MISSÃO: Guiar o Player no <strong>HEADSET</strong>. Ele tem os controles, mas você tem o mapa.
+                <br><br>
+                <strong>ESTRATÉGIA:</strong><br>
+                1. Localize onde o som entra no Groove.<br>
+                2. Analise Ritmo, Afinação e Timbre.<br>
+                3. Transmita: <strong>Cantarole</strong> (intuição) ou use os <strong>Dados Técnicos</strong> (ciência) abaixo.
+            </p>
+            <p style="font-size: 10px; color:#666; margin-top:10px;">[ TOQUE EM QUALQUER LUGAR PARA FECHAR ]</p>
         </div>
 
-        <div class="help-box" style="margin-top: 80px;">
-            <h3>1. FÍSICA DO SOM (CÁLCULO)</h3>
-            <p>O <strong>Comprimento de Onda</strong> (o tamanho da repetição da forma no gráfico) define a frequência.</p>
-            <p><strong>QUANTO MAIS GRAVE = MAIOR A ONDA.</strong></p>
+        <div class="help-box">
+            <h3>1. A CONSTANTE 343 (AFINAÇÃO)</h3>
+            <p><strong>FÍSICA DO SOM:</strong> O gráfico superior simula o som viajando no ar. A velocidade do som é de <strong>343 m/s</strong>.</p>
+            <p>Para descobrir a nota exata sem ouvir, usamos a matemática: dividimos a Velocidade pelo Comprimento da onda (a distância da repetição no gráfico).</p>
             
             <div class="help-formula">
-                Freq (Hz) = 343 ÷ Comprimento (m)
+                FREQ (Hz) = 343 ÷ COMPRIMENTO (m)
             </div>
             
-            <p style="margin-top:10px; font-size:10px; text-transform:uppercase; color:#aaa;">Tabela de Referência (Oitava 3):</p>
             <table class="cheat-sheet">
-                <tr><th>NOTA</th><th>FREQ (Hz)</th><th>COMPRIMENTO (m)</th></tr>
-                <tr><td>C3 (Dó)</td><td>130.81</td><td>~ 2.62m</td></tr>
-                <tr><td>D3 (Ré)</td><td>146.83</td><td>~ 2.33m</td></tr>
-                <tr><td>E3 (Mi)</td><td>164.81</td><td>~ 2.08m</td></tr>
-                <tr><td>F3 (Fá)</td><td>174.61</td><td>~ 1.96m</td></tr>
-                <tr><td>G3 (Sol)</td><td>196.00</td><td>~ 1.75m</td></tr>
-                <tr><td>A3 (Lá)</td><td>220.00</td><td>~ 1.56m</td></tr>
-                <tr><td>B3 (Si)</td><td>246.94</td><td>~ 1.39m</td></tr>
+                <tr><th>NOTA (Oitava 3)</th><th>FREQ</th><th>COMPRIMENTO</th></tr>
+                <tr><td>C3 (Dó)</td><td>130 Hz</td><td>~ 2.62m</td></tr>
+                <tr><td>E3 (Mi)</td><td>164 Hz</td><td>~ 2.08m</td></tr>
+                <tr><td>G3 (Sol)</td><td>196 Hz</td><td>~ 1.75m</td></tr>
+                <tr><td>A3 (Lá)</td><td>220 Hz</td><td>~ 1.56m</td></tr>
+                <tr><td>C4 (Dó Médio)</td><td>261 Hz</td><td>~ 1.31m</td></tr>
             </table>
-            <p style="font-size:10px; margin-top:5px; border-top:1px solid #444; padding-top:5px;">
-                <strong>REGRA DA OITAVA:</strong><br>
-                Oitava Acima = Dobro da Frequência (Metade do tamanho).<br>
-                Oitava Abaixo = Metade da Frequência (Dobro do tamanho).
-            </p>
+            <p style="font-size:10px; margin-top:5px; color:#888;">*Quanto MAIOR a onda (metros), mais GRAVE o som.</p>
         </div>
 
         <div class="help-box">
-            <h3>2. SINCRONIA & RITMO (DIVS)</h3>
-            <p><strong>CENÁRIO:</strong> O Player VR ouve um loop circular constante. Você (Mobile) só ouve quando aperta o play.</p>
-            <p><strong>MISSÃO:</strong> Use as linhas tracejadas do <strong>MASTER GROOVE</strong> (no topo) para mapear o tempo.</p>
-            <ul>
-                <li>Identifique onde é o <strong>Tempo 1</strong>.</li>
-                <li>Veja em qual linha da grade (Divisão) cada Track entra.</li>
-                <li>Cante o ritmo para o VR ("Tu-tá-tu-tá") ou dê coordenadas: <em>"O som entra na terceira divisão do compasso"</em>.</li>
-            </ul>
+            <h3>2. SINCRONIA (RITMO & DIVS)</h3>
+            <p>O Player no Headset ouve um loop constante. Use o slider <strong>DIVS</strong> para fatiar o tempo visualmente.</p>
+            <p><strong>AÇÃO:</strong> Identifique em qual linha da grade o som começa e dê a coordenada ("Entra na 3ª divisão") ou cante o ritmo visualizando a grade.</p>
         </div>
 
         <div class="help-box">
-            <h3>3. ASSINATURA TÍMBRICA</h3>
-            <p>Cada som possui uma forma visual única (um desenho).</p>
-            <p>Descreva a geometria da onda para o VR encontrar o timbre correto:</p>
-            <ul>
-                <li>É uma onda lisa e redonda?</li>
-                <li>É quadrada e "digital"?</li>
-                <li>É pontuda e agressiva?</li>
-                <li>O som começa forte e some rápido (triângulo)?</li>
-            </ul>
+            <h3>3. IDENTIDADE (TIMBRE)</h3>
+            <p>Cada som tem uma "impressão digital" visual nas tracks de baixo.</p>
+            <p>Se não conseguir imitar o som com a voz, descreva a geometria: "É redondo/suave", "É quadrado/robótico" ou "É pontudo/áspero".</p>
+        </div>
+
+        <div class="help-box">
+            <h3>4. VISUAL GAIN (ZOOM)</h3>
+            <p>O slider <strong>GAIN</strong> é um microscópio visual.</p>
+            <p><strong>NOTA:</strong> Ele NÃO aumenta o volume do áudio. Ele apenas amplia o desenho da onda para que você enxergue detalhes em sons muito baixos.</p>
         </div>
     </div>
 
@@ -423,7 +423,6 @@
             
             const mainColor = isGroove ? '#fff' : '#000';
 
-            // 1. Desenha as DIVISÕES
             if(isGroove) {
                 ctx.strokeStyle = mainColor; 
                 ctx.lineWidth = 1;         
@@ -439,7 +438,6 @@
                 ctx.setLineDash([]); 
             }
 
-            // 2. Desenha a ONDA
             ctx.lineWidth = 2; 
             ctx.strokeStyle = mainColor;
             const step = w / data.waveform.length;
@@ -457,14 +455,12 @@
         function animate() {
             requestAnimationFrame(animate);
 
-            // CURSOR
             if (activeTrack === grooveData && !isPaused && currentSource) {
                 const progress = (audioCtx.currentTime - startTime) / grooveData.buffer.duration;
                 const el = document.getElementById('cursor-g');
                 if(el) { el.style.display = 'block'; el.style.left = (Math.min(progress, 1) * 100) + '%'; }
             }
 
-            // OSCILOSCÓPIO
             const scopeCanvas = document.getElementById('liveScope');
             const sCtx = scopeCanvas.getContext('2d');
             const w = scopeCanvas.width;
@@ -485,7 +481,6 @@
             sCtx.fillStyle = '#000'; 
             sCtx.fillRect(0,0,w,h);
 
-            // RÉGUA FÍSICA
             const SPEED_OF_SOUND = 343; // m/s
             const totalSeconds = dataArr.length / audioCtx.sampleRate; 
             const totalMeters = totalSeconds * SPEED_OF_SOUND;
@@ -510,7 +505,6 @@
             sCtx.fillStyle = "#fffacd"; 
             sCtx.fillText(`AIR DISTANCE: ${totalMeters.toFixed(2)}m`, w - 5, 12);
 
-            // ONDA
             sCtx.strokeStyle = '#fff'; 
             sCtx.lineWidth = 2;
             sCtx.beginPath();
