@@ -1,0 +1,67 @@
+{
+    "compositionName": "AutoSave_21-29-55",
+    "isMetronome": false,
+    "bpm": 120.0,
+    "numberOfBars": 1,
+    "grooveName": "groove",
+    "numberOfGrooves": 1,
+    "grooveClipNames": [],
+    "numberOfSinesteticasPerGroove": [],
+    "maxPlayerHeight": 2.0,
+    "sourceGrooveSetName": "ByTheWay",
+    "dashboardSessions": [
+        {
+            "sessionId": 0,
+            "grooveIndex": 6,
+            "grooveVolume": 1.0,
+            "isGrooveMuted": false,
+            "tracks": [
+                {
+                    "globalId": 6,
+                    "startSample": 1536,
+                    "generatorType": 1,
+                    "presetName": "QuaseQuadradoR"
+                },
+                {
+                    "globalId": 9,
+                    "startSample": 43776,
+                    "generatorType": 1,
+                    "presetName": "SineStutterR"
+                },
+                {
+                    "globalId": 10,
+                    "startSample": 68352,
+                    "generatorType": 1,
+                    "presetName": "MiauMetal"
+                },
+                {
+                    "globalId": 11,
+                    "startSample": 9216,
+                    "generatorType": 1,
+                    "presetName": "FlinR"
+                },
+                {
+                    "globalId": 13,
+                    "startSample": 8960,
+                    "generatorType": 1,
+                    "presetName": "PatchoulyR"
+                },
+                {
+                    "globalId": 17,
+                    "startSample": 8960,
+                    "generatorType": 1,
+                    "presetName": "MiauMetal"
+                }
+            ]
+        }
+    ],
+    "continuousTracks": [],
+    "presetNames": [
+        "SineStutterR",
+        "QuaseQuadradoR",
+        "MiauMetal",
+        "FlinR",
+        "PatchoulyR",
+        "PengR"
+    ]
+}
