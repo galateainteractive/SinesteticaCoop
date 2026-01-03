@@ -9,7 +9,7 @@ const GAME_TEXTS = {
     overlaySubtitle: `SUA MISSÃO: Guiar o Player no <strong>HEADSET</strong>. Ele tem os controles, mas você tem o mapa.<br><br>
                       <strong>ESTRATÉGIA:</strong><br>
                       1. Localize onde o som entra no Groove.<br>
-                      2. Analise Ritmo, Afinação e Timbre.<br>
+                      2. Analise Ritmo, altura (grave, agudo, qual a nota) e timbre.<br>
                       3. Transmita: <strong>Cantarole</strong> (intuição) ou use os <strong>Dados Técnicos</strong> (ciência) abaixo.`,
 
     // Seção 1: Física
@@ -47,3 +47,4 @@ const GAME_TEXTS = {
     section3Title: "3. IDENTIDADE (TIMBRE)",
     section3Content: `Descreva a geometria da onda nas tracks de baixo: "Redonda", "Quadrada", "Pontuda", "Crescente".`
 };
+
