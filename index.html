@@ -567,8 +567,9 @@
             // --- Lógica de Steps: 1m, 0.5m ou 0.1m (limpo) ---
             let stepSize = 1;
             let precision = 0;
-            // Se zoom for alto, mostra 0.1m (10cm)
-            if (scaledPixelsPerMeter > 1000) { stepSize = 0.1; precision = 1; }
+            
+            // MUDEI DE 1000 PARA 400 AQUI EMBAIXO:
+            if (scaledPixelsPerMeter > 400) { stepSize = 0.1; precision = 1; }
             else if (scaledPixelsPerMeter > 250) { stepSize = 0.5; precision = 1; }
             else if (scaledPixelsPerMeter > 100) { stepSize = 0.5; precision = 1; }
 
@@ -654,3 +655,4 @@
     </script>
 </body>
 </html>
+
