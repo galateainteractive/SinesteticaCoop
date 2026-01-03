@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Sinestética Player - Precision Lab v2</title>
+    <title>Sinestética Player - Final</title>
     <style>
         /* --- ESTILO BRUTALISTA HIGH CONTRAST --- */
         html, body { height: 100%; margin: 0; padding: 0; background: #000; color: #fff; font-family: 'Courier New', Courier, monospace; overflow-x: hidden; }
@@ -25,8 +25,10 @@
         .help-btn { background: #000; color: #fff; border: 1px solid #fff; padding: 5px 12px; cursor: pointer; font-family: inherit; font-weight: bold; font-size: 14px; }
         .help-btn:hover { background: #fff; color: #000; }
 
-        .top-panel .canvas-container { position: relative; width: 100%; height: 100px; background: #000; display: flex; align-items: center; }
-        .top-panel canvas { border: 2px solid #fff; background: #000; } 
+        /* Canvas Container Topo */
+        .top-panel .canvas-container { position: relative; width: 100%; height: 120px; background: #000; display: flex; align-items: center; }
+        /* Removemos a borda CSS do topo para desenhar manualmente e fazer a linha passar */
+        .top-panel canvas { border: none; background: #000; } 
 
         /* --- ÁREA DE SCROLL --- */
         .tracks-scroll { 
@@ -85,24 +87,16 @@
 
         .btn-pause { border-color: #666; color: #ccc; display: none; }
 
-        /* LIVE SCOPE COM CURSOR DE MÃOZINHA */
-        #liveScope { 
-            width: 100%; 
-            height: 80px; 
-            border: 1px solid #555; 
-            background: #000; 
-            cursor: grab; /* Indica que pode arrastar */
-        }
-        #liveScope:active {
-            cursor: grabbing; /* Mão fechada quando clica */
-        }
+        /* LIVE SCOPE */
+        #liveScope { width: 100%; height: 80px; border: 1px solid #555; background: #000; cursor: grab; }
+        #liveScope:active { cursor: grabbing; }
 
         .loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: #000; display:none; align-items:center; justify-content:center; z-index:1000; color: #fff; }
 
         /* --- TACTICAL OVERLAY (HELP) --- */
         #help-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.92);
+            background: rgba(0,0,0,0.95);
             z-index: 999;
             display: none;
             overflow-y: auto;
@@ -180,12 +174,15 @@
             </div>
             
             <table class="cheat-sheet">
-                <tr><th>NOTA (Oitava 3)</th><th>FREQ</th><th>COMPRIMENTO</th></tr>
-                <tr><td>C3 (Dó)</td><td>130 Hz</td><td>~ 2.62m</td></tr>
-                <tr><td>E3 (Mi)</td><td>164 Hz</td><td>~ 2.08m</td></tr>
-                <tr><td>G3 (Sol)</td><td>196 Hz</td><td>~ 1.75m</td></tr>
-                <tr><td>A3 (Lá)</td><td>220 Hz</td><td>~ 1.56m</td></tr>
-                <tr><td>C4 (Dó Médio)</td><td>261 Hz</td><td>~ 1.31m</td></tr>
+                <tr><th>NOTA</th><th>FREQ (Hz)</th><th>COMPRIMENTO (m)</th></tr>
+                <tr><td>C3 (Dó)</td><td>130.8</td><td>~ 2.62m</td></tr>
+                <tr><td>D3 (Ré)</td><td>146.8</td><td>~ 2.33m</td></tr>
+                <tr><td>E3 (Mi)</td><td>164.8</td><td>~ 2.08m</td></tr>
+                <tr><td>F3 (Fá)</td><td>174.6</td><td>~ 1.96m</td></tr>
+                <tr><td>G3 (Sol)</td><td>196.0</td><td>~ 1.75m</td></tr>
+                <tr><td>A3 (Lá)</td><td>220.0</td><td>~ 1.56m</td></tr>
+                <tr><td>B3 (Si)</td><td>246.9</td><td>~ 1.39m</td></tr>
+                <tr><td>C4 (Dó)</td><td>261.6</td><td>~ 1.31m</td></tr>
             </table>
             
             <p style="font-size:10px; margin-top:8px; border-top:1px dashed #555; padding-top:5px;">
@@ -260,8 +257,7 @@
         let scopeZoom = 1.0; 
         let divisions = 4;
 
-        // Variáveis para o Arraste (Pan)
-        let scopeOffset = 0; // Deslocamento em pixels
+        let scopeOffset = 0; 
         let isDragging = false;
         let lastMouseX = 0;
 
@@ -279,22 +275,18 @@
         }
 
         window.onload = async () => {
-            // Setup Listeners de Arraste no Canvas
             const cvs = document.getElementById('liveScope');
             
-            // Mouse Events
             cvs.addEventListener('mousedown', (e) => { isDragging = true; lastMouseX = e.clientX; });
-            window.addEventListener('mouseup', () => { isDragging = false; }); // Window pega se soltar fora
+            window.addEventListener('mouseup', () => { isDragging = false; }); 
             cvs.addEventListener('mousemove', (e) => {
                 if(!isDragging) return;
                 const delta = e.clientX - lastMouseX;
                 scopeOffset += delta;
-                // Bloqueia arraste para o futuro (offset > 0)
                 if(scopeOffset > 0) scopeOffset = 0; 
                 lastMouseX = e.clientX;
             });
 
-            // Touch Events (Celular)
             cvs.addEventListener('touchstart', (e) => { isDragging = true; lastMouseX = e.touches[0].clientX; });
             cvs.addEventListener('touchend', () => { isDragging = false; });
             cvs.addEventListener('touchmove', (e) => {
@@ -303,7 +295,7 @@
                 scopeOffset += delta;
                 if(scopeOffset > 0) scopeOffset = 0; 
                 lastMouseX = e.touches[0].clientX;
-                e.preventDefault(); // Evita scroll da tela
+                e.preventDefault(); 
             });
 
             try {
@@ -436,7 +428,7 @@
                         <div class="track-label">${data.label}</div>
                     </div>
                     <div class="canvas-container">
-                        <canvas id="canv-${isGroove?'g':data.id}" width="800" height="160"></canvas>
+                        <canvas id="canv-${isGroove?'g':data.id}" width="800" height="${isGroove?120:100}"></canvas>
                         ${isGroove ? '<div id="cursor-g" class="cursor-groove"></div>' : ''}
                     </div>
                     <div class="btn-group"></div>`;
@@ -467,7 +459,32 @@
             ctx.clearRect(0,0,w,h);
             
             const mainColor = isGroove ? '#fff' : '#000';
+            
+            // --- BOX DO TRACK (MANUAL) ---
+            // Se for Groove, desenha a caixa menor (com margem) para a linha sobrar
+            const marginY = isGroove ? 15 : 0; 
+            const boxHeight = h - (marginY * 2);
 
+            // Desenha a borda da caixa
+            ctx.strokeStyle = isGroove ? '#fff' : '#000';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(0, marginY, w, boxHeight);
+
+            // --- ONDA ---
+            // A onda é desenhada DENTRO da altura da caixa
+            const step = w / data.waveform.length;
+            const waveCenter = h / 2;
+            const waveMaxAmp = boxHeight * 0.8; // 80% da altura da caixa
+
+            ctx.beginPath();
+            data.waveform.forEach((v, i) => {
+                const amp = v * (waveMaxAmp/2) * visualGain;
+                ctx.moveTo(i*step, waveCenter - amp); 
+                ctx.lineTo(i*step, waveCenter + amp);
+            });
+            ctx.stroke();
+
+            // --- DIVS (GRADE) - DESENHADA POR ÚLTIMO PARA FICAR POR CIMA ---
             if(isGroove) {
                 ctx.strokeStyle = mainColor; 
                 ctx.lineWidth = 1;         
@@ -476,25 +493,13 @@
                 for(let i=1; i<divisions; i++) {
                     const x = (w / divisions) * i;
                     ctx.beginPath(); 
+                    // Linha vai de 0 até h (ALTURA TOTAL), passando da caixa
                     ctx.moveTo(x, 0); 
                     ctx.lineTo(x, h);
                     ctx.stroke();
                 }
                 ctx.setLineDash([]); 
             }
-
-            ctx.lineWidth = 2; 
-            ctx.strokeStyle = mainColor;
-            const step = w / data.waveform.length;
-            const waveHeightLimit = h * 0.7; 
-            
-            ctx.beginPath();
-            data.waveform.forEach((v, i) => {
-                const amp = v * (waveHeightLimit/2) * visualGain;
-                ctx.moveTo(i*step, (h/2)-amp); 
-                ctx.lineTo(i*step, (h/2)+amp);
-            });
-            ctx.stroke();
         }
 
         function animate() {
@@ -523,11 +528,9 @@
                 return;
             }
 
-            // Limpa
             sCtx.fillStyle = '#000'; 
             sCtx.fillRect(0,0,w,h);
 
-            // --- FÍSICA & CÁLCULOS ---
             const SPEED_OF_SOUND = 343; 
             const totalSeconds = dataArr.length / audioCtx.sampleRate; 
             const totalMeters = totalSeconds * SPEED_OF_SOUND;
@@ -535,12 +538,10 @@
             const basePixelsPerMeter = w / totalMeters;
             const scaledPixelsPerMeter = basePixelsPerMeter * scopeZoom;
 
-            // --- RÉGUA ADAPTATIVA ---
             sCtx.lineWidth = 1;
             sCtx.font = "10px Courier New";
             sCtx.textAlign = "left";
 
-            // Lógica agressiva de steps (1m -> 0.5m -> 0.1m -> 0.01m)
             let stepSize = 1;
             let precision = 0;
             
@@ -550,19 +551,15 @@
 
             const maxVisibleMeters = (w - scopeOffset) / scaledPixelsPerMeter;
             
-            // Loop de desenho da régua
             for(let m = 0; m < maxVisibleMeters + stepSize; m += stepSize) {
-                // Arredonda m para evitar erros de float (0.30000004)
                 m = Math.round(m * 100) / 100;
                 if(m === 0) continue; 
                 
                 const xPos = (m * scaledPixelsPerMeter) + scopeOffset;
                 
-                // Se saiu da tela pela esquerda, ignora
                 if(xPos < 0) continue;
                 if(xPos > w) break;
 
-                // Estilo visual: Inteiros mais fortes, decimais mais fracos
                 const isInteger = Number.isInteger(m);
                 sCtx.strokeStyle = isInteger ? '#666' : '#333'; 
                 sCtx.beginPath();
@@ -570,34 +567,30 @@
                 sCtx.lineTo(xPos, h);
                 sCtx.stroke();
 
-                // Texto
                 sCtx.fillStyle = isInteger ? '#fff' : '#888';
                 sCtx.fillText(m.toFixed(precision) + "m", xPos + 4, h - 5);
             }
             
-            // Info do Zoom
             sCtx.textAlign = "right";
             sCtx.fillStyle = "#fffacd"; 
             sCtx.fillText(`SCOPE: ${scopeZoom.toFixed(1)}x`, w - 5, 12);
 
-            // --- DESENHO DA ONDA (APLICA ZOOM E OFFSET) ---
             sCtx.strokeStyle = '#fff'; 
             sCtx.lineWidth = 2;
             sCtx.beginPath();
             
             const slice = (w / dataArr.length) * scopeZoom;
-            let x = scopeOffset; // Começa deslocado pelo arraste
+            let x = scopeOffset;
             
             for(let i = 0; i < dataArr.length; i++) {
                 const v = dataArr[i] / 128.0; 
                 const yCorrected = (h/2) + ((dataArr[i] - 128) / 128) * (h/2) * visualGain;
                 
-                // Otimização: Não desenha se estiver fora da tela
                 if (x >= -slice && x <= w + slice) {
                     if(i===0) sCtx.moveTo(x, yCorrected); 
                     else sCtx.lineTo(x, yCorrected);
                 } else if (i === 0) {
-                     sCtx.moveTo(x, yCorrected); // Precisa mover o cursor mesmo fora
+                     sCtx.moveTo(x, yCorrected); 
                 }
 
                 x += slice;
@@ -617,9 +610,6 @@
         document.getElementById('hZoomSlider').oninput = (e) => {
             scopeZoom = parseFloat(e.target.value);
             document.getElementById('zoomLabel').textContent = scopeZoom.toFixed(1) + "x";
-            // Ao mudar o zoom, resetamos o offset pra não perder a onda?
-            // Melhor resetar para evitar confusão ou ajustar proporcionalmente. 
-            // Vamos resetar por segurança nesta versão.
             scopeOffset = 0; 
         };
     </script>
