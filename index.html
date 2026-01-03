@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Sinestética Player - Final v12</title>
+    <title>Sinestética Player - Final v13</title>
     <script src="manual.js" charset="utf-8"></script> 
     <style>
         /* --- ESTILO GERAL --- */
@@ -22,7 +22,9 @@
         .top-panel { flex-shrink: 0; border-bottom: 4px solid #fff; padding: 15px; background: #000; z-index: 10; position: relative; }
         
         .nav-header { display: flex; justify-content: space-between; margin-bottom: 15px; }
-        .back-btn { background: #000; color: #888; border: 1px solid #444; padding: 5px 10px; cursor: pointer; font-family: inherit; text-transform: uppercase; font-size: 10px; }
+        
+        /* AJUSTE 1: Botão Back agora é branco puro igual ao Help */
+        .back-btn { background: #000; color: #fff; border: 1px solid #fff; padding: 5px 10px; cursor: pointer; font-family: inherit; text-transform: uppercase; font-size: 10px; }
         .help-btn { background: #000; color: #fff; border: 1px solid #fff; padding: 5px 12px; cursor: pointer; font-family: inherit; font-weight: bold; font-size: 14px; }
         .help-btn:hover { background: #fff; color: #000; }
 
@@ -44,24 +46,37 @@
         }
         @keyframes blink { 0% {opacity:1;} 50% {opacity:0.5;} 100% {opacity:1;} }
 
-        /* --- BARRA GROOVE (ALINHADA COM SPACE-BETWEEN) --- */
+        /* --- BARRA GROOVE --- */
         .groove-toolbar {
             display: flex; 
-            justify-content: space-between; /* Botão na Esq, Slider na Dir */
+            justify-content: space-between; 
             align-items: center;
-            margin-top: 15px; margin-bottom: 5px; padding: 10px 5px 0 5px;
+            margin-top: 15px; 
+            margin-bottom: 5px; 
+            padding: 10px 5px 0 5px;
             border-top: 1px dashed #333;
+            /* AJUSTE 2: Gap para garantir separação entre botão e slider */
+            gap: 20px; 
         }
-        .groove-control-group { display: flex; align-items: center; gap: 10px; font-size: 10px; text-transform: uppercase; }
+        
+        .groove-control-group { 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            font-size: 10px; 
+            text-transform: uppercase;
+            /* Garante que o texto não cole na esquerda se a tela encolher */
+            text-align: right; 
+        }
         .groove-control-group input { width: 100px; margin-left: 5px; }
 
-        /* Botão Play Groove (Estilo) */
         .play-groove-btn {
             background: #000; color: #fff;
             border: 1px solid #fff;
             padding: 8px 15px;
             font-family: inherit; font-weight: bold; font-size: 11px;
             cursor: pointer; text-transform: uppercase;
+            white-space: nowrap; /* Não quebra linha */
         }
         .play-groove-btn:active { background: #333; }
         .groove-playing { background: #fff; color: #000; border-color: #000; }
@@ -94,7 +109,7 @@
         .btn-pause { border-color: #666; color: #ccc; display: none; }
 
         /* LIVE SCOPE */
-        #liveScope { width: 100%; height: 120px; border: 1px solid #555; background: #000; cursor: grab; }
+        #liveScope { width: 100%; height: 80px; border: 1px solid #555; background: #000; cursor: grab; }
         #liveScope:active { cursor: grabbing; }
 
         .loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: #000; display:none; align-items:center; justify-content:center; z-index:1000; color: #fff; }
@@ -182,7 +197,6 @@
 
                 <div class="groove-toolbar">
                     <button id="groovePlayBtn" class="play-groove-btn">[ PLAY GROOVE ]</button>
-
                     <div class="groove-control-group">
                         <label>DIVISÕES DO RITMO: <span id="divLabel">4</span></label>
                         <input type="range" id="divisionSlider" min="2" max="16" step="1" value="4" />
@@ -190,7 +204,6 @@
                 </div>
                 
                 <div id="grooveContainer"></div>
-
             </div>
 
             <div class="tracks-scroll">
@@ -202,7 +215,6 @@
     <script>
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         const analyser = audioCtx.createAnalyser();
-        // Aumentei fftSize para 4096 para ter maior resolução e alcance de ~14m no 1x
         analyser.fftSize = 4096; 
         analyser.connect(audioCtx.destination);
         
@@ -255,14 +267,35 @@
             setZoomState(false); 
 
             const cvs = document.getElementById('liveScope');
+            
+            // --- MANIPULAÇÃO DE ARRASTE COM LIMITE (CLAMP) ---
+            // AJUSTE 3: Calcula o máximo de arraste permitido para não ver tela vazia
             const handleStart = (x) => { isDragging = true; lastMouseX = x; };
+            
             const handleMove = (x) => {
                 if(!isDragging) return;
                 const delta = x - lastMouseX;
                 scopeOffset += delta;
-                if(scopeOffset > 0) scopeOffset = 0; 
+                
+                // 1. Limite Esquerdo (Início): Não pode ser maior que 0
+                if(scopeOffset > 0) scopeOffset = 0;
+                
+                // 2. Limite Direito (Fim da Onda):
+                // A onda desenha em (canvasWidth * scopeZoom) pixels.
+                // O canvas mostra (canvasWidth) pixels.
+                // O máximo que podemos "esconder" na esquerda é (LarguraTotal - LarguraTela).
+                // Como offset é negativo, o MÍNIMO valor é -(LarguraTotal - LarguraTela).
+                
+                // Pegamos a largura real do canvas (internal resolution)
+                const w = cvs.width; // 800 (definido no HTML em runtime, mas aqui assumimos o setup do animate)
+                const totalWidth = w * scopeZoom;
+                const minOffset = -(totalWidth - w);
+                
+                if (scopeOffset < minOffset) scopeOffset = minOffset;
+
                 lastMouseX = x;
             };
+            
             cvs.addEventListener('mousedown', (e) => handleStart(e.clientX));
             window.addEventListener('mouseup', () => { isDragging = false; });
             cvs.addEventListener('mousemove', (e) => handleMove(e.clientX));
@@ -327,7 +360,6 @@
                     } catch (e) {}
                 }
                 
-                // Configura o botão do Groove
                 const grooveBtn = document.getElementById('groovePlayBtn');
                 grooveBtn.onclick = () => {
                     if(activeTrack === grooveData) {
@@ -353,7 +385,6 @@
             currentBuffer = data.buffer;
             currentOffset = data.offset;
 
-            // Atualiza botões
             if(grooveBtn) {
                 grooveBtn.textContent = "[ PLAYING GROOVE ]";
                 grooveBtn.classList.add('groove-playing');
@@ -399,11 +430,10 @@
             currentSource.start(0, actualStartPoint);
             startTime = audioCtx.currentTime - offsetTime;
             
-            // CORREÇÃO DO BUG: Limpar activeTrack quando acabar
             currentSource.onended = () => { 
                 if (!isPaused && currentSource) {
                     resetUI();
-                    activeTrack = null; // Isso permite tocar a mesma track novamente do zero
+                    activeTrack = null;
                 }
             };
         }
@@ -457,7 +487,6 @@
                 row.className = 'track-row';
                 
                 if(isGroove) {
-                    // Groove: Apenas canvas (Botão foi pra barra)
                     row.innerHTML = `
                     <div class="canvas-container" style="position:relative;">
                         <canvas id="canv-g" width="800" height="120"></canvas>
@@ -465,7 +494,6 @@
                     </div>`;
                     cont.appendChild(row);
                 } else {
-                    // Tracks: Padrão
                     row.innerHTML = `
                         <div class="track-info">
                             <div class="track-label">${data.label}</div>
@@ -546,10 +574,10 @@
 
             const cvs = document.getElementById('liveScope');
             const sCtx = cvs.getContext('2d');
-            const w = 800; // Simulado para canvas width
+            const w = 800; 
             const h = cvs.height; 
             
-            const dataArr = new Uint8Array(analyser.frequencyBinCount); // 2048 bins agora
+            const dataArr = new Uint8Array(analyser.frequencyBinCount);
             
             if (!isPaused && currentSource) {
                 analyser.getByteTimeDomainData(dataArr);
@@ -564,17 +592,14 @@
             sCtx.fillStyle = '#000'; 
             sCtx.fillRect(0,0,w,h);
 
-            // --- DIVISÃO DO CANVAS: ONDA vs RÉGUA ---
-            const rulerHeight = 20; // Altura da régua embaixo
-            const waveAreaHeight = h - rulerHeight; // 100px para onda
+            const rulerHeight = 20; 
+            const waveAreaHeight = h - rulerHeight; 
             const waveCenter = waveAreaHeight / 2;
 
-            // Fundo da régua para contraste
             sCtx.fillStyle = '#111';
             sCtx.fillRect(0, waveAreaHeight, w, rulerHeight);
 
             const SPEED_OF_SOUND = 343; 
-            // sampleRate / dataArr.length -> Tempo total do buffer
             const totalSeconds = dataArr.length / audioCtx.sampleRate; 
             const totalMeters = totalSeconds * SPEED_OF_SOUND;
             
@@ -593,7 +618,6 @@
 
             const maxVisibleMeters = (w - scopeOffset) / scaledPixelsPerMeter;
             
-            // --- DESENHO DA RÉGUA (NO ANDAR DE BAIXO) ---
             for(let m = 0; m < maxVisibleMeters + stepSize; m += stepSize) {
                 m = Math.round(m * 100) / 100;
                 if(m === 0) continue; 
@@ -601,17 +625,15 @@
                 if(xPos < 0) continue;
                 if(xPos > w) break;
 
-                // Tick (Tracinho)
-                sCtx.strokeStyle = '#fff';
+                const isInteger = Number.isInteger(m);
+                
+                sCtx.strokeStyle = '#fff'; 
                 sCtx.beginPath();
-                // Tick começa no topo da área da régua e desce
                 sCtx.moveTo(xPos, waveAreaHeight); 
                 sCtx.lineTo(xPos, h);
                 sCtx.stroke();
 
-                // Texto (Branco Forte)
                 sCtx.fillStyle = '#fff';
-                // Texto um pouco afastado do tick
                 sCtx.fillText(m.toFixed(precision) + "m", xPos + 2, h - 5);
             }
             
@@ -619,10 +641,9 @@
             sCtx.fillStyle = "#fffacd"; 
             sCtx.fillText(`SCOPE: ${scopeZoom.toFixed(1)}x`, w - 5, 12);
 
-            // --- DESENHO DA ONDA (CLIPPED NA ÁREA DE CIMA) ---
             sCtx.save();
             sCtx.beginPath();
-            sCtx.rect(0, 0, w, waveAreaHeight); // Define área de corte
+            sCtx.rect(0, 0, w, waveAreaHeight); 
             sCtx.clip();
 
             sCtx.strokeStyle = '#fff'; 
@@ -634,7 +655,6 @@
             
             for(let i = 0; i < dataArr.length; i++) {
                 const v = dataArr[i] / 128.0; 
-                // Renderiza centralizado na área de cima
                 const yCorrected = waveCenter + ((dataArr[i] - 128) / 128) * waveCenter * visualGain;
                 
                 if (x >= -slice && x <= w + slice) {
@@ -646,7 +666,7 @@
                 x += slice;
             }
             sCtx.stroke();
-            sCtx.restore(); // Remove o clip para desenhar outras coisas se precisar
+            sCtx.restore();
         }
 
         document.getElementById('divisionSlider').oninput = (e) => {
