@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Sinestética Player - Precision Lab</title>
+    <title>Sinestética Player - Precision Lab v2</title>
     <style>
         /* --- ESTILO BRUTALISTA HIGH CONTRAST --- */
         html, body { height: 100%; margin: 0; padding: 0; background: #000; color: #fff; font-family: 'Courier New', Courier, monospace; overflow-x: hidden; }
@@ -85,8 +85,18 @@
 
         .btn-pause { border-color: #666; color: #ccc; display: none; }
 
-        /* LIVE SCOPE */
-        #liveScope { width: 100%; height: 80px; border: 1px solid #555; background: #000; cursor: crosshair; }
+        /* LIVE SCOPE COM CURSOR DE MÃOZINHA */
+        #liveScope { 
+            width: 100%; 
+            height: 80px; 
+            border: 1px solid #555; 
+            background: #000; 
+            cursor: grab; /* Indica que pode arrastar */
+        }
+        #liveScope:active {
+            cursor: grabbing; /* Mão fechada quando clica */
+        }
+
         .loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: #000; display:none; align-items:center; justify-content:center; z-index:1000; color: #fff; }
 
         /* --- TACTICAL OVERLAY (HELP) --- */
@@ -162,8 +172,8 @@
 
         <div class="help-box">
             <h3>1. A FÍSICA DO SOM (343 m/s)</h3>
-            <p><strong>NOVO RECURSO:</strong> Use o slider <strong>H-ZOOM</strong> para aproximar a régua. Quanto mais zoom, mais precisão (Metros &rarr; Centímetros).</p>
-            <p><strong>MEDINDO A ONDA:</strong> Dê zoom até ver claramente onde o desenho da onda começa a se repetir. Meça essa distância.</p>
+            <p><strong>PRECISION LAB:</strong> Use o <strong>H-ZOOM</strong> para ampliar. Quando ampliado, você pode <strong>ARRASTAR</strong> o gráfico lateralmente para medir com precisão de centímetros.</p>
+            <p><strong>MEDINDO A ONDA:</strong> Encontre o ponto exato onde a onda se repete (1 ciclo) e veja a distância na régua.</p>
             
             <div class="help-formula">
                 FREQ (Hz) = 343 ÷ COMPRIMENTO (m)
@@ -180,21 +190,19 @@
             
             <p style="font-size:10px; margin-top:8px; border-top:1px dashed #555; padding-top:5px;">
                 <strong>LÓGICA DAS OITAVAS:</strong><br>
-                Se o comprimento da onda <strong>DOBRAR</strong>, a nota cai uma oitava (fica mais grave).<br>
-                Se o comprimento cair pela <strong>METADE</strong>, a nota sobe uma oitava (fica mais aguda).
+                Onda DOBRA de tamanho = Nota cai uma oitava (mais grave).<br>
+                Onda CAI PELA METADE = Nota sobe uma oitava (mais aguda).
             </p>
         </div>
 
         <div class="help-box">
             <h3>2. SINCRONIA (RITMO & DIVS)</h3>
-            <p>O Player no Headset ouve um loop constante. Use o slider <strong>DIVS</strong> para fatiar o tempo visualmente.</p>
-            <p><strong>AÇÃO:</strong> Identifique em qual linha da grade o som começa e dê a coordenada ("Entra na 3ª divisão") ou cante o ritmo visualizando a grade.</p>
+            <p>Use o slider <strong>DIVS</strong> para dividir o compasso. Informe ao player em qual "fatia" do tempo o som começa.</p>
         </div>
 
         <div class="help-box">
             <h3>3. IDENTIDADE (TIMBRE)</h3>
-            <p>Cada som tem uma "impressão digital" visual nas tracks de baixo.</p>
-            <p>Se não conseguir imitar o som com a voz, descreva a geometria: "É redondo/suave", "É quadrado/robótico" ou "É pontudo/áspero".</p>
+            <p>Descreva a geometria da onda nas tracks de baixo: "Redonda", "Quadrada", "Pontuda", "Crescente".</p>
         </div>
     </div>
 
@@ -249,8 +257,13 @@
         let trackData = [];
         let activeTrack = null;
         let visualGain = 1.0;
-        let scopeZoom = 1.0; // Novo estado de zoom
+        let scopeZoom = 1.0; 
         let divisions = 4;
+
+        // Variáveis para o Arraste (Pan)
+        let scopeOffset = 0; // Deslocamento em pixels
+        let isDragging = false;
+        let lastMouseX = 0;
 
         let currentSource = null;
         let startTime = 0;   
@@ -266,6 +279,33 @@
         }
 
         window.onload = async () => {
+            // Setup Listeners de Arraste no Canvas
+            const cvs = document.getElementById('liveScope');
+            
+            // Mouse Events
+            cvs.addEventListener('mousedown', (e) => { isDragging = true; lastMouseX = e.clientX; });
+            window.addEventListener('mouseup', () => { isDragging = false; }); // Window pega se soltar fora
+            cvs.addEventListener('mousemove', (e) => {
+                if(!isDragging) return;
+                const delta = e.clientX - lastMouseX;
+                scopeOffset += delta;
+                // Bloqueia arraste para o futuro (offset > 0)
+                if(scopeOffset > 0) scopeOffset = 0; 
+                lastMouseX = e.clientX;
+            });
+
+            // Touch Events (Celular)
+            cvs.addEventListener('touchstart', (e) => { isDragging = true; lastMouseX = e.touches[0].clientX; });
+            cvs.addEventListener('touchend', () => { isDragging = false; });
+            cvs.addEventListener('touchmove', (e) => {
+                if(!isDragging) return;
+                const delta = e.touches[0].clientX - lastMouseX;
+                scopeOffset += delta;
+                if(scopeOffset > 0) scopeOffset = 0; 
+                lastMouseX = e.touches[0].clientX;
+                e.preventDefault(); // Evita scroll da tela
+            });
+
             try {
                 const res = await fetch('composicoes.json');
                 const musicas = await res.json();
@@ -487,82 +527,79 @@
             sCtx.fillStyle = '#000'; 
             sCtx.fillRect(0,0,w,h);
 
-            // --- CÁLCULO DA FÍSICA E ZOOM ---
+            // --- FÍSICA & CÁLCULOS ---
             const SPEED_OF_SOUND = 343; 
             const totalSeconds = dataArr.length / audioCtx.sampleRate; 
             const totalMeters = totalSeconds * SPEED_OF_SOUND;
             
-            // Pixels por Metro base * Zoom
-            // Se Zoom=1, cabe tudo na tela. Se Zoom=2, os pixels esticam.
             const basePixelsPerMeter = w / totalMeters;
             const scaledPixelsPerMeter = basePixelsPerMeter * scopeZoom;
 
-            // --- RÉGUA ADAPTATIVA (LÓGICA OUSADA) ---
+            // --- RÉGUA ADAPTATIVA ---
             sCtx.lineWidth = 1;
             sCtx.font = "10px Courier New";
             sCtx.textAlign = "left";
 
-            // Decide a unidade da régua baseado no zoom
-            let stepSize = 1; // Padrão: 1 metro
-            let labelSuffix = "m";
+            // Lógica agressiva de steps (1m -> 0.5m -> 0.1m -> 0.01m)
+            let stepSize = 1;
             let precision = 0;
-
-            if (scaledPixelsPerMeter > 1000) {
-                // Super Zoom: Mostra Centímetros (0.1m)
-                stepSize = 0.1; 
-                precision = 1;
-            } else if (scaledPixelsPerMeter > 200) {
-                // Médio Zoom: Mostra Meio Metro (0.5m)
-                stepSize = 0.5;
-                precision = 1;
-            }
-
-            // Loop para desenhar a grade
-            // Desenhamos apenas até onde a tela alcança, não precisa desenhar 300 metros se só vemos 5.
-            const maxVisibleMeters = w / scaledPixelsPerMeter;
             
+            if (scaledPixelsPerMeter > 1000) { stepSize = 0.01; precision = 2; }
+            else if (scaledPixelsPerMeter > 250) { stepSize = 0.1; precision = 1; }
+            else if (scaledPixelsPerMeter > 100) { stepSize = 0.5; precision = 1; }
+
+            const maxVisibleMeters = (w - scopeOffset) / scaledPixelsPerMeter;
+            
+            // Loop de desenho da régua
             for(let m = 0; m < maxVisibleMeters + stepSize; m += stepSize) {
-                if(m === 0) continue; // Pula o zero
+                // Arredonda m para evitar erros de float (0.30000004)
+                m = Math.round(m * 100) / 100;
+                if(m === 0) continue; 
                 
-                const xPos = m * scaledPixelsPerMeter;
+                const xPos = (m * scaledPixelsPerMeter) + scopeOffset;
                 
-                // Estilo da linha muda com o zoom
-                sCtx.strokeStyle = (stepSize < 1) ? '#444' : '#555'; 
+                // Se saiu da tela pela esquerda, ignora
+                if(xPos < 0) continue;
+                if(xPos > w) break;
+
+                // Estilo visual: Inteiros mais fortes, decimais mais fracos
+                const isInteger = Number.isInteger(m);
+                sCtx.strokeStyle = isInteger ? '#666' : '#333'; 
                 sCtx.beginPath();
                 sCtx.moveTo(xPos, 0);
                 sCtx.lineTo(xPos, h);
                 sCtx.stroke();
 
                 // Texto
-                sCtx.fillStyle = (stepSize < 1) ? '#aaa' : '#ddd'; // Texto mais apagado se for subdivisão
+                sCtx.fillStyle = isInteger ? '#fff' : '#888';
                 sCtx.fillText(m.toFixed(precision) + "m", xPos + 4, h - 5);
             }
             
-            // Label de Status (Canto Direito)
+            // Info do Zoom
             sCtx.textAlign = "right";
             sCtx.fillStyle = "#fffacd"; 
             sCtx.fillText(`SCOPE: ${scopeZoom.toFixed(1)}x`, w - 5, 12);
 
-            // --- DESENHO DA ONDA COM ZOOM ---
+            // --- DESENHO DA ONDA (APLICA ZOOM E OFFSET) ---
             sCtx.strokeStyle = '#fff'; 
             sCtx.lineWidth = 2;
             sCtx.beginPath();
             
-            // O slice (fatia) agora é multiplicado pelo Zoom para "esticar" a onda
             const slice = (w / dataArr.length) * scopeZoom;
-            let x = 0;
+            let x = scopeOffset; // Começa deslocado pelo arraste
             
             for(let i = 0; i < dataArr.length; i++) {
                 const v = dataArr[i] / 128.0; 
                 const yCorrected = (h/2) + ((dataArr[i] - 128) / 128) * (h/2) * visualGain;
                 
-                // Se o ponto já saiu da tela, podemos parar de desenhar para economizar CPU?
-                // Não necessariamente, pois o canvas corta automágicamente, mas ajuda.
-                if (x > w) break; 
+                // Otimização: Não desenha se estiver fora da tela
+                if (x >= -slice && x <= w + slice) {
+                    if(i===0) sCtx.moveTo(x, yCorrected); 
+                    else sCtx.lineTo(x, yCorrected);
+                } else if (i === 0) {
+                     sCtx.moveTo(x, yCorrected); // Precisa mover o cursor mesmo fora
+                }
 
-                if(i===0) sCtx.moveTo(x, yCorrected); 
-                else sCtx.lineTo(x, yCorrected);
-                
                 x += slice;
             }
             sCtx.stroke();
@@ -576,13 +613,14 @@
         document.getElementById('gainSlider').oninput = (e) => {
             visualGain = e.target.value;
             document.getElementById('gainLabel').textContent = visualGain;
-            render(); // O Gain afeta as tracks estáticas também? Se sim, chama render. Se só o scope, não precisa.
         };
-        // LISTENER DO NOVO SLIDER
         document.getElementById('hZoomSlider').oninput = (e) => {
             scopeZoom = parseFloat(e.target.value);
             document.getElementById('zoomLabel').textContent = scopeZoom.toFixed(1) + "x";
-            // Não precisa chamar render(), pois o animate() roda 60fps
+            // Ao mudar o zoom, resetamos o offset pra não perder a onda?
+            // Melhor resetar para evitar confusão ou ajustar proporcionalmente. 
+            // Vamos resetar por segurança nesta versão.
+            scopeOffset = 0; 
         };
     </script>
 </body>
