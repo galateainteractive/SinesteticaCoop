@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Sinestética Player - Final v10 Layout</title>
+    <title>Sinestética Player - Final v11</title>
     <script src="manual.js" charset="utf-8"></script> 
     <style>
-        /* --- ESTILO BRUTALISTA HIGH CONTRAST --- */
+        /* --- ESTILO GERAL --- */
         html, body { height: 100%; margin: 0; padding: 0; background: #000; color: #fff; font-family: 'Courier New', Courier, monospace; overflow-x: hidden; }
         
         #menu-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100%; text-align: center; padding: 20px; box-sizing: border-box; }
@@ -26,90 +26,78 @@
         .help-btn { background: #000; color: #fff; border: 1px solid #fff; padding: 5px 12px; cursor: pointer; font-family: inherit; font-weight: bold; font-size: 14px; }
         .help-btn:hover { background: #fff; color: #000; }
 
-        /* --- CONTROLES ESPECÍFICOS DO GROOVE --- */
+        /* --- CONTROLES SCOPE --- */
+        .scope-controls { display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end; margin: 0 0 10px 0; border: 1px solid #222; padding: 10px; }
+        .control-group { display: flex; flex-direction: column; gap: 5px; font-size: 10px; text-transform: uppercase; flex: 1; min-width: 90px; }
+        input[type=range] { width: 100%; height: 20px; accent-color: #fff; cursor: pointer; }
+
+        /* Aviso de Zoom (Agora bem visível) */
+        .control-disabled { opacity: 0.5; pointer-events: none; filter: grayscale(100%); }
+        .zoom-warning { 
+            color: #ff9900; 
+            font-size: 10px; 
+            font-weight: bold; 
+            margin-top: 5px; 
+            display: none; 
+            text-shadow: 0 0 5px #ff9900;
+            animation: blink 2s infinite;
+        }
+        @keyframes blink { 0% {opacity:1;} 50% {opacity:0.5;} 100% {opacity:1;} }
+
+        /* --- BARRA GROOVE --- */
         .groove-toolbar {
-            display: flex;
-            justify-content: flex-end; 
-            align-items: center;
-            margin-top: 15px; /* Espaço extra pois agora ele está embaixo */
-            margin-bottom: 5px;
-            padding: 0 5px;
-            border-top: 1px dashed #333; /* Divisória visual sutil */
-            padding-top: 10px;
+            display: flex; justify-content: flex-end; align-items: center;
+            margin-top: 15px; margin-bottom: 5px; padding: 10px 5px 0 5px;
+            border-top: 1px dashed #333;
         }
-        .groove-control-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 10px;
-            text-transform: uppercase;
-        }
+        .groove-control-group { display: flex; align-items: center; gap: 10px; font-size: 10px; text-transform: uppercase; }
         .groove-control-group input { width: 100px; margin-left: 5px; }
 
-        /* Canvas Container Topo */
+        /* --- CANVAS --- */
         .top-panel .canvas-container { position: relative; width: 100%; height: 120px; background: #000; display: flex; align-items: center; }
         .top-panel canvas { border: none; background: #000; } 
 
-        /* --- ÁREA DE SCROLL --- */
-        .tracks-scroll { 
-            flex: 1; 
-            overflow-y: auto; 
-            background: #e0e0e0; 
-            color: #000; 
-            padding: 15px;
-            -webkit-overflow-scrolling: touch;
-            position: relative;
-        }
-
+        .tracks-scroll { flex: 1; overflow-y: auto; background: #e0e0e0; color: #000; padding: 15px; -webkit-overflow-scrolling: touch; position: relative; }
         .tracks-scroll::-webkit-scrollbar { width: 12px; background: #000; border-left: 1px solid #333; }
         .tracks-scroll::-webkit-scrollbar-thumb { background: #fff; border: 2px solid #000; }
-
-        .tracks-scroll .canvas-container { 
-            position: relative; 
-            width: 100%; 
-            height: 100px; 
-            display: flex; 
-            align-items: center; 
-        }
-        
-        .tracks-scroll canvas { 
-            border: 2px solid #000; 
-            background: #fff;       
-            display: block;
-        }
-
-        /* --- CONTROLES DO SCOPE --- */
-        .scope-controls { display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end; margin: 0 0 10px 0; border: 1px solid #222; padding: 10px; }
-        .control-group { display: flex; flex-direction: column; gap: 5px; font-size: 10px; text-transform: uppercase; flex: 1; min-width: 90px; }
-        
-        input[type=range] { width: 100%; height: 20px; accent-color: #fff; cursor: pointer; }
-
-        /* Estado Desativado (Para o Zoom) */
-        .control-disabled { opacity: 0.3; pointer-events: none; }
-        .zoom-warning { color: #ffff00; font-size: 9px; margin-top: 3px; display: none; }
+        .tracks-scroll .canvas-container { position: relative; width: 100%; height: 100px; display: flex; align-items: center; }
+        .tracks-scroll canvas { border: 2px solid #000; background: #fff; display: block; }
 
         .track-row { display: flex; flex-direction: column; gap: 8px; padding: 15px 0; border-bottom: 2px solid #999; }
-        
         canvas { display: block; width: 100%; height: 100%; box-sizing: border-box; }
         
         .track-info { display: flex; justify-content: space-between; align-items: center; }
         .track-label { font-size: 9px; text-transform: uppercase; font-weight: bold; }
-        
         .tracks-scroll .track-label { color: #000; }
         .top-panel .track-label { color: #888; }
         
+        /* Cursor do Groove */
         .cursor-groove { position: absolute; top: 0; left: 0; width: 2px; height: 100%; background: #fff; pointer-events: none; display: none; z-index: 10; box-shadow: 0 0 5px #fff; }
         
         .btn-group { display: flex; gap: 5px; margin-top: 5px; }
         .btn { cursor: pointer; padding: 12px 10px; font-size: 10px; text-transform: uppercase; flex: 1; text-align: center; border: 1px solid; }
         
-        .top-panel .btn { background: #000; color: #fff; border-color: #fff; }
-        .top-panel .btn:active { background: #fff; color: #000; }
-        
         .tracks-scroll .btn { background: transparent; color: #000; border-color: #000; font-weight: bold; }
         .tracks-scroll .btn:active { background: #000; color: #fff; }
-
         .btn-pause { border-color: #666; color: #ccc; display: none; }
+
+        /* Botão Overlay do Groove (NOVO) */
+        .overlay-play-btn {
+            position: absolute;
+            top: 10px; left: 10px;
+            background: #000; color: #fff;
+            border: 2px solid #fff;
+            padding: 8px 15px;
+            font-family: inherit;
+            font-weight: bold;
+            font-size: 11px;
+            cursor: pointer;
+            z-index: 20;
+            text-transform: uppercase;
+            box-shadow: 2px 2px 0px rgba(255,255,255,0.5);
+        }
+        .overlay-play-btn:active { transform: translate(1px, 1px); box-shadow: none; }
+        .overlay-playing { background: #fff; color: #000; border-color: #000; }
 
         /* LIVE SCOPE */
         #liveScope { width: 100%; height: 80px; border: 1px solid #555; background: #000; cursor: grab; }
@@ -117,45 +105,17 @@
 
         .loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: #000; display:none; align-items:center; justify-content:center; z-index:1000; color: #fff; }
 
-        /* --- TACTICAL OVERLAY (HELP) --- */
-        #help-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95);
-            z-index: 999;
-            display: none;
-            overflow-y: auto;
-            color: #fff;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-
+        /* --- HELP OVERLAY --- */
+        #help-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 999; display: none; overflow-y: auto; color: #fff; padding: 20px; box-sizing: border-box; }
         .help-section { margin-bottom: 30px; border-bottom: 1px dashed #444; padding-bottom: 20px; }
-        
-        .help-box {
-            border: 1px solid #fff;
-            padding: 15px;
-            margin-bottom: 15px;
-            background: rgba(20,20,20,0.95);
-            position: relative;
-        }
-        
+        .help-box { border: 1px solid #fff; padding: 15px; margin-bottom: 15px; background: rgba(20,20,20,0.95); position: relative; }
         .help-title-main { color: #fff; font-size: 16px; margin: 0 0 10px 0; text-transform: uppercase; border: 2px solid #fff; display: inline-block; padding: 5px 10px; }
         .help-subtitle { color: #aaa; font-size: 11px; margin-top: 5px; margin-bottom: 15px; max-width: 600px; }
-
         .help-box h3 { margin: 0 0 10px 0; color: #ffff00; text-transform: uppercase; font-size: 13px; border-bottom: 1px solid #555; padding-bottom: 5px; letter-spacing: 1px; }
         .help-box p { font-size: 11px; line-height: 1.5; margin: 8px 0; color: #ddd; }
         .help-box strong { color: #fff; font-weight: bold; }
-        
         .help-formula { background: #222; padding: 8px; font-family: monospace; text-align: center; margin: 10px 0; border: 1px solid #666; font-size: 11px; color: #0f0; }
-
-        .cheat-sheet {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 10px;
-            margin-top: 10px;
-            color: #aaa;
-            font-family: monospace;
-        }
+        .cheat-sheet { width: 100%; border-collapse: collapse; font-size: 10px; margin-top: 10px; color: #aaa; font-family: monospace; }
         .cheat-sheet td, .cheat-sheet th { border: 1px solid #444; padding: 6px 4px; text-align: center; }
         .cheat-sheet th { color: #fff; background: #222; }
         .cheat-sheet tr:nth-child(even) { background: #111; }
@@ -180,7 +140,6 @@
             <p class="help-subtitle" id="txt-subtitle">...</p>
             <p style="font-size: 10px; color:#666; margin-top:10px;">[ TOQUE EM QUALQUER LUGAR PARA FECHAR ]</p>
         </div>
-
         <div class="help-box">
             <h3 id="txt-sec1-title">...</h3>
             <p id="txt-sec1-content">...</p>
@@ -191,16 +150,8 @@
             </table>
             <p style="font-size:10px; margin-top:8px; border-top:1px dashed #555; padding-top:5px;" id="txt-octave">...</p>
         </div>
-
-        <div class="help-box">
-            <h3 id="txt-sec2-title">...</h3>
-            <p id="txt-sec2-content">...</p>
-        </div>
-
-        <div class="help-box">
-            <h3 id="txt-sec3-title">...</h3>
-            <p id="txt-sec3-content">...</p>
-        </div>
+        <div class="help-box"><h3 id="txt-sec2-title">...</h3><p id="txt-sec2-content">...</p></div>
+        <div class="help-box"><h3 id="txt-sec3-title">...</h3><p id="txt-sec3-content">...</p></div>
     </div>
 
     <div id="menu-screen">
@@ -231,8 +182,7 @@
                     </div>
                     
                     <div class="control-group" style="flex: 3; min-width: 200px;">
-                        <canvas id="liveScope" height="80"></canvas>
-                    </div>
+                        <canvas id="liveScope" height="100"></canvas> </div>
                 </div>
 
                 <div class="groove-toolbar">
@@ -263,7 +213,6 @@
         let visualGain = 1.0;
         let scopeZoom = 1.0; 
         let divisions = 4;
-
         let scopeOffset = 0; 
         let isDragging = false;
         let lastMouseX = 0;
@@ -285,18 +234,15 @@
             if (typeof GAME_TEXTS !== 'undefined') {
                 document.getElementById('txt-title').innerHTML = GAME_TEXTS.overlayTitle;
                 document.getElementById('txt-subtitle').innerHTML = GAME_TEXTS.overlaySubtitle;
-                
                 document.getElementById('txt-sec1-title').innerHTML = GAME_TEXTS.section1Title;
                 document.getElementById('txt-sec1-content').innerHTML = GAME_TEXTS.section1Content;
                 document.getElementById('txt-formula').innerHTML = GAME_TEXTS.formula;
-                
                 const tbody = document.getElementById('notes-table-body');
                 GAME_TEXTS.notesTable.forEach(row => {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `<td>${row.note}</td><td>${row.freq}</td><td>${row.meters}</td>`;
                     tbody.appendChild(tr);
                 });
-
                 document.getElementById('txt-octave').innerHTML = GAME_TEXTS.octaveLogic;
                 document.getElementById('txt-sec2-title').innerHTML = GAME_TEXTS.section2Title;
                 document.getElementById('txt-sec2-content').innerHTML = GAME_TEXTS.section2Content;
@@ -311,28 +257,23 @@
 
             const cvs = document.getElementById('liveScope');
             
-            // Mouse Events
-            cvs.addEventListener('mousedown', (e) => { isDragging = true; lastMouseX = e.clientX; });
-            window.addEventListener('mouseup', () => { isDragging = false; }); 
-            cvs.addEventListener('mousemove', (e) => {
+            // Events Pan
+            const handleStart = (x) => { isDragging = true; lastMouseX = x; };
+            const handleMove = (x) => {
                 if(!isDragging) return;
-                const delta = e.clientX - lastMouseX;
+                const delta = x - lastMouseX;
                 scopeOffset += delta;
                 if(scopeOffset > 0) scopeOffset = 0; 
-                lastMouseX = e.clientX;
-            });
+                lastMouseX = x;
+            };
+            
+            cvs.addEventListener('mousedown', (e) => handleStart(e.clientX));
+            window.addEventListener('mouseup', () => { isDragging = false; });
+            cvs.addEventListener('mousemove', (e) => handleMove(e.clientX));
 
-            // Touch Events
-            cvs.addEventListener('touchstart', (e) => { isDragging = true; lastMouseX = e.touches[0].clientX; });
+            cvs.addEventListener('touchstart', (e) => handleStart(e.touches[0].clientX));
             cvs.addEventListener('touchend', () => { isDragging = false; });
-            cvs.addEventListener('touchmove', (e) => {
-                if(!isDragging) return;
-                const delta = e.touches[0].clientX - lastMouseX;
-                scopeOffset += delta;
-                if(scopeOffset > 0) scopeOffset = 0; 
-                lastMouseX = e.touches[0].clientX;
-                e.preventDefault(); 
-            });
+            cvs.addEventListener('touchmove', (e) => { e.preventDefault(); handleMove(e.touches[0].clientX); });
 
             try {
                 const res = await fetch('composicoes.json');
@@ -351,7 +292,6 @@
             const zoomGroup = document.getElementById('zoomGroup');
             const slider = document.getElementById('hZoomSlider');
             const warning = document.getElementById('zoomWarning');
-
             if (isEnabled) {
                 zoomGroup.classList.remove('control-disabled');
                 slider.disabled = false;
@@ -399,34 +339,46 @@
             document.getElementById('loading').style.display = 'none';
         }
 
-        function playFromStart(data, btnPlay, btnPause) {
+        function playFromStart(data, btnPlay, btnPause, overlayBtn) {
             stopAudioInternal(); 
             resetUI();
-            
-            // Tocar = Zoom Bloqueado
             setZoomState(false);
-
             activeTrack = data;
             currentBuffer = data.buffer;
             currentOffset = data.offset;
-            btnPlay.textContent = "[ PLAYING ]";
-            btnPause.style.display = "block";
+
+            // Atualiza botões
+            if(overlayBtn) {
+                overlayBtn.textContent = "[ PLAYING GROOVE ]";
+                overlayBtn.classList.add('overlay-playing');
+            } else {
+                btnPlay.textContent = "[ PLAYING ]";
+                btnPause.style.display = "block";
+            }
+            
             startSource(0);
         }
 
-        function togglePause(btnPause) {
+        function togglePause(btnPause, overlayBtn) {
             if (!currentBuffer) return; 
             if (isPaused) {
                 setZoomState(false);
                 startSource(pausedAt);
                 isPaused = false;
-                btnPause.textContent = "[ PAUSE ]";
+                if(btnPause) btnPause.textContent = "[ PAUSE ]";
+                if(overlayBtn) {
+                    overlayBtn.textContent = "[ PLAYING GROOVE ]";
+                    overlayBtn.classList.add('overlay-playing');
+                }
             } else {
                 if(currentSource) { currentSource.stop(); currentSource = null; }
                 pausedAt = audioCtx.currentTime - startTime;
                 isPaused = true;
-                btnPause.textContent = "[ RESUME ]";
-                
+                if(btnPause) btnPause.textContent = "[ RESUME ]";
+                if(overlayBtn) {
+                    overlayBtn.textContent = "[ RESUME GROOVE ]";
+                    overlayBtn.classList.remove('overlay-playing');
+                }
                 setZoomState(true);
             }
         }
@@ -456,6 +408,14 @@
                 if (!b.classList.contains('back-btn') && !b.classList.contains('btn-pause')) b.textContent = "[ PLAY ]";
             });
             document.querySelectorAll('.btn-pause').forEach(b => { b.style.display = "none"; b.textContent = "[ PAUSE ]"; });
+            
+            // Reset do Overlay Button do Groove
+            const ovBtn = document.getElementById('grooveOverlayBtn');
+            if(ovBtn) {
+                ovBtn.textContent = "[ PLAY GROOVE ]";
+                ovBtn.classList.remove('overlay-playing');
+            }
+
             const cursor = document.getElementById('cursor-g');
             if(cursor) cursor.style.display = 'none';
         }
@@ -483,27 +443,55 @@
             const drawRow = (data, cont, isGroove) => {
                 const row = document.createElement('div');
                 row.className = 'track-row';
-                row.innerHTML = `
-                    <div class="track-info">
-                        <div class="track-label">${data.label}</div>
-                    </div>
-                    <div class="canvas-container">
-                        <canvas id="canv-${isGroove?'g':data.id}" width="800" height="${isGroove?120:100}"></canvas>
-                        ${isGroove ? '<div id="cursor-g" class="cursor-groove"></div>' : ''}
-                    </div>
-                    <div class="btn-group"></div>`;
                 
-                const btnPlay = document.createElement('button');
-                btnPlay.className = 'btn'; btnPlay.textContent = '[ PLAY ]';
+                // --- BOTÃO DO GROOVE (OVERLAY) ---
+                let overlayBtnHtml = '';
+                if(isGroove) {
+                    // Se for Groove, não criamos a estrutura padrão com botões embaixo.
+                    // Apenas a caixa e o botão em cima.
+                    row.innerHTML = `
+                    <div class="canvas-container" style="position:relative;">
+                        <canvas id="canv-g" width="800" height="120"></canvas>
+                        <div id="cursor-g" class="cursor-groove"></div>
+                        <button id="grooveOverlayBtn" class="overlay-play-btn">[ PLAY GROOVE ]</button>
+                    </div>`;
+                    
+                    cont.appendChild(row);
+                    
+                    // Listener do Botão Overlay
+                    const btn = document.getElementById('grooveOverlayBtn');
+                    btn.onclick = () => {
+                        // Lógica de toggle: se já for o activeTrack, pausa/resume. Se não, toca do início.
+                        if(activeTrack === data) {
+                            togglePause(null, btn);
+                        } else {
+                            playFromStart(data, null, null, btn);
+                        }
+                    };
+
+                } else {
+                    // --- TRACKS NORMAIS ---
+                    row.innerHTML = `
+                        <div class="track-info">
+                            <div class="track-label">${data.label}</div>
+                        </div>
+                        <div class="canvas-container">
+                            <canvas id="canv-${data.id}" width="800" height="100"></canvas>
+                        </div>
+                        <div class="btn-group"></div>`;
+                    
+                    const btnPlay = document.createElement('button');
+                    btnPlay.className = 'btn'; btnPlay.textContent = '[ PLAY ]';
+                    const btnPause = document.createElement('button');
+                    btnPause.className = 'btn btn-pause'; btnPause.textContent = '[ PAUSE ]';
+
+                    btnPlay.onclick = () => playFromStart(data, btnPlay, btnPause, null);
+                    btnPause.onclick = () => togglePause(btnPause, null);
+
+                    row.querySelector('.btn-group').append(btnPlay, btnPause);
+                    cont.appendChild(row);
+                }
                 
-                const btnPause = document.createElement('button');
-                btnPause.className = 'btn btn-pause'; btnPause.textContent = '[ PAUSE ]';
-
-                btnPlay.onclick = () => playFromStart(data, btnPlay, btnPause);
-                btnPause.onclick = () => togglePause(btnPause);
-
-                row.querySelector('.btn-group').append(btnPlay, btnPause);
-                cont.appendChild(row);
                 updateCanvas(data, isGroove);
             };
 
@@ -519,7 +507,6 @@
             ctx.clearRect(0,0,w,h);
             
             const mainColor = isGroove ? '#fff' : '#000';
-            
             const marginY = isGroove ? 15 : 0; 
             const boxHeight = h - (marginY * 2);
 
@@ -543,7 +530,6 @@
                 ctx.strokeStyle = mainColor; 
                 ctx.lineWidth = 1;         
                 ctx.setLineDash([5, 5]);  
-                
                 for(let i=1; i<divisions; i++) {
                     const x = (w / divisions) * i;
                     ctx.beginPath(); 
@@ -564,10 +550,10 @@
                 if(el) { el.style.display = 'block'; el.style.left = (Math.min(progress, 1) * 100) + '%'; }
             }
 
-            const scopeCanvas = document.getElementById('liveScope');
-            const sCtx = scopeCanvas.getContext('2d');
-            const w = scopeCanvas.width;
-            const h = scopeCanvas.height;
+            const sCtx = document.getElementById('liveScope').getContext('2d');
+            const w = 800; // Largura fixa ou pega do elemento
+            // A altura agora é 100 no HTML para caber a régua embaixo
+            const h = document.getElementById('liveScope').height; 
             
             const dataArr = new Uint8Array(analyser.frequencyBinCount);
             
@@ -591,13 +577,19 @@
             const basePixelsPerMeter = w / totalMeters;
             const scaledPixelsPerMeter = basePixelsPerMeter * scopeZoom;
 
+            // --- ÁREA SEGURA DO SCOPE ---
+            // Reservamos os últimos 20px para a régua
+            const rulerHeight = 20;
+            const waveAreaHeight = h - rulerHeight;
+            const waveCenter = waveAreaHeight / 2;
+
+            // --- RÉGUA ADAPTATIVA (DESENHADA FORA DA ONDA) ---
             sCtx.lineWidth = 1;
-            sCtx.font = "10px Courier New";
+            sCtx.font = "bold 10px Courier New"; // Fonte forte
             sCtx.textAlign = "left";
 
             let stepSize = 1;
             let precision = 0;
-            
             if (scaledPixelsPerMeter > 1000) { stepSize = 0.01; precision = 2; }
             else if (scaledPixelsPerMeter > 250) { stepSize = 0.1; precision = 1; }
             else if (scaledPixelsPerMeter > 100) { stepSize = 0.5; precision = 1; }
@@ -607,27 +599,30 @@
             for(let m = 0; m < maxVisibleMeters + stepSize; m += stepSize) {
                 m = Math.round(m * 100) / 100;
                 if(m === 0) continue; 
-                
                 const xPos = (m * scaledPixelsPerMeter) + scopeOffset;
-                
                 if(xPos < 0) continue;
                 if(xPos > w) break;
 
                 const isInteger = Number.isInteger(m);
-                sCtx.strokeStyle = isInteger ? '#666' : '#333'; 
+                
+                // Linha (Tick)
+                sCtx.strokeStyle = '#fff'; // Linhas sempre brancas
                 sCtx.beginPath();
-                sCtx.moveTo(xPos, 0);
+                // A linha começa onde a onda acaba e vai até o fim
+                sCtx.moveTo(xPos, waveAreaHeight); 
                 sCtx.lineTo(xPos, h);
                 sCtx.stroke();
 
-                sCtx.fillStyle = isInteger ? '#fff' : '#888';
-                sCtx.fillText(m.toFixed(precision) + "m", xPos + 4, h - 5);
+                // Texto (Sempre Branco Forte)
+                sCtx.fillStyle = '#fff';
+                sCtx.fillText(m.toFixed(precision) + "m", xPos + 2, h - 5);
             }
             
             sCtx.textAlign = "right";
             sCtx.fillStyle = "#fffacd"; 
             sCtx.fillText(`SCOPE: ${scopeZoom.toFixed(1)}x`, w - 5, 12);
 
+            // --- DESENHO DA ONDA (LIMITADA AO WAVE AREA) ---
             sCtx.strokeStyle = '#fff'; 
             sCtx.lineWidth = 2;
             sCtx.beginPath();
@@ -637,7 +632,8 @@
             
             for(let i = 0; i < dataArr.length; i++) {
                 const v = dataArr[i] / 128.0; 
-                const yCorrected = (h/2) + ((dataArr[i] - 128) / 128) * (h/2) * visualGain;
+                // Ajuste para centralizar na área da onda (não na altura total)
+                const yCorrected = waveCenter + ((dataArr[i] - 128) / 128) * waveCenter * visualGain;
                 
                 if (x >= -slice && x <= w + slice) {
                     if(i===0) sCtx.moveTo(x, yCorrected); 
@@ -645,7 +641,6 @@
                 } else if (i === 0) {
                      sCtx.moveTo(x, yCorrected); 
                 }
-
                 x += slice;
             }
             sCtx.stroke();
@@ -669,4 +664,3 @@
     </script>
 </body>
 </html>
-
