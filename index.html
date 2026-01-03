@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Sinestética Player - Final</title>
+    <title>Sinestética Player - Final v8</title>
+    <script src="manual.js"></script> 
     <style>
         /* --- ESTILO BRUTALISTA HIGH CONTRAST --- */
         html, body { height: 100%; margin: 0; padding: 0; background: #000; color: #fff; font-family: 'Courier New', Courier, monospace; overflow-x: hidden; }
@@ -27,7 +28,6 @@
 
         /* Canvas Container Topo */
         .top-panel .canvas-container { position: relative; width: 100%; height: 120px; background: #000; display: flex; align-items: center; }
-        /* Removemos a borda CSS do topo para desenhar manualmente e fazer a linha passar */
         .top-panel canvas { border: none; background: #000; } 
 
         /* --- ÁREA DE SCROLL --- */
@@ -152,54 +152,35 @@
 
     <div id="help-overlay" onclick="toggleHelp()">
         <div class="help-section" style="text-align:left; margin-top: 10px;">
-            <h1 class="help-title-main">PROTOCOLO DE COMUNICAÇÃO</h1>
-            <p class="help-subtitle">
-                SUA MISSÃO: Guiar o Player no <strong>HEADSET</strong>. Ele tem os controles, mas você tem o mapa.
-                <br><br>
-                <strong>ESTRATÉGIA:</strong><br>
-                1. Localize onde o som entra no Groove.<br>
-                2. Analise Ritmo, Afinação e Timbre.<br>
-                3. Transmita: <strong>Cantarole</strong> (intuição) ou use os <strong>Dados Técnicos</strong> (ciência) abaixo.
-            </p>
+            <h1 class="help-title-main" id="txt-title">...</h1>
+            <p class="help-subtitle" id="txt-subtitle">...</p>
             <p style="font-size: 10px; color:#666; margin-top:10px;">[ TOQUE EM QUALQUER LUGAR PARA FECHAR ]</p>
         </div>
 
         <div class="help-box">
-            <h3>1. A FÍSICA DO SOM (343 m/s)</h3>
-            <p><strong>PRECISION LAB:</strong> Use o <strong>H-ZOOM</strong> para ampliar. Quando ampliado, você pode <strong>ARRASTAR</strong> o gráfico lateralmente para medir com precisão de centímetros.</p>
-            <p><strong>MEDINDO A ONDA:</strong> Encontre o ponto exato onde a onda se repete (1 ciclo) e veja a distância na régua.</p>
+            <h3 id="txt-sec1-title">...</h3>
+            <p id="txt-sec1-content">...</p>
             
-            <div class="help-formula">
-                FREQ (Hz) = 343 ÷ COMPRIMENTO (m)
-            </div>
+            <div class="help-formula" id="txt-formula">...</div>
             
             <table class="cheat-sheet">
-                <tr><th>NOTA</th><th>FREQ (Hz)</th><th>COMPRIMENTO (m)</th></tr>
-                <tr><td>C3 (Dó)</td><td>130.8</td><td>~ 2.62m</td></tr>
-                <tr><td>D3 (Ré)</td><td>146.8</td><td>~ 2.33m</td></tr>
-                <tr><td>E3 (Mi)</td><td>164.8</td><td>~ 2.08m</td></tr>
-                <tr><td>F3 (Fá)</td><td>174.6</td><td>~ 1.96m</td></tr>
-                <tr><td>G3 (Sol)</td><td>196.0</td><td>~ 1.75m</td></tr>
-                <tr><td>A3 (Lá)</td><td>220.0</td><td>~ 1.56m</td></tr>
-                <tr><td>B3 (Si)</td><td>246.9</td><td>~ 1.39m</td></tr>
-                <tr><td>C4 (Dó)</td><td>261.6</td><td>~ 1.31m</td></tr>
+                <thead>
+                    <tr><th>NOTA</th><th>FREQ (Hz)</th><th>COMPRIMENTO (m)</th></tr>
+                </thead>
+                <tbody id="notes-table-body"></tbody>
             </table>
             
-            <p style="font-size:10px; margin-top:8px; border-top:1px dashed #555; padding-top:5px;">
-                <strong>LÓGICA DAS OITAVAS:</strong><br>
-                Onda DOBRA de tamanho = Nota cai uma oitava (mais grave).<br>
-                Onda CAI PELA METADE = Nota sobe uma oitava (mais aguda).
-            </p>
+            <p style="font-size:10px; margin-top:8px; border-top:1px dashed #555; padding-top:5px;" id="txt-octave">...</p>
         </div>
 
         <div class="help-box">
-            <h3>2. SINCRONIA (RITMO & DIVS)</h3>
-            <p>Use o slider <strong>DIVS</strong> para dividir o compasso. Informe ao player em qual "fatia" do tempo o som começa.</p>
+            <h3 id="txt-sec2-title">...</h3>
+            <p id="txt-sec2-content">...</p>
         </div>
 
         <div class="help-box">
-            <h3>3. IDENTIDADE (TIMBRE)</h3>
-            <p>Descreva a geometria da onda nas tracks de baixo: "Redonda", "Quadrada", "Pontuda", "Crescente".</p>
+            <h3 id="txt-sec3-title">...</h3>
+            <p id="txt-sec3-content">...</p>
         </div>
     </div>
 
@@ -274,9 +255,39 @@
             el.style.display = (el.style.display === 'block') ? 'none' : 'block';
         }
 
+        // --- FUNÇÃO PARA CARREGAR TEXTOS DO MANUAL.JS ---
+        function loadTexts() {
+            if (typeof GAME_TEXTS !== 'undefined') {
+                document.getElementById('txt-title').innerHTML = GAME_TEXTS.overlayTitle;
+                document.getElementById('txt-subtitle').innerHTML = GAME_TEXTS.overlaySubtitle;
+                
+                document.getElementById('txt-sec1-title').innerHTML = GAME_TEXTS.section1Title;
+                document.getElementById('txt-sec1-content').innerHTML = GAME_TEXTS.section1Content;
+                document.getElementById('txt-formula').innerHTML = GAME_TEXTS.formula;
+                
+                // Popula a tabela
+                const tbody = document.getElementById('notes-table-body');
+                GAME_TEXTS.notesTable.forEach(row => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td>${row.note}</td><td>${row.freq}</td><td>${row.meters}</td>`;
+                    tbody.appendChild(tr);
+                });
+
+                document.getElementById('txt-octave').innerHTML = GAME_TEXTS.octaveLogic;
+
+                document.getElementById('txt-sec2-title').innerHTML = GAME_TEXTS.section2Title;
+                document.getElementById('txt-sec2-content').innerHTML = GAME_TEXTS.section2Content;
+                document.getElementById('txt-sec3-title').innerHTML = GAME_TEXTS.section3Title;
+                document.getElementById('txt-sec3-content').innerHTML = GAME_TEXTS.section3Content;
+            }
+        }
+
         window.onload = async () => {
+            loadTexts(); // Carrega os textos ao iniciar
+
             const cvs = document.getElementById('liveScope');
             
+            // Mouse Events (Pan)
             cvs.addEventListener('mousedown', (e) => { isDragging = true; lastMouseX = e.clientX; });
             window.addEventListener('mouseup', () => { isDragging = false; }); 
             cvs.addEventListener('mousemove', (e) => {
@@ -287,6 +298,7 @@
                 lastMouseX = e.clientX;
             });
 
+            // Touch Events (Pan)
             cvs.addEventListener('touchstart', (e) => { isDragging = true; lastMouseX = e.touches[0].clientX; });
             cvs.addEventListener('touchend', () => { isDragging = false; });
             cvs.addEventListener('touchmove', (e) => {
@@ -461,20 +473,18 @@
             const mainColor = isGroove ? '#fff' : '#000';
             
             // --- BOX DO TRACK (MANUAL) ---
-            // Se for Groove, desenha a caixa menor (com margem) para a linha sobrar
             const marginY = isGroove ? 15 : 0; 
             const boxHeight = h - (marginY * 2);
 
-            // Desenha a borda da caixa
+            // Borda
             ctx.strokeStyle = isGroove ? '#fff' : '#000';
             ctx.lineWidth = 2;
             ctx.strokeRect(0, marginY, w, boxHeight);
 
             // --- ONDA ---
-            // A onda é desenhada DENTRO da altura da caixa
             const step = w / data.waveform.length;
             const waveCenter = h / 2;
-            const waveMaxAmp = boxHeight * 0.8; // 80% da altura da caixa
+            const waveMaxAmp = boxHeight * 0.8;
 
             ctx.beginPath();
             data.waveform.forEach((v, i) => {
@@ -484,7 +494,7 @@
             });
             ctx.stroke();
 
-            // --- DIVS (GRADE) - DESENHADA POR ÚLTIMO PARA FICAR POR CIMA ---
+            // --- DIVS (GRADE) ---
             if(isGroove) {
                 ctx.strokeStyle = mainColor; 
                 ctx.lineWidth = 1;         
@@ -493,7 +503,6 @@
                 for(let i=1; i<divisions; i++) {
                     const x = (w / divisions) * i;
                     ctx.beginPath(); 
-                    // Linha vai de 0 até h (ALTURA TOTAL), passando da caixa
                     ctx.moveTo(x, 0); 
                     ctx.lineTo(x, h);
                     ctx.stroke();
@@ -528,9 +537,11 @@
                 return;
             }
 
+            // Limpa
             sCtx.fillStyle = '#000'; 
             sCtx.fillRect(0,0,w,h);
 
+            // --- FÍSICA & CÁLCULOS ---
             const SPEED_OF_SOUND = 343; 
             const totalSeconds = dataArr.length / audioCtx.sampleRate; 
             const totalMeters = totalSeconds * SPEED_OF_SOUND;
@@ -538,6 +549,7 @@
             const basePixelsPerMeter = w / totalMeters;
             const scaledPixelsPerMeter = basePixelsPerMeter * scopeZoom;
 
+            // --- RÉGUA ADAPTATIVA ---
             sCtx.lineWidth = 1;
             sCtx.font = "10px Courier New";
             sCtx.textAlign = "left";
@@ -575,6 +587,7 @@
             sCtx.fillStyle = "#fffacd"; 
             sCtx.fillText(`SCOPE: ${scopeZoom.toFixed(1)}x`, w - 5, 12);
 
+            // --- DESENHO DA ONDA (SCOPE) ---
             sCtx.strokeStyle = '#fff'; 
             sCtx.lineWidth = 2;
             sCtx.beginPath();
@@ -603,9 +616,11 @@
             document.getElementById('divLabel').textContent = divisions;
             render();
         };
+        // BUG CORRIGIDO: Agora chamamos render() aqui também!
         document.getElementById('gainSlider').oninput = (e) => {
             visualGain = e.target.value;
             document.getElementById('gainLabel').textContent = visualGain;
+            render(); // Redesenha as tracks estáticas com o novo ganho
         };
         document.getElementById('hZoomSlider').oninput = (e) => {
             scopeZoom = parseFloat(e.target.value);
