@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Sinestética Player - Final v11</title>
+    <title>Sinestética Player - Final v12</title>
     <script src="manual.js" charset="utf-8"></script> 
     <style>
         /* --- ESTILO GERAL --- */
@@ -31,7 +31,7 @@
         .control-group { display: flex; flex-direction: column; gap: 5px; font-size: 10px; text-transform: uppercase; flex: 1; min-width: 90px; }
         input[type=range] { width: 100%; height: 20px; accent-color: #fff; cursor: pointer; }
 
-        /* Aviso de Zoom (Agora bem visível) */
+        /* Aviso de Zoom */
         .control-disabled { opacity: 0.5; pointer-events: none; filter: grayscale(100%); }
         .zoom-warning { 
             color: #ff9900; 
@@ -44,14 +44,27 @@
         }
         @keyframes blink { 0% {opacity:1;} 50% {opacity:0.5;} 100% {opacity:1;} }
 
-        /* --- BARRA GROOVE --- */
+        /* --- BARRA GROOVE (ALINHADA COM SPACE-BETWEEN) --- */
         .groove-toolbar {
-            display: flex; justify-content: flex-end; align-items: center;
+            display: flex; 
+            justify-content: space-between; /* Botão na Esq, Slider na Dir */
+            align-items: center;
             margin-top: 15px; margin-bottom: 5px; padding: 10px 5px 0 5px;
             border-top: 1px dashed #333;
         }
         .groove-control-group { display: flex; align-items: center; gap: 10px; font-size: 10px; text-transform: uppercase; }
         .groove-control-group input { width: 100px; margin-left: 5px; }
+
+        /* Botão Play Groove (Estilo) */
+        .play-groove-btn {
+            background: #000; color: #fff;
+            border: 1px solid #fff;
+            padding: 8px 15px;
+            font-family: inherit; font-weight: bold; font-size: 11px;
+            cursor: pointer; text-transform: uppercase;
+        }
+        .play-groove-btn:active { background: #333; }
+        .groove-playing { background: #fff; color: #000; border-color: #000; }
 
         /* --- CANVAS --- */
         .top-panel .canvas-container { position: relative; width: 100%; height: 120px; background: #000; display: flex; align-items: center; }
@@ -71,7 +84,6 @@
         .tracks-scroll .track-label { color: #000; }
         .top-panel .track-label { color: #888; }
         
-        /* Cursor do Groove */
         .cursor-groove { position: absolute; top: 0; left: 0; width: 2px; height: 100%; background: #fff; pointer-events: none; display: none; z-index: 10; box-shadow: 0 0 5px #fff; }
         
         .btn-group { display: flex; gap: 5px; margin-top: 5px; }
@@ -81,26 +93,8 @@
         .tracks-scroll .btn:active { background: #000; color: #fff; }
         .btn-pause { border-color: #666; color: #ccc; display: none; }
 
-        /* Botão Overlay do Groove (NOVO) */
-        .overlay-play-btn {
-            position: absolute;
-            top: 10px; left: 10px;
-            background: #000; color: #fff;
-            border: 2px solid #fff;
-            padding: 8px 15px;
-            font-family: inherit;
-            font-weight: bold;
-            font-size: 11px;
-            cursor: pointer;
-            z-index: 20;
-            text-transform: uppercase;
-            box-shadow: 2px 2px 0px rgba(255,255,255,0.5);
-        }
-        .overlay-play-btn:active { transform: translate(1px, 1px); box-shadow: none; }
-        .overlay-playing { background: #fff; color: #000; border-color: #000; }
-
         /* LIVE SCOPE */
-        #liveScope { width: 100%; height: 80px; border: 1px solid #555; background: #000; cursor: grab; }
+        #liveScope { width: 100%; height: 120px; border: 1px solid #555; background: #000; cursor: grab; }
         #liveScope:active { cursor: grabbing; }
 
         .loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: #000; display:none; align-items:center; justify-content:center; z-index:1000; color: #fff; }
@@ -182,10 +176,13 @@
                     </div>
                     
                     <div class="control-group" style="flex: 3; min-width: 200px;">
-                        <canvas id="liveScope" height="100"></canvas> </div>
+                        <canvas id="liveScope" height="120"></canvas>
+                    </div>
                 </div>
 
                 <div class="groove-toolbar">
+                    <button id="groovePlayBtn" class="play-groove-btn">[ PLAY GROOVE ]</button>
+
                     <div class="groove-control-group">
                         <label>DIVISÕES DO RITMO: <span id="divLabel">4</span></label>
                         <input type="range" id="divisionSlider" min="2" max="16" step="1" value="4" />
@@ -205,6 +202,8 @@
     <script>
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         const analyser = audioCtx.createAnalyser();
+        // Aumentei fftSize para 4096 para ter maior resolução e alcance de ~14m no 1x
+        analyser.fftSize = 4096; 
         analyser.connect(audioCtx.destination);
         
         let grooveData = null;
@@ -256,8 +255,6 @@
             setZoomState(false); 
 
             const cvs = document.getElementById('liveScope');
-            
-            // Events Pan
             const handleStart = (x) => { isDragging = true; lastMouseX = x; };
             const handleMove = (x) => {
                 if(!isDragging) return;
@@ -266,11 +263,9 @@
                 if(scopeOffset > 0) scopeOffset = 0; 
                 lastMouseX = x;
             };
-            
             cvs.addEventListener('mousedown', (e) => handleStart(e.clientX));
             window.addEventListener('mouseup', () => { isDragging = false; });
             cvs.addEventListener('mousemove', (e) => handleMove(e.clientX));
-
             cvs.addEventListener('touchstart', (e) => handleStart(e.touches[0].clientX));
             cvs.addEventListener('touchend', () => { isDragging = false; });
             cvs.addEventListener('touchmove', (e) => { e.preventDefault(); handleMove(e.touches[0].clientX); });
@@ -331,6 +326,17 @@
                         }
                     } catch (e) {}
                 }
+                
+                // Configura o botão do Groove
+                const grooveBtn = document.getElementById('groovePlayBtn');
+                grooveBtn.onclick = () => {
+                    if(activeTrack === grooveData) {
+                        togglePause(null, grooveBtn);
+                    } else {
+                        playFromStart(grooveData, null, null, grooveBtn);
+                    }
+                };
+
                 render();
                 animate();
                 document.getElementById('menu-screen').style.display = 'none';
@@ -339,7 +345,7 @@
             document.getElementById('loading').style.display = 'none';
         }
 
-        function playFromStart(data, btnPlay, btnPause, overlayBtn) {
+        function playFromStart(data, btnPlay, btnPause, grooveBtn) {
             stopAudioInternal(); 
             resetUI();
             setZoomState(false);
@@ -348,10 +354,10 @@
             currentOffset = data.offset;
 
             // Atualiza botões
-            if(overlayBtn) {
-                overlayBtn.textContent = "[ PLAYING GROOVE ]";
-                overlayBtn.classList.add('overlay-playing');
-            } else {
+            if(grooveBtn) {
+                grooveBtn.textContent = "[ PLAYING GROOVE ]";
+                grooveBtn.classList.add('groove-playing');
+            } else if (btnPlay) {
                 btnPlay.textContent = "[ PLAYING ]";
                 btnPause.style.display = "block";
             }
@@ -359,25 +365,25 @@
             startSource(0);
         }
 
-        function togglePause(btnPause, overlayBtn) {
+        function togglePause(btnPause, grooveBtn) {
             if (!currentBuffer) return; 
             if (isPaused) {
                 setZoomState(false);
                 startSource(pausedAt);
                 isPaused = false;
                 if(btnPause) btnPause.textContent = "[ PAUSE ]";
-                if(overlayBtn) {
-                    overlayBtn.textContent = "[ PLAYING GROOVE ]";
-                    overlayBtn.classList.add('overlay-playing');
+                if(grooveBtn) {
+                    grooveBtn.textContent = "[ PLAYING GROOVE ]";
+                    grooveBtn.classList.add('groove-playing');
                 }
             } else {
                 if(currentSource) { currentSource.stop(); currentSource = null; }
                 pausedAt = audioCtx.currentTime - startTime;
                 isPaused = true;
                 if(btnPause) btnPause.textContent = "[ RESUME ]";
-                if(overlayBtn) {
-                    overlayBtn.textContent = "[ RESUME GROOVE ]";
-                    overlayBtn.classList.remove('overlay-playing');
+                if(grooveBtn) {
+                    grooveBtn.textContent = "[ RESUME GROOVE ]";
+                    grooveBtn.classList.remove('groove-playing');
                 }
                 setZoomState(true);
             }
@@ -392,7 +398,14 @@
             if (actualStartPoint >= currentBuffer.duration) { resetUI(); return; }
             currentSource.start(0, actualStartPoint);
             startTime = audioCtx.currentTime - offsetTime;
-            currentSource.onended = () => { if (!isPaused && currentSource) resetUI(); };
+            
+            // CORREÇÃO DO BUG: Limpar activeTrack quando acabar
+            currentSource.onended = () => { 
+                if (!isPaused && currentSource) {
+                    resetUI();
+                    activeTrack = null; // Isso permite tocar a mesma track novamente do zero
+                }
+            };
         }
 
         function stopAudioInternal() {
@@ -409,11 +422,10 @@
             });
             document.querySelectorAll('.btn-pause').forEach(b => { b.style.display = "none"; b.textContent = "[ PAUSE ]"; });
             
-            // Reset do Overlay Button do Groove
-            const ovBtn = document.getElementById('grooveOverlayBtn');
-            if(ovBtn) {
-                ovBtn.textContent = "[ PLAY GROOVE ]";
-                ovBtn.classList.remove('overlay-playing');
+            const gBtn = document.getElementById('groovePlayBtn');
+            if(gBtn) {
+                gBtn.textContent = "[ PLAY GROOVE ]";
+                gBtn.classList.remove('groove-playing');
             }
 
             const cursor = document.getElementById('cursor-g');
@@ -444,33 +456,16 @@
                 const row = document.createElement('div');
                 row.className = 'track-row';
                 
-                // --- BOTÃO DO GROOVE (OVERLAY) ---
-                let overlayBtnHtml = '';
                 if(isGroove) {
-                    // Se for Groove, não criamos a estrutura padrão com botões embaixo.
-                    // Apenas a caixa e o botão em cima.
+                    // Groove: Apenas canvas (Botão foi pra barra)
                     row.innerHTML = `
                     <div class="canvas-container" style="position:relative;">
                         <canvas id="canv-g" width="800" height="120"></canvas>
                         <div id="cursor-g" class="cursor-groove"></div>
-                        <button id="grooveOverlayBtn" class="overlay-play-btn">[ PLAY GROOVE ]</button>
                     </div>`;
-                    
                     cont.appendChild(row);
-                    
-                    // Listener do Botão Overlay
-                    const btn = document.getElementById('grooveOverlayBtn');
-                    btn.onclick = () => {
-                        // Lógica de toggle: se já for o activeTrack, pausa/resume. Se não, toca do início.
-                        if(activeTrack === data) {
-                            togglePause(null, btn);
-                        } else {
-                            playFromStart(data, null, null, btn);
-                        }
-                    };
-
                 } else {
-                    // --- TRACKS NORMAIS ---
+                    // Tracks: Padrão
                     row.innerHTML = `
                         <div class="track-info">
                             <div class="track-label">${data.label}</div>
@@ -491,7 +486,6 @@
                     row.querySelector('.btn-group').append(btnPlay, btnPause);
                     cont.appendChild(row);
                 }
-                
                 updateCanvas(data, isGroove);
             };
 
@@ -550,12 +544,12 @@
                 if(el) { el.style.display = 'block'; el.style.left = (Math.min(progress, 1) * 100) + '%'; }
             }
 
-            const sCtx = document.getElementById('liveScope').getContext('2d');
-            const w = 800; // Largura fixa ou pega do elemento
-            // A altura agora é 100 no HTML para caber a régua embaixo
-            const h = document.getElementById('liveScope').height; 
+            const cvs = document.getElementById('liveScope');
+            const sCtx = cvs.getContext('2d');
+            const w = 800; // Simulado para canvas width
+            const h = cvs.height; 
             
-            const dataArr = new Uint8Array(analyser.frequencyBinCount);
+            const dataArr = new Uint8Array(analyser.frequencyBinCount); // 2048 bins agora
             
             if (!isPaused && currentSource) {
                 analyser.getByteTimeDomainData(dataArr);
@@ -570,22 +564,25 @@
             sCtx.fillStyle = '#000'; 
             sCtx.fillRect(0,0,w,h);
 
+            // --- DIVISÃO DO CANVAS: ONDA vs RÉGUA ---
+            const rulerHeight = 20; // Altura da régua embaixo
+            const waveAreaHeight = h - rulerHeight; // 100px para onda
+            const waveCenter = waveAreaHeight / 2;
+
+            // Fundo da régua para contraste
+            sCtx.fillStyle = '#111';
+            sCtx.fillRect(0, waveAreaHeight, w, rulerHeight);
+
             const SPEED_OF_SOUND = 343; 
+            // sampleRate / dataArr.length -> Tempo total do buffer
             const totalSeconds = dataArr.length / audioCtx.sampleRate; 
             const totalMeters = totalSeconds * SPEED_OF_SOUND;
             
             const basePixelsPerMeter = w / totalMeters;
             const scaledPixelsPerMeter = basePixelsPerMeter * scopeZoom;
 
-            // --- ÁREA SEGURA DO SCOPE ---
-            // Reservamos os últimos 20px para a régua
-            const rulerHeight = 20;
-            const waveAreaHeight = h - rulerHeight;
-            const waveCenter = waveAreaHeight / 2;
-
-            // --- RÉGUA ADAPTATIVA (DESENHADA FORA DA ONDA) ---
             sCtx.lineWidth = 1;
-            sCtx.font = "bold 10px Courier New"; // Fonte forte
+            sCtx.font = "bold 10px Courier New";
             sCtx.textAlign = "left";
 
             let stepSize = 1;
@@ -596,6 +593,7 @@
 
             const maxVisibleMeters = (w - scopeOffset) / scaledPixelsPerMeter;
             
+            // --- DESENHO DA RÉGUA (NO ANDAR DE BAIXO) ---
             for(let m = 0; m < maxVisibleMeters + stepSize; m += stepSize) {
                 m = Math.round(m * 100) / 100;
                 if(m === 0) continue; 
@@ -603,18 +601,17 @@
                 if(xPos < 0) continue;
                 if(xPos > w) break;
 
-                const isInteger = Number.isInteger(m);
-                
-                // Linha (Tick)
-                sCtx.strokeStyle = '#fff'; // Linhas sempre brancas
+                // Tick (Tracinho)
+                sCtx.strokeStyle = '#fff';
                 sCtx.beginPath();
-                // A linha começa onde a onda acaba e vai até o fim
+                // Tick começa no topo da área da régua e desce
                 sCtx.moveTo(xPos, waveAreaHeight); 
                 sCtx.lineTo(xPos, h);
                 sCtx.stroke();
 
-                // Texto (Sempre Branco Forte)
+                // Texto (Branco Forte)
                 sCtx.fillStyle = '#fff';
+                // Texto um pouco afastado do tick
                 sCtx.fillText(m.toFixed(precision) + "m", xPos + 2, h - 5);
             }
             
@@ -622,7 +619,12 @@
             sCtx.fillStyle = "#fffacd"; 
             sCtx.fillText(`SCOPE: ${scopeZoom.toFixed(1)}x`, w - 5, 12);
 
-            // --- DESENHO DA ONDA (LIMITADA AO WAVE AREA) ---
+            // --- DESENHO DA ONDA (CLIPPED NA ÁREA DE CIMA) ---
+            sCtx.save();
+            sCtx.beginPath();
+            sCtx.rect(0, 0, w, waveAreaHeight); // Define área de corte
+            sCtx.clip();
+
             sCtx.strokeStyle = '#fff'; 
             sCtx.lineWidth = 2;
             sCtx.beginPath();
@@ -632,7 +634,7 @@
             
             for(let i = 0; i < dataArr.length; i++) {
                 const v = dataArr[i] / 128.0; 
-                // Ajuste para centralizar na área da onda (não na altura total)
+                // Renderiza centralizado na área de cima
                 const yCorrected = waveCenter + ((dataArr[i] - 128) / 128) * waveCenter * visualGain;
                 
                 if (x >= -slice && x <= w + slice) {
@@ -644,6 +646,7 @@
                 x += slice;
             }
             sCtx.stroke();
+            sCtx.restore(); // Remove o clip para desenhar outras coisas se precisar
         }
 
         document.getElementById('divisionSlider').oninput = (e) => {
