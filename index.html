@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Sinestética Player - Final v13</title>
+    <title>Sinestética Player - Final v14</title>
     <script src="manual.js" charset="utf-8"></script> 
     <style>
         /* --- ESTILO GERAL --- */
@@ -22,8 +22,6 @@
         .top-panel { flex-shrink: 0; border-bottom: 4px solid #fff; padding: 15px; background: #000; z-index: 10; position: relative; }
         
         .nav-header { display: flex; justify-content: space-between; margin-bottom: 15px; }
-        
-        /* AJUSTE 1: Botão Back agora é branco puro igual ao Help */
         .back-btn { background: #000; color: #fff; border: 1px solid #fff; padding: 5px 10px; cursor: pointer; font-family: inherit; text-transform: uppercase; font-size: 10px; }
         .help-btn { background: #000; color: #fff; border: 1px solid #fff; padding: 5px 12px; cursor: pointer; font-family: inherit; font-weight: bold; font-size: 14px; }
         .help-btn:hover { background: #fff; color: #000; }
@@ -48,35 +46,17 @@
 
         /* --- BARRA GROOVE --- */
         .groove-toolbar {
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center;
-            margin-top: 15px; 
-            margin-bottom: 5px; 
-            padding: 10px 5px 0 5px;
-            border-top: 1px dashed #333;
-            /* AJUSTE 2: Gap para garantir separação entre botão e slider */
-            gap: 20px; 
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 15px; margin-bottom: 5px; padding: 10px 5px 0 5px;
+            border-top: 1px dashed #333; gap: 20px;
         }
-        
-        .groove-control-group { 
-            display: flex; 
-            align-items: center; 
-            gap: 10px; 
-            font-size: 10px; 
-            text-transform: uppercase;
-            /* Garante que o texto não cole na esquerda se a tela encolher */
-            text-align: right; 
-        }
+        .groove-control-group { display: flex; align-items: center; gap: 10px; font-size: 10px; text-transform: uppercase; text-align: right; }
         .groove-control-group input { width: 100px; margin-left: 5px; }
 
         .play-groove-btn {
-            background: #000; color: #fff;
-            border: 1px solid #fff;
-            padding: 8px 15px;
-            font-family: inherit; font-weight: bold; font-size: 11px;
-            cursor: pointer; text-transform: uppercase;
-            white-space: nowrap; /* Não quebra linha */
+            background: #000; color: #fff; border: 1px solid #fff;
+            padding: 8px 15px; font-family: inherit; font-weight: bold; font-size: 11px;
+            cursor: pointer; text-transform: uppercase; white-space: nowrap;
         }
         .play-groove-btn:active { background: #333; }
         .groove-playing { background: #fff; color: #000; border-color: #000; }
@@ -267,27 +247,15 @@
             setZoomState(false); 
 
             const cvs = document.getElementById('liveScope');
-            
-            // --- MANIPULAÇÃO DE ARRASTE COM LIMITE (CLAMP) ---
-            // AJUSTE 3: Calcula o máximo de arraste permitido para não ver tela vazia
             const handleStart = (x) => { isDragging = true; lastMouseX = x; };
-            
             const handleMove = (x) => {
                 if(!isDragging) return;
                 const delta = x - lastMouseX;
                 scopeOffset += delta;
                 
-                // 1. Limite Esquerdo (Início): Não pode ser maior que 0
                 if(scopeOffset > 0) scopeOffset = 0;
                 
-                // 2. Limite Direito (Fim da Onda):
-                // A onda desenha em (canvasWidth * scopeZoom) pixels.
-                // O canvas mostra (canvasWidth) pixels.
-                // O máximo que podemos "esconder" na esquerda é (LarguraTotal - LarguraTela).
-                // Como offset é negativo, o MÍNIMO valor é -(LarguraTotal - LarguraTela).
-                
-                // Pegamos a largura real do canvas (internal resolution)
-                const w = cvs.width; // 800 (definido no HTML em runtime, mas aqui assumimos o setup do animate)
+                const w = cvs.width;
                 const totalWidth = w * scopeZoom;
                 const minOffset = -(totalWidth - w);
                 
@@ -295,7 +263,6 @@
 
                 lastMouseX = x;
             };
-            
             cvs.addEventListener('mousedown', (e) => handleStart(e.clientX));
             window.addEventListener('mouseup', () => { isDragging = false; });
             cvs.addEventListener('mousemove', (e) => handleMove(e.clientX));
@@ -625,6 +592,14 @@
                 if(xPos < 0) continue;
                 if(xPos > w) break;
 
+                // Lógica de "Decimation" (Pular etiquetas se estiver muito perto)
+                // Se estamos no modo de precisão máxima (0.01), só desenha texto a cada 5
+                let drawText = true;
+                if (stepSize === 0.01) {
+                    const cmIndex = Math.round(m * 100);
+                    if (cmIndex % 5 !== 0) drawText = false;
+                }
+
                 const isInteger = Number.isInteger(m);
                 
                 sCtx.strokeStyle = '#fff'; 
@@ -633,8 +608,10 @@
                 sCtx.lineTo(xPos, h);
                 sCtx.stroke();
 
-                sCtx.fillStyle = '#fff';
-                sCtx.fillText(m.toFixed(precision) + "m", xPos + 2, h - 5);
+                if (drawText) {
+                    sCtx.fillStyle = '#fff';
+                    sCtx.fillText(m.toFixed(precision) + "m", xPos + 2, h - 5);
+                }
             }
             
             sCtx.textAlign = "right";
