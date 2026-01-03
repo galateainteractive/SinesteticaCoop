@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Sinestética Player - Final v8</title>
+    <title>Sinestética Player - Final v9 UI</title>
     <script src="manual.js"></script> 
     <style>
         /* --- ESTILO BRUTALISTA HIGH CONTRAST --- */
@@ -25,6 +25,23 @@
         .back-btn { background: #000; color: #888; border: 1px solid #444; padding: 5px 10px; cursor: pointer; font-family: inherit; text-transform: uppercase; font-size: 10px; }
         .help-btn { background: #000; color: #fff; border: 1px solid #fff; padding: 5px 12px; cursor: pointer; font-family: inherit; font-weight: bold; font-size: 14px; }
         .help-btn:hover { background: #fff; color: #000; }
+
+        /* --- CONTROLES ESPECÍFICOS DO GROOVE (NOVA BARRA) --- */
+        .groove-toolbar {
+            display: flex;
+            justify-content: flex-end; /* Alinha à direita */
+            align-items: center;
+            margin-bottom: 5px;
+            padding: 0 5px;
+        }
+        .groove-control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 10px;
+            text-transform: uppercase;
+        }
+        .groove-control-group input { width: 100px; margin-left: 5px; }
 
         /* Canvas Container Topo */
         .top-panel .canvas-container { position: relative; width: 100%; height: 120px; background: #000; display: flex; align-items: center; }
@@ -58,11 +75,15 @@
             display: block;
         }
 
-        /* --- CONTROLES --- */
-        .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-start; margin: 10px 0; border: 1px solid #222; padding: 10px; justify-content: space-between; }
+        /* --- CONTROLES DO SCOPE (AGORA SÓ GAIN E ZOOM) --- */
+        .scope-controls { display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end; margin: 10px 0; border: 1px solid #222; padding: 10px; }
         .control-group { display: flex; flex-direction: column; gap: 5px; font-size: 10px; text-transform: uppercase; flex: 1; min-width: 90px; }
         
-        input[type=range] { width: 100%; height: 30px; accent-color: #fff; cursor: pointer; }
+        input[type=range] { width: 100%; height: 20px; accent-color: #fff; cursor: pointer; }
+
+        /* Estado Desativado (Para o Zoom) */
+        .control-disabled { opacity: 0.3; pointer-events: none; }
+        .zoom-warning { color: #ffff00; font-size: 9px; margin-top: 3px; display: none; }
 
         .track-row { display: flex; flex-direction: column; gap: 8px; padding: 15px 0; border-bottom: 2px solid #999; }
         
@@ -160,16 +181,11 @@
         <div class="help-box">
             <h3 id="txt-sec1-title">...</h3>
             <p id="txt-sec1-content">...</p>
-            
             <div class="help-formula" id="txt-formula">...</div>
-            
             <table class="cheat-sheet">
-                <thead>
-                    <tr><th>NOTA</th><th>FREQ (Hz)</th><th>COMPRIMENTO (m)</th></tr>
-                </thead>
+                <thead><tr><th>NOTA</th><th>FREQ (Hz)</th><th>COMPRIMENTO (m)</th></tr></thead>
                 <tbody id="notes-table-body"></tbody>
             </table>
-            
             <p style="font-size:10px; margin-top:8px; border-top:1px dashed #555; padding-top:5px;" id="txt-octave">...</p>
         </div>
 
@@ -199,25 +215,31 @@
 
                 <h2 id="playing-title" style="margin:0 0 10px 0; text-transform: uppercase; letter-spacing: 1px; font-size: 14px; text-align: center;"></h2>
                 
-                <div class="controls">
-                    <div class="control-group">
-                        <label>Divs: <span id="divLabel">4</span></label>
+                <div class="groove-toolbar">
+                    <div class="groove-control-group">
+                        <label>DIVISÕES DO RITMO: <span id="divLabel">4</span></label>
                         <input type="range" id="divisionSlider" min="2" max="16" step="1" value="4" />
                     </div>
+                </div>
+                
+                <div id="grooveContainer"></div>
+
+                <div class="scope-controls">
                     <div class="control-group">
                         <label>V-Gain: <span id="gainLabel">1.0</span></label>
                         <input type="range" id="gainSlider" min="0.5" max="10" step="0.5" value="1" />
                     </div>
-                    <div class="control-group">
+                    
+                    <div class="control-group" id="zoomGroup">
                         <label>H-Zoom: <span id="zoomLabel">1.0x</span></label>
                         <input type="range" id="hZoomSlider" min="1" max="20" step="0.1" value="1" />
+                        <span id="zoomWarning" class="zoom-warning">[ PAUSE PARA ZOOM ]</span>
                     </div>
                     
-                    <div class="control-group" style="min-width: 100%; margin-top: 10px;">
+                    <div class="control-group" style="flex: 3; min-width: 200px;">
                         <canvas id="liveScope" height="80"></canvas>
                     </div>
                 </div>
-                <div id="grooveContainer"></div>
             </div>
 
             <div class="tracks-scroll">
@@ -255,7 +277,6 @@
             el.style.display = (el.style.display === 'block') ? 'none' : 'block';
         }
 
-        // --- FUNÇÃO PARA CARREGAR TEXTOS DO MANUAL.JS ---
         function loadTexts() {
             if (typeof GAME_TEXTS !== 'undefined') {
                 document.getElementById('txt-title').innerHTML = GAME_TEXTS.overlayTitle;
@@ -265,7 +286,6 @@
                 document.getElementById('txt-sec1-content').innerHTML = GAME_TEXTS.section1Content;
                 document.getElementById('txt-formula').innerHTML = GAME_TEXTS.formula;
                 
-                // Popula a tabela
                 const tbody = document.getElementById('notes-table-body');
                 GAME_TEXTS.notesTable.forEach(row => {
                     const tr = document.createElement('tr');
@@ -274,7 +294,6 @@
                 });
 
                 document.getElementById('txt-octave').innerHTML = GAME_TEXTS.octaveLogic;
-
                 document.getElementById('txt-sec2-title').innerHTML = GAME_TEXTS.section2Title;
                 document.getElementById('txt-sec2-content').innerHTML = GAME_TEXTS.section2Content;
                 document.getElementById('txt-sec3-title').innerHTML = GAME_TEXTS.section3Title;
@@ -283,11 +302,12 @@
         }
 
         window.onload = async () => {
-            loadTexts(); // Carrega os textos ao iniciar
+            loadTexts();
+            setZoomState(false); // Inicia com Zoom Bloqueado
 
             const cvs = document.getElementById('liveScope');
             
-            // Mouse Events (Pan)
+            // Mouse Events
             cvs.addEventListener('mousedown', (e) => { isDragging = true; lastMouseX = e.clientX; });
             window.addEventListener('mouseup', () => { isDragging = false; }); 
             cvs.addEventListener('mousemove', (e) => {
@@ -298,7 +318,7 @@
                 lastMouseX = e.clientX;
             });
 
-            // Touch Events (Pan)
+            // Touch Events
             cvs.addEventListener('touchstart', (e) => { isDragging = true; lastMouseX = e.touches[0].clientX; });
             cvs.addEventListener('touchend', () => { isDragging = false; });
             cvs.addEventListener('touchmove', (e) => {
@@ -322,6 +342,26 @@
                 });
             } catch (e) { console.error("Erro ao carregar catálogo."); }
         };
+
+        // --- FUNÇÃO PARA CONTROLAR O ESTADO DO ZOOM ---
+        function setZoomState(isEnabled) {
+            const zoomGroup = document.getElementById('zoomGroup');
+            const slider = document.getElementById('hZoomSlider');
+            const warning = document.getElementById('zoomWarning');
+
+            if (isEnabled) {
+                // Habilita
+                zoomGroup.classList.remove('control-disabled');
+                slider.disabled = false;
+                warning.style.display = 'none';
+            } else {
+                // Desabilita
+                zoomGroup.classList.add('control-disabled');
+                slider.disabled = true;
+                warning.style.display = 'block';
+                // Reset visual para 1x se quiser? Não, deixa onde estava, mas não pode mexer.
+            }
+        }
 
         async function startApp(musica) {
             document.getElementById('loading').style.display = 'flex';
@@ -362,6 +402,10 @@
         function playFromStart(data, btnPlay, btnPause) {
             stopAudioInternal(); 
             resetUI();
+            
+            // Tocar = Zoom Bloqueado
+            setZoomState(false);
+
             activeTrack = data;
             currentBuffer = data.buffer;
             currentOffset = data.offset;
@@ -373,14 +417,20 @@
         function togglePause(btnPause) {
             if (!currentBuffer) return; 
             if (isPaused) {
+                // Resume -> Zoom Bloqueado
+                setZoomState(false);
                 startSource(pausedAt);
                 isPaused = false;
                 btnPause.textContent = "[ PAUSE ]";
             } else {
+                // Pause -> Zoom Liberado
                 if(currentSource) { currentSource.stop(); currentSource = null; }
                 pausedAt = audioCtx.currentTime - startTime;
                 isPaused = true;
                 btnPause.textContent = "[ RESUME ]";
+                
+                // Mágica do Zoom liberada
+                setZoomState(true);
             }
         }
 
@@ -401,6 +451,8 @@
             isPaused = false;
             pausedAt = 0;
             lastWaveformData = null;
+            // Ao parar tudo, pode liberar o zoom ou bloquear. Vou deixar bloqueado até pausar uma track ativa.
+            setZoomState(false); 
         }
 
         function resetUI() {
@@ -472,16 +524,13 @@
             
             const mainColor = isGroove ? '#fff' : '#000';
             
-            // --- BOX DO TRACK (MANUAL) ---
             const marginY = isGroove ? 15 : 0; 
             const boxHeight = h - (marginY * 2);
 
-            // Borda
             ctx.strokeStyle = isGroove ? '#fff' : '#000';
             ctx.lineWidth = 2;
             ctx.strokeRect(0, marginY, w, boxHeight);
 
-            // --- ONDA ---
             const step = w / data.waveform.length;
             const waveCenter = h / 2;
             const waveMaxAmp = boxHeight * 0.8;
@@ -494,7 +543,6 @@
             });
             ctx.stroke();
 
-            // --- DIVS (GRADE) ---
             if(isGroove) {
                 ctx.strokeStyle = mainColor; 
                 ctx.lineWidth = 1;         
@@ -537,11 +585,9 @@
                 return;
             }
 
-            // Limpa
             sCtx.fillStyle = '#000'; 
             sCtx.fillRect(0,0,w,h);
 
-            // --- FÍSICA & CÁLCULOS ---
             const SPEED_OF_SOUND = 343; 
             const totalSeconds = dataArr.length / audioCtx.sampleRate; 
             const totalMeters = totalSeconds * SPEED_OF_SOUND;
@@ -549,7 +595,6 @@
             const basePixelsPerMeter = w / totalMeters;
             const scaledPixelsPerMeter = basePixelsPerMeter * scopeZoom;
 
-            // --- RÉGUA ADAPTATIVA ---
             sCtx.lineWidth = 1;
             sCtx.font = "10px Courier New";
             sCtx.textAlign = "left";
@@ -587,7 +632,6 @@
             sCtx.fillStyle = "#fffacd"; 
             sCtx.fillText(`SCOPE: ${scopeZoom.toFixed(1)}x`, w - 5, 12);
 
-            // --- DESENHO DA ONDA (SCOPE) ---
             sCtx.strokeStyle = '#fff'; 
             sCtx.lineWidth = 2;
             sCtx.beginPath();
@@ -616,11 +660,10 @@
             document.getElementById('divLabel').textContent = divisions;
             render();
         };
-        // BUG CORRIGIDO: Agora chamamos render() aqui também!
         document.getElementById('gainSlider').oninput = (e) => {
             visualGain = e.target.value;
             document.getElementById('gainLabel').textContent = visualGain;
-            render(); // Redesenha as tracks estáticas com o novo ganho
+            render();
         };
         document.getElementById('hZoomSlider').oninput = (e) => {
             scopeZoom = parseFloat(e.target.value);
