@@ -402,29 +402,46 @@
 
             try {
                 // --- LÓGICA DO GROOVE ---
-                const grooveName = currentCompositionConfig.grooveClipNames[session.grooveIndex];
-                const grooveFilename = `${grooveName}.wav`;
+                let fetchPath = "";
+                let displayLabel = "";
 
-                // Debug no Console (F12)
-                const localPath = `${localFolder}/${grooveFilename}`;
-                const globalPath = `${GLOBAL_GROOVES_FOLDER}/${grooveFilename}`;
-                console.log(`Buscando Groove...`);
-
-                // 1. Tenta Local
-                let gRes = await fetch(localPath);
-
-                // 2. Se falhar, tenta Global
-                if (!gRes.ok) {
-                    console.warn(`Local falhou. Tentando Global: ${globalPath}`);
-                    gRes = await fetch(globalPath);
+                // CASO 1: Método Antigo (Lista de nomes explicita no JSON)
+                if (currentCompositionConfig.grooveClipNames && currentCompositionConfig.grooveClipNames[session.grooveIndex]) {
+                    const gName = currentCompositionConfig.grooveClipNames[session.grooveIndex];
+                    displayLabel = gName;
+                    fetchPath = `${GLOBAL_GROOVES_FOLDER}/${gName}.wav`;
+                }
+                // CASO 2: Método Novo (Pasta "Amistade" + Índice numérico 0.wav, 3.wav...)
+                else if (currentCompositionConfig.sourceGrooveSetName) {
+                    const setName = currentCompositionConfig.sourceGrooveSetName;
+                    const idx = session.grooveIndex;
+                    displayLabel = `${setName} [Var ${idx}]`;
+                    fetchPath = `${GLOBAL_GROOVES_FOLDER}/${setName}/${idx}.wav`;
+                }
+                else {
+                    // Fallback desesperado: tenta achar só pelo número na raiz de grooves
+                    displayLabel = `Groove Index ${session.grooveIndex}`;
+                    fetchPath = `${GLOBAL_GROOVES_FOLDER}/${session.grooveIndex}.wav`;
                 }
 
-                if (!gRes.ok) throw new Error(`Groove não encontrado: ${grooveFilename}`);
+                console.log(`Buscando Groove principal em: ${fetchPath}`);
+
+                // 1. Tenta o caminho calculado (Global)
+                let gRes = await fetch(fetchPath);
+
+                // 2. Fallback: Se falhar, tenta procurar na pasta LOCAL do projeto pelo índice
+                if (!gRes.ok) {
+                    const localFallback = `${localFolder}/${session.grooveIndex}.wav`;
+                    console.warn(`Caminho principal falhou. Tentando Local: ${localFallback}`);
+                    gRes = await fetch(localFallback);
+                }
+
+                if (!gRes.ok) throw new Error(`Groove não encontrado! Tentei em: ${fetchPath}`);
 
                 const gBuf = await audioCtx.decodeAudioData(await gRes.arrayBuffer());
 
                 grooveData = {
-                    label: `GROOVE (${grooveName})`,
+                    label: `GROOVE (${displayLabel})`,
                     buffer: gBuf,
                     waveform: computeWave(gBuf),
                     offset: 0
