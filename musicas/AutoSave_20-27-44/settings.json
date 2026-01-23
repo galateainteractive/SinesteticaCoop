@@ -1,0 +1,67 @@
+{
+    "compositionName": "AutoSave_20-27-44",
+    "originSeed": 0,
+    "isMetronome": false,
+    "bpm": 68.0,
+    "numberOfBars": 1,
+    "grooveName": "groove",
+    "numberOfGrooves": 1,
+    "grooveClipNames": [],
+    "numberOfSinesteticasPerGroove": [],
+    "maxPlayerHeight": 2.700000047683716,
+    "sourceGrooveSetName": "Amistade",
+    "dashboardSessions": [
+        {
+            "sessionId": 0,
+            "grooveIndex": 0,
+            "grooveVolume": 1.0,
+            "isGrooveMuted": false,
+            "tracks": [
+                {
+                    "globalId": 2,
+                    "startSample": 8547,
+                    "generatorType": 1,
+                    "presetName": "SineStutterR",
+                    "frequencyRange": ""
+                }
+            ]
+        },
+        {
+            "sessionId": 1,
+            "grooveIndex": 3,
+            "grooveVolume": 1.0,
+            "isGrooveMuted": false,
+            "tracks": [
+                {
+                    "globalId": 4,
+                    "startSample": 84363,
+                    "generatorType": 1,
+                    "presetName": "QuaseQuadradoR",
+                    "frequencyRange": ""
+                }
+            ]
+        },
+        {
+            "sessionId": 2,
+            "grooveIndex": 5,
+            "grooveVolume": 1.0,
+            "isGrooveMuted": false,
+            "tracks": [
+                {
+                    "globalId": 7,
+                    "startSample": 280,
+                    "generatorType": 1,
+                    "presetName": "MiauMetal",
+                    "frequencyRange": ""
+                }
+            ]
+        }
+    ],
+    "continuousTracks": [],
+    "presetNames": [
+        "SineStutterR",
+        "QuaseQuadradoR",
+        "FlinR",
+        "MiauMetal"
+    ]
+}
