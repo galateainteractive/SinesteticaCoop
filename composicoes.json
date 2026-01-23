@@ -18,5 +18,11 @@
         "nome": "Experimento 2",
         "pasta": "musicas/iioh",
         "grooveFile": "indus_120bpm_00.wav"
+    },
+
+    {
+        "nome": "Novo Protocolo_49",
+        "pasta": "musicas/Novo Protocolo_49",
+        "grooveFile": "GrvOrionIatus.wav"
     }
 ]
