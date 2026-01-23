@@ -1,34 +1,26 @@
 [
     {
+        "nome": "AutoSave_11-31-59",
+        "pasta": "musicas/AutoSave_11-31-59"
+    },
+    {
         "nome": "AutoSave_15-54-51",
-        "pasta": "musicas/AutoSave_15-54-51",
-        "grooveFile": "cresc_90bpm_00.wav"
+        "pasta": "musicas/AutoSave_15-54-51"
     },
     {
         "nome": "AutoSave_21-29-55",
-        "pasta": "musicas/AutoSave_21-29-55",
-        "grooveFile": "ByTheWayGrv2.wav"
+        "pasta": "musicas/AutoSave_21-29-55"
     },
     {
-        "nome": "AutoSave_11-31-59",
-        "pasta": "musicas/AutoSave_11-31-59",
-        "grooveFile": "cresc_90bpm_00.wav"
+        "nome": "iioh",
+        "pasta": "musicas/iioh"
     },
-    {
-        "nome": "Experimento 2",
-        "pasta": "musicas/iioh",
-        "grooveFile": "indus_120bpm_00.wav"
-    },
-
-    {
-        "nome": "Novo Protocolo_49",
-        "pasta": "musicas/Novo Protocolo_49",
-        "grooveFile": "GrvOrionIatus.wav"
-    },
-
     {
         "nome": "Novo Protocolo_48",
-        "pasta": "musicas/Novo Protocolo_48",
-        "grooveFile": "GrvOrionIatus.wav"
+        "pasta": "musicas/Novo Protocolo_48"
+    },
+    {
+        "nome": "Novo Protocolo_49",
+        "pasta": "musicas/Novo Protocolo_49"
     }
 ]
