@@ -323,49 +323,156 @@
             }
         }
 
+        /* --- BLOCO NOVO: SESSIONS & GROOVES COMPARTILHADOS --- */
+        let currentCompositionConfig = null;
+        let currentSessionIndex = -1;
+        const GLOBAL_GROOVES_FOLDER = 'grooves'; // Pasta global na raiz
+
         async function startApp(musica) {
             document.getElementById('loading').style.display = 'flex';
             try {
+                // 1. Carrega settings.json
                 const resJson = await fetch(`${musica.pasta}/settings.json`);
-                const composition = await resJson.json();
-                document.getElementById('playing-title').textContent = musica.nome;
+                currentCompositionConfig = await resJson.json();
 
-                const gRes = await fetch(`${musica.pasta}/${musica.grooveFile}`);
+                // Guarda pasta raiz
+                currentCompositionConfig._rootFolder = musica.pasta;
+
+                // Título
+                document.getElementById('playing-title').textContent =
+                    currentCompositionConfig.compositionName || musica.nome;
+
+                // 2. Cria navegação de Sessions (se houver mais de 1)
+                setupSessionNav(currentCompositionConfig.dashboardSessions);
+
+                // 3. Carrega a primeira sessão
+                if (currentCompositionConfig.dashboardSessions && currentCompositionConfig.dashboardSessions.length > 0) {
+                    await loadSession(0);
+                } else {
+                    throw new Error("Nenhuma sessão encontrada no JSON.");
+                }
+
+                // Troca de tela
+                document.getElementById('menu-screen').style.display = 'none';
+                document.getElementById('player-screen').style.display = 'block';
+                animate();
+
+            } catch (err) {
+                console.error(err);
+                alert("Erro ao iniciar: " + err.message);
+            }
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function setupSessionNav(sessions) {
+            const nav = document.getElementById('sessionNav');
+            nav.innerHTML = '';
+
+            // Se tiver só 1 sessão, esconde o menu
+            if (!sessions || sessions.length <= 1) {
+                nav.style.display = 'none';
+                return;
+            }
+
+            nav.style.display = 'flex';
+            sessions.forEach((sess, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'session-btn';
+                btn.textContent = `SESSION ${idx + 1}`;
+                btn.onclick = () => loadSession(idx);
+                btn.id = `btn-sess-${idx}`;
+                nav.appendChild(btn);
+            });
+        }
+
+        async function loadSession(index) {
+            if (currentSessionIndex === index) return;
+
+            document.getElementById('loading').style.display = 'flex';
+            stopAudioInternal(); // Para o som anterior
+
+            // Atualiza visual dos botões
+            document.querySelectorAll('.session-btn').forEach(b => b.classList.remove('active'));
+            const activeBtn = document.getElementById(`btn-sess-${index}`);
+            if (activeBtn) activeBtn.classList.add('active');
+
+            currentSessionIndex = index;
+            const session = currentCompositionConfig.dashboardSessions[index];
+            const localFolder = currentCompositionConfig._rootFolder;
+
+            try {
+                // --- LÓGICA DO GROOVE ---
+                const grooveName = currentCompositionConfig.grooveClipNames[session.grooveIndex];
+                const grooveFilename = `${grooveName}.wav`;
+
+                // Debug no Console (F12)
+                const localPath = `${localFolder}/${grooveFilename}`;
+                const globalPath = `${GLOBAL_GROOVES_FOLDER}/${grooveFilename}`;
+                console.log(`Buscando Groove...`);
+
+                // 1. Tenta Local
+                let gRes = await fetch(localPath);
+
+                // 2. Se falhar, tenta Global
+                if (!gRes.ok) {
+                    console.warn(`Local falhou. Tentando Global: ${globalPath}`);
+                    gRes = await fetch(globalPath);
+                }
+
+                if (!gRes.ok) throw new Error(`Groove não encontrado: ${grooveFilename}`);
+
                 const gBuf = await audioCtx.decodeAudioData(await gRes.arrayBuffer());
-                grooveData = { label: "MASTER_GROOVE", buffer: gBuf, waveform: computeWave(gBuf), offset: 0 };
 
+                grooveData = {
+                    label: `GROOVE (${grooveName})`,
+                    buffer: gBuf,
+                    waveform: computeWave(gBuf),
+                    offset: 0
+                };
+
+                // --- CARREGAMENTO DAS TRACKS ---
                 trackData = [];
-                const jsonTracks = composition.dashboardSessions[0].tracks;
-                for (let t of jsonTracks) {
+                const trackPromises = session.tracks.map(async (t) => {
                     try {
-                        const tRes = await fetch(`${musica.pasta}/clip_${t.globalId}.wav`);
+                        // Tracks são sempre na pasta local
+                        const tRes = await fetch(`${localFolder}/clip_${t.globalId}.wav`);
                         if (tRes.ok) {
                             const tBuf = await audioCtx.decodeAudioData(await tRes.arrayBuffer());
-                            trackData.push({
+                            return {
                                 id: t.globalId,
                                 label: t.presetName || `CLIP_${t.globalId}`,
                                 buffer: tBuf,
                                 waveform: computeWave(tBuf),
                                 offset: (t.startSample || 0) / tBuf.sampleRate
-                            });
+                            };
                         }
-                    } catch (e) {}
-                }
-                
+                    } catch (e) { }
+                    return null;
+                });
+
+                const loadedTracks = await Promise.all(trackPromises);
+                trackData = loadedTracks.filter(t => t !== null);
+
+                // Configura botão Play do Groove
                 const grooveBtn = document.getElementById('groovePlayBtn');
-                grooveBtn.onclick = () => {
-                    if(activeTrack === grooveData) {
-                        togglePause(null, grooveBtn);
+                const newBtn = grooveBtn.cloneNode(true);
+                grooveBtn.parentNode.replaceChild(newBtn, grooveBtn);
+
+                newBtn.onclick = () => {
+                    if (activeTrack === grooveData) {
+                        togglePause(null, newBtn);
                     } else {
-                        playFromStart(grooveData, null, null, grooveBtn);
+                        playFromStart(grooveData, null, null, newBtn);
                     }
                 };
 
                 render();
-                animate();
-                document.getElementById('menu-screen').style.display = 'none';
-                document.getElementById('player-screen').style.display = 'block';
-            } catch (err) { alert("Error loading files."); }
+
+            } catch (err) {
+                console.error(err);
+                alert("Erro na Sessão: " + err.message);
+            }
+
             document.getElementById('loading').style.display = 'none';
         }
 
