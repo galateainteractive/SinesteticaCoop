@@ -1,0 +1,150 @@
+{
+    "compositionName": "Novo Protocolo_51",
+    "originSeed": 12345,
+    "isMetronome": false,
+    "bpm": 92.0,
+    "numberOfBars": 1,
+    "grooveName": "GrvOrionIatus",
+    "numberOfGrooves": 1,
+    "grooveClipNames": [
+        "GrvOrionIatus"
+    ],
+    "numberOfSinesteticasPerGroove": [
+        14
+    ],
+    "maxPlayerHeight": 2.700000047683716,
+    "sourceGrooveSetName": "OrionIatus",
+    "dashboardSessions": [
+        {
+            "sessionId": 0,
+            "grooveIndex": 0,
+            "grooveVolume": 1.0,
+            "isGrooveMuted": false,
+            "tracks": [
+                {
+                    "globalId": 1,
+                    "startSample": 15652,
+                    "generatorType": 1,
+                    "presetName": "SineStutterR",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 2,
+                    "startSample": 15652,
+                    "generatorType": 1,
+                    "presetName": "SineStutterR",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 3,
+                    "startSample": 39130,
+                    "generatorType": 1,
+                    "presetName": "SineStutterR",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 4,
+                    "startSample": 31304,
+                    "generatorType": 1,
+                    "presetName": "QuaseQuadradoR",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 5,
+                    "startSample": 46957,
+                    "generatorType": 1,
+                    "presetName": "SineStutterR",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 6,
+                    "startSample": 7826,
+                    "generatorType": 1,
+                    "presetName": "SineStutterR",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 7,
+                    "startSample": 31304,
+                    "generatorType": 1,
+                    "presetName": "SineStutterR",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 8,
+                    "startSample": 23478,
+                    "generatorType": 1,
+                    "presetName": "SineStutterR",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 9,
+                    "startSample": 0,
+                    "generatorType": 1,
+                    "presetName": "SineStutterR",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 10,
+                    "startSample": 15652,
+                    "generatorType": 1,
+                    "presetName": "SineStutterR",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 11,
+                    "startSample": 0,
+                    "generatorType": 1,
+                    "presetName": "QuaseQuadradoR",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 12,
+                    "startSample": 54783,
+                    "generatorType": 1,
+                    "presetName": "SineStutterR",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 13,
+                    "startSample": 54783,
+                    "generatorType": 1,
+                    "presetName": "SineStutterR",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 14,
+                    "startSample": 15652,
+                    "generatorType": 1,
+                    "presetName": "SineStutterR",
+                    "frequencyRange": ""
+                }
+            ]
+        }
+    ],
+    "continuousTracks": [],
+    "presetNames": [
+        "SineStutterR",
+        "PatchoulyR",
+        "PengR",
+        "QuaseQuadradoR",
+        "SenoR",
+        "SerraDancanteR",
+        "MiauMetal",
+        "FlinR",
+        "BorbulhandoR",
+        "CigarraDefeituosaR",
+        "EscadasDesafinadasR",
+        "FM",
+        "RobotaR",
+        "SinaisExtraterrestresR",
+        "COA Trumpet",
+        "COA Pluck Tom",
+        "MT Organ 2",
+        "MT Wandering Lost",
+        "SF Clarinet",
+        "COA Soft Neo Church Organ",
+        "OZ Platinum",
+        "COA Tension 3"
+    ]
+}
