@@ -19,8 +19,14 @@
         .main-layout { display: flex; flex-direction: column; height: 100%; }
         
         /* --- PAINEL SUPERIOR --- */
-        .top-panel { flex-shrink: 0; border-bottom: 4px solid #fff; padding: 15px; background: #000; z-index: 10; position: relative; }
-        
+        .top-panel {
+            flex-shrink: 0;
+            max-height: 55vh; /* O painel fixo nunca terá mais que 55% da altura da tela */
+            overflow-y: auto; /* Se o conteúdo do painel for grande, ele escoa internamente */
+            border-bottom: 4px solid #fff;
+            padding: 10px;
+            background: #000;
+        }        
         .nav-header { display: flex; justify-content: space-between; margin-bottom: 15px; }
         .back-btn { background: #000; color: #fff; border: 1px solid #fff; padding: 5px 10px; cursor: pointer; font-family: inherit; text-transform: uppercase; font-size: 10px; }
         .help-btn { background: #000; color: #fff; border: 1px solid #fff; padding: 5px 12px; cursor: pointer; font-family: inherit; font-weight: bold; font-size: 14px; }
@@ -108,6 +114,35 @@
             .canvas-container { width: 600px; }
             .btn-group { margin-top: 0; }
             .btn { flex: none; min-width: 100px; }
+        }
+
+        /* Ajustes para telas com pouca altura vertical (celulares) */
+        @media (max-height: 700px) {
+            .top-panel .canvas-container {
+                height: 80px !important;
+            }
+
+            #liveScope {
+                height: 60px !important;
+            }
+
+            .groove-toolbar {
+                margin-top: 5px;
+                padding-top: 5px;
+            }
+
+            .scope-controls {
+                gap: 5px;
+                padding: 5px;
+            }
+
+            .control-group {
+                min-width: 70px;
+            }
+
+            .top-panel {
+                padding: 8px;
+            }
         }
         /* --- SESSIONS NAV (Botões de Sessão) --- */
         .session-nav {
