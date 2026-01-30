@@ -1,0 +1,232 @@
+{
+    "compositionName": "Novo Protocolo_47",
+    "originSeed": 0,
+    "isMetronome": false,
+    "bpm": 92.0,
+    "numberOfBars": 1,
+    "grooveName": "GrvOrionIatus",
+    "numberOfGrooves": 1,
+    "grooveClipNames": [
+        "GrvOrionIatus"
+    ],
+    "numberOfSinesteticasPerGroove": [
+        24
+    ],
+    "maxPlayerHeight": 1.2128052711486817,
+    "sourceGrooveSetName": "OrionIatus",
+    "dashboardSessions": [
+        {
+            "sessionId": 0,
+            "grooveIndex": 0,
+            "grooveVolume": 1.0,
+            "isGrooveMuted": false,
+            "tracks": [
+                {
+                    "globalId": 1,
+                    "startSample": 46957,
+                    "generatorType": 2,
+                    "presetName": "Clarinet-SFZ-20190818",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 2,
+                    "startSample": 23478,
+                    "generatorType": 2,
+                    "presetName": "Clarinet-SFZ-20190818",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 3,
+                    "startSample": 0,
+                    "generatorType": 2,
+                    "presetName": "Clarinet-SFZ-20190818",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 4,
+                    "startSample": 0,
+                    "generatorType": 2,
+                    "presetName": "Basspick",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 5,
+                    "startSample": 78261,
+                    "generatorType": 2,
+                    "presetName": "Basspick",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 6,
+                    "startSample": 23478,
+                    "generatorType": 2,
+                    "presetName": "Basspick",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 7,
+                    "startSample": 78261,
+                    "generatorType": 2,
+                    "presetName": "Basspick",
+                    "frequencyRange": ""
+                }
+            ]
+        },
+        {
+            "sessionId": 1,
+            "grooveIndex": 0,
+            "grooveVolume": 1.0,
+            "isGrooveMuted": false,
+            "tracks": [
+                {
+                    "globalId": 8,
+                    "startSample": 0,
+                    "generatorType": 2,
+                    "presetName": "Clarinet-SFZ-20190818",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 9,
+                    "startSample": 23478,
+                    "generatorType": 2,
+                    "presetName": "Clarinet-SFZ-20190818",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 10,
+                    "startSample": 78261,
+                    "generatorType": 2,
+                    "presetName": "Basspick",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 11,
+                    "startSample": 70435,
+                    "generatorType": 2,
+                    "presetName": "Basspick",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 12,
+                    "startSample": 23478,
+                    "generatorType": 2,
+                    "presetName": "Basspick",
+                    "frequencyRange": ""
+                }
+            ]
+        },
+        {
+            "sessionId": 2,
+            "grooveIndex": 0,
+            "grooveVolume": 1.0,
+            "isGrooveMuted": false,
+            "tracks": [
+                {
+                    "globalId": 13,
+                    "startSample": 70435,
+                    "generatorType": 2,
+                    "presetName": "Clarinet-SFZ-20190818",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 14,
+                    "startSample": 23478,
+                    "generatorType": 2,
+                    "presetName": "Basspick",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 15,
+                    "startSample": 78261,
+                    "generatorType": 2,
+                    "presetName": "Basspick",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 16,
+                    "startSample": 23478,
+                    "generatorType": 2,
+                    "presetName": "Basspick",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 17,
+                    "startSample": 0,
+                    "generatorType": 2,
+                    "presetName": "Basspick",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 18,
+                    "startSample": 78261,
+                    "generatorType": 2,
+                    "presetName": "Basspick",
+                    "frequencyRange": ""
+                }
+            ]
+        },
+        {
+            "sessionId": 3,
+            "grooveIndex": 0,
+            "grooveVolume": 1.0,
+            "isGrooveMuted": false,
+            "tracks": [
+                {
+                    "globalId": 19,
+                    "startSample": 93913,
+                    "generatorType": 2,
+                    "presetName": "Clarinet-SFZ-20190818",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 20,
+                    "startSample": 70435,
+                    "generatorType": 2,
+                    "presetName": "Clarinet-SFZ-20190818",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 21,
+                    "startSample": 93913,
+                    "generatorType": 2,
+                    "presetName": "Basspick",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 22,
+                    "startSample": 78261,
+                    "generatorType": 2,
+                    "presetName": "Basspick",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 23,
+                    "startSample": 31304,
+                    "generatorType": 2,
+                    "presetName": "Basspick",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 24,
+                    "startSample": 93913,
+                    "generatorType": 2,
+                    "presetName": "Basspick",
+                    "frequencyRange": ""
+                }
+            ]
+        }
+    ],
+    "continuousTracks": [],
+    "presetNames": [
+        "Basspick",
+        "Basspick",
+        "Basspick",
+        "Basspick",
+        "Basspick",
+        "Basspick",
+        "Basspick",
+        "Basspick",
+        "Basspick",
+        "Basspick"
+    ]
+}
