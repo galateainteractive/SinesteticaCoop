@@ -844,11 +844,8 @@
 
                 const mBtn = masterContainer.querySelector('#masterPlayBtn');
                 mBtn.onclick = () => {
-                    if (isPlayingMaster) {
-                        togglePause(null, null);
-                    } else {
-                        playMaster();
-                    }
+                    // Removemos o IF que pausava. Agora chamamos direto o play:
+                    playMaster();
                 };
 
                 // Desenha waveform do Groove no Master apenas visualmente
