@@ -334,7 +334,7 @@
         let lastWaveformData = null;
 
         // --- FEATURE SECRET CODE ---
-        let isMasterUnlocked = false;
+        let unlockedSessions = new Set(); // Agora é uma lista de sessões liberadas
         const SECRET_CODE = "067";
 
         // --- CONFIGURAÇÃO DE SESSÃO ---
@@ -474,7 +474,6 @@
 
             document.getElementById('loading').style.display = 'flex';
             stopAllAudio();
-            isMasterUnlocked = false; // Reset do segredo ao trocar sessão
 
             document.querySelectorAll('.session-btn').forEach(b => b.classList.remove('active'));
             const activeBtn = document.getElementById(`btn-sess-${index}`);
@@ -817,32 +816,34 @@
             const masterContainer = document.createElement('div');
             masterContainer.className = 'master-track-container';
 
-            if (!isMasterUnlocked) {
+            // Verifica se a sessão ATUAL já está na lista de desbloqueados
+            if (!unlockedSessions.has(currentSessionIndex)) {
                 masterContainer.innerHTML = `
-                <div class="master-locked">
-                    <span>COMPLETE A SESSION PARA RECEBER O CÓDIGO</span>
-                    <br><br>
-                    > <input type="text" class="master-input" maxlength="3" placeholder="000" />
-                </div>
+            <div class="master-locked">
+                <span>COMPLETE A SESSION PARA RECEBER O CÓDIGO</span>
+                <br><br>
+                > <input type="text" class="master-input" maxlength="3" placeholder="000" />
+            </div>
             `;
                 const input = masterContainer.querySelector('input');
                 input.oninput = (e) => {
                     if (e.target.value === SECRET_CODE) {
-                        isMasterUnlocked = true;
+                        // SUCESSO: Salva na memória que ESTA sessão foi liberada
+                        unlockedSessions.add(currentSessionIndex);
                         render();
                     }
                 };
             } else {
                 masterContainer.innerHTML = `
-                <div class="master-unlocked">
-                    <div class="master-title">★ MASTER SEQUENCE UNLOCKED ★</div>
-                    <div class="canvas-container" style="margin: 0 auto; height: 100px;">
-                        <canvas id="canv-master" width="800" height="100"></canvas>
-                    </div>
-                    <button id="masterPlayBtn" class="btn" style="width:100%; margin-top:10px; font-weight:bold; border:1px solid #fff;">
-                        [ PLAY ALL - MASTER SEQUENCE ]
-                    </button>
+            <div class="master-unlocked">
+                <div class="master-title">★ MASTER SEQUENCE UNLOCKED ★</div>
+                <div class="canvas-container" style="margin: 0 auto; height: 100px;">
+                    <canvas id="canv-master" width="800" height="100"></canvas>
                 </div>
+                <button id="masterPlayBtn" class="btn" style="width:100%; margin-top:10px; font-weight:bold; border:1px solid #fff;">
+                    [ PLAY ALL - MASTER SEQUENCE ]
+                </button>
+            </div>
             `;
                 tCont.appendChild(masterContainer);
 
