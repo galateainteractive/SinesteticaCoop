@@ -283,6 +283,18 @@
             }
         }
 
+        /* --- ESTADO BLOQUEADO DO BOTÃO FULL --- */
+        .full-seq-btn.locked {
+            background: #000;
+            color: #444; /* Texto cinza escuro */
+            border: 1px dashed #333; /* Borda pontilhada discreta */
+            cursor: not-allowed; /* Cursor de proibido */
+            opacity: 0.7;
+            pointer-events: none; /* Impede clique */
+            box-shadow: none;
+            font-size: 10px; /* Um pouco menor pra caber o texto longo */
+        }
+
     </style>
 </head>
 <body>
@@ -872,20 +884,30 @@
             const tCont = document.getElementById('tracksContainer');
             gCont.innerHTML = ''; tCont.innerHTML = '';
 
-            // --- ATUALIZA CABEÇALHO (CHECK DO FULL SEQUENCE) ---
+            // --- ATUALIZA CABEÇALHO (BOTÃO FULL SEQUENCE) ---
             const headerCont = document.getElementById('full-seq-container');
             if (headerCont) {
                 headerCont.innerHTML = '';
-                // Verifica se todas as sessões foram desbloqueadas
                 const totalSessions = currentCompositionConfig.dashboardSessions ? currentCompositionConfig.dashboardSessions.length : 0;
 
-                if (totalSessions > 0 && unlockedSessions.size === totalSessions) {
-                    // Cria botão Full Sequence
+                // Se houver sessões configuradas, mostra o botão (Bloqueado ou Desbloqueado)
+                if (totalSessions > 0) {
                     const btnFull = document.createElement('button');
                     btnFull.id = 'fullSeqBtn';
                     btnFull.className = 'full-seq-btn';
-                    btnFull.textContent = '[ PLAY FULL SEQUENCE ]';
-                    btnFull.onclick = () => playFullSequence();
+
+                    // Verifica se desbloqueou tudo
+                    if (unlockedSessions.size === totalSessions) {
+                        // --- MODO DESBLOQUEADO ---
+                        btnFull.textContent = '[ PLAY FULL SEQUENCE ]';
+                        btnFull.onclick = () => playFullSequence();
+                    } else {
+                        // --- MODO BLOQUEADO ---
+                        btnFull.classList.add('locked');
+                        // Texto explicativo (pode editar aqui se quiser outra frase)
+                        btnFull.textContent = '[ BLOQUEADO: COMPLETE TODAS AS SESSIONS ]';
+                    }
+
                     headerCont.appendChild(btnFull);
                 }
             }
