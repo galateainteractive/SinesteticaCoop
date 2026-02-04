@@ -286,13 +286,12 @@
         /* --- ESTADO BLOQUEADO DO BOTÃO FULL --- */
         .full-seq-btn.locked {
             background: #000;
-            color: #444; /* Texto cinza escuro */
-            border: 1px dashed #333; /* Borda pontilhada discreta */
-            cursor: not-allowed; /* Cursor de proibido */
-            opacity: 0.7;
-            pointer-events: none; /* Impede clique */
+            color: #666; /* Cinza igual session inativa */
+            border: 1px solid #333; /* Borda sólida igual session */
+            cursor: not-allowed;
+            pointer-events: none;
             box-shadow: none;
-            font-size: 10px; /* Um pouco menor pra caber o texto longo */
+            font-size: 10px;
         }
 
     </style>
@@ -678,6 +677,12 @@
         }
 
         async function playFullSequence() {
+            // Se já estiver tocando, funciona como STOP
+            if (isPlayingFull) {
+                stopAllAudio();
+                return;
+            }
+
             document.getElementById('loading').style.display = 'flex';
             stopAllAudio();
             resetUI();
@@ -688,26 +693,27 @@
 
             const fsBtn = document.getElementById('fullSeqBtn');
             if (fsBtn) {
-                fsBtn.textContent = "[ PLAYING FULL SEQUENCE ]";
+                fsBtn.textContent = "[ STOP FULL SEQUENCE (LOOP) ]"; // Muda texto para STOP
                 fsBtn.classList.add('active-full');
+                // Muda cor para vermelho ou algo que indique 'parar'? 
+                // Por enquanto mantive o padrão 'active-full' (branco/preto invertido)
             }
 
             try {
-                // Busca o MP3 na pasta da composição
-                const path = `${currentCompositionConfig._rootFolder}/full_sequence.mp3`;
+                const path = encodeURI(`${currentCompositionConfig._rootFolder}/full_sequence.mp3`);
                 const response = await fetch(path);
                 if (!response.ok) throw new Error("Full Sequence file not found in: " + path);
 
                 const arrayBuffer = await response.arrayBuffer();
                 const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
 
-                // Cria objeto "falso" de track para usar o mesmo engine (assim aparece no scope)
                 const fullTrackData = {
                     buffer: audioBuffer,
                     offset: 0
                 };
 
-                startSources([fullTrackData], 0, true);
+                // O ultimo parâmetro 'true' ativa o LOOP
+                startSources([fullTrackData], 0, true, true);
 
             } catch (e) {
                 console.error(e);
@@ -717,7 +723,7 @@
             document.getElementById('loading').style.display = 'none';
         }
 
-        function startSources(dataList, offsetTime, forceSync) {
+        function startSources(dataList, offsetTime, forceSync, shouldLoop = false) {
             // Limpa anteriores
             activeSources.forEach(s => { try { s.stop() } catch (e) { } });
             activeSources = [];
@@ -727,6 +733,7 @@
             dataList.forEach(data => {
                 const src = audioCtx.createBufferSource();
                 src.buffer = data.buffer;
+                src.loop = shouldLoop; // <--- NOVA LINHA: Ativa o Loop se pedido
                 src.connect(analyser);
 
                 let startPoint = 0;
@@ -736,13 +743,16 @@
                     startPoint = data.offset + offsetTime;
                 }
 
-                if (startPoint < data.buffer.duration) {
+                // Se for loop, não precisamos checar duração vs startPoint com tanto rigor
+                if (shouldLoop || startPoint < data.buffer.duration) {
                     src.start(0, startPoint);
                     activeSources.push(src);
                 }
             });
 
-            if (activeSources.length > 0) {
+            // Se NÃO for loop, mantém o comportamento de acabar sozinho.
+            // Se FOR loop, ele nunca acaba sozinho, só no Stop manual.
+            if (!shouldLoop && activeSources.length > 0) {
                 activeSources[0].onended = () => {
                     if (!isPaused && activeSources.length === 0) {
                         resetUI();
@@ -890,22 +900,27 @@
                 headerCont.innerHTML = '';
                 const totalSessions = currentCompositionConfig.dashboardSessions ? currentCompositionConfig.dashboardSessions.length : 0;
 
-                // Se houver sessões configuradas, mostra o botão (Bloqueado ou Desbloqueado)
                 if (totalSessions > 0) {
                     const btnFull = document.createElement('button');
                     btnFull.id = 'fullSeqBtn';
                     btnFull.className = 'full-seq-btn';
 
-                    // Verifica se desbloqueou tudo
                     if (unlockedSessions.size === totalSessions) {
                         // --- MODO DESBLOQUEADO ---
-                        btnFull.textContent = '[ PLAY FULL SEQUENCE ]';
+                        // Se estiver tocando, mostra STOP, senão PLAY
+                        if (isPlayingFull) {
+                            btnFull.textContent = '[ STOP FULL SEQUENCE (LOOP) ]';
+                            btnFull.classList.add('active-full');
+                        } else {
+                            btnFull.textContent = '[ PLAY FULL SEQUENCE ]';
+                        }
+
+                        // O clique alterna entre tocar ou parar (gerenciado dentro da playFullSequence)
                         btnFull.onclick = () => playFullSequence();
                     } else {
                         // --- MODO BLOQUEADO ---
                         btnFull.classList.add('locked');
-                        // Texto explicativo (pode editar aqui se quiser outra frase)
-                        btnFull.textContent = '[ BLOQUEADO: COMPLETE TODAS AS SESSIONS ]';
+                        btnFull.textContent = '[ PLAY ALL SEQUENCE BLOQUEADO: COMPLETE TODAS AS SESSIONS ]';
                     }
 
                     headerCont.appendChild(btnFull);
