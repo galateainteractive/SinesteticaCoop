@@ -590,13 +590,16 @@
 
         // 2. Play Master (Novo Modo "Banda Completa")
         function playMaster() {
+            // 1. Força parada total e limpeza de qualquer estado anterior
             stopAllAudio();
             resetUI();
             setZoomState(false);
 
-            activeTrack = null; // Não é uma track individual
-            isPlayingMaster = true; // É o Master
+            // 2. Define explicitamente o estado como "Tocando Master"
+            activeTrack = null;
+            isPlayingMaster = true;
 
+            // 3. Atualiza o visual do botão
             const masterBtn = document.getElementById('masterPlayBtn');
             if (masterBtn) {
                 masterBtn.textContent = "[ PLAYING ALL SEQUENCE ]";
@@ -604,9 +607,10 @@
                 masterBtn.style.color = "#000";
             }
 
-            // Cria lista com TODOS os áudios
+            // 4. Recria a lista de fontes do zero (CRUCIAL: recriar a lista aqui)
             const allSources = [grooveData, ...trackData];
-            // Força modo Master (ignora offsets individuais, toca tudo do 0)
+
+            // 5. Manda bala
             startSources(allSources, 0, true);
         }
 
