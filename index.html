@@ -177,6 +177,56 @@
                 border-color: #fff;
                 font-weight: bold;
             }
+
+        /* --- ESTILO DA MASTER TRACK (O "BOSS") --- */
+        .master-track-container {
+            margin-top: 40px;
+            margin-bottom: 50px;
+            padding: 10px;
+        }
+
+        .master-locked {
+            border: 2px dashed #444;
+            background: #0a0a0a;
+            padding: 30px;
+            text-align: center;
+            color: #666;
+            font-family: monospace;
+            letter-spacing: 1px;
+        }
+
+        .master-input {
+            background: #000;
+            border: 1px solid #666;
+            color: #fff;
+            padding: 8px;
+            font-size: 14px;
+            width: 80px;
+            text-align: center;
+            letter-spacing: 3px;
+            margin-left: 10px;
+            text-transform: uppercase;
+        }
+
+        .master-unlocked {
+            border: 4px double #fff;
+            background: #000;
+            padding: 15px;
+            position: relative;
+            box-shadow: 0 0 15px rgba(255,255,255,0.2);
+        }
+
+        .master-title {
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
+            letter-spacing: 4px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            color: #fff;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -257,26 +307,35 @@
     <script>
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         const analyser = audioCtx.createAnalyser();
-        analyser.fftSize = 8192; 
+        analyser.fftSize = 8192;
         analyser.connect(audioCtx.destination);
-        
+
+        // --- ESTADO GLOBAL ---
         let grooveData = null;
         let trackData = [];
-        let activeTrack = null;
+        let activeTrack = null; // Se for 'MASTER', indica modo conjunto
         let visualGain = 1.0;
-        let scopeZoom = 1.0; 
+        let scopeZoom = 1.0;
         let divisions = 4;
-        let scopeOffset = 0; 
+        let scopeOffset = 0;
         let isDragging = false;
         let lastMouseX = 0;
 
-        let currentSource = null;
-        let startTime = 0;   
-        let pausedAt = 0;    
+        // AUDIO ENGINE MULTI-CANAL
+        let activeSources = []; // Lista de fontes tocando agora
+        let startTime = 0;
+        let pausedAt = 0;
         let isPaused = false;
-        let currentBuffer = null;
-        let currentOffset = 0;
         let lastWaveformData = null;
+
+        // FEATURE BOSS / CÓDIGO
+        let isMasterUnlocked = false;
+        const SECRET_CODE = "067";
+
+        // --- CONFIGURAÇÃO DE SESSÃO ---
+        let currentCompositionConfig = null;
+        let currentSessionIndex = -1;
+        const GLOBAL_GROOVES_FOLDER = 'grooves';
 
         function toggleHelp() {
             const el = document.getElementById('help-overlay');
@@ -306,20 +365,20 @@
 
         window.onload = async () => {
             loadTexts();
-            setZoomState(false); 
+            setZoomState(false);
 
             const cvs = document.getElementById('liveScope');
             const handleStart = (x) => { isDragging = true; lastMouseX = x; };
             const handleMove = (x) => {
-                if(!isDragging) return;
+                if (!isDragging) return;
                 const delta = x - lastMouseX;
                 scopeOffset += delta;
-                if(scopeOffset > 0) scopeOffset = 0;
-                
+                if (scopeOffset > 0) scopeOffset = 0;
+
                 const w = cvs.width;
                 const totalWidth = w * scopeZoom;
                 const minOffset = -(totalWidth - w);
-                
+
                 if (scopeOffset < minOffset) scopeOffset = minOffset;
                 lastMouseX = x;
             };
@@ -358,36 +417,24 @@
             }
         }
 
-        /* --- BLOCO NOVO: SESSIONS & GROOVES COMPARTILHADOS --- */
-        let currentCompositionConfig = null;
-        let currentSessionIndex = -1;
-        const GLOBAL_GROOVES_FOLDER = 'grooves'; // Pasta global na raiz
-
         async function startApp(musica) {
             document.getElementById('loading').style.display = 'flex';
             try {
-                // 1. Carrega settings.json
                 const resJson = await fetch(`${musica.pasta}/settings.json`);
                 currentCompositionConfig = await resJson.json();
-
-                // Guarda pasta raiz
                 currentCompositionConfig._rootFolder = musica.pasta;
 
-                // Título
                 document.getElementById('playing-title').textContent =
                     currentCompositionConfig.compositionName || musica.nome;
 
-                // 2. Cria navegação de Sessions (se houver mais de 1)
                 setupSessionNav(currentCompositionConfig.dashboardSessions);
 
-                // 3. Carrega a primeira sessão
                 if (currentCompositionConfig.dashboardSessions && currentCompositionConfig.dashboardSessions.length > 0) {
                     await loadSession(0);
                 } else {
                     throw new Error("Nenhuma sessão encontrada no JSON.");
                 }
 
-                // Troca de tela
                 document.getElementById('menu-screen').style.display = 'none';
                 document.getElementById('player-screen').style.display = 'block';
                 animate();
@@ -402,13 +449,10 @@
         function setupSessionNav(sessions) {
             const nav = document.getElementById('sessionNav');
             nav.innerHTML = '';
-
-            // Se tiver só 1 sessão, esconde o menu
             if (!sessions || sessions.length <= 1) {
                 nav.style.display = 'none';
                 return;
             }
-
             nav.style.display = 'flex';
             sessions.forEach((sess, idx) => {
                 const btn = document.createElement('button');
@@ -424,9 +468,11 @@
             if (currentSessionIndex === index) return;
 
             document.getElementById('loading').style.display = 'flex';
-            stopAudioInternal(); // Para o som anterior
+            stopAllAudio();
 
-            // Atualiza visual dos botões
+            // Reset do Master Lock ao trocar de sessão
+            isMasterUnlocked = false;
+
             document.querySelectorAll('.session-btn').forEach(b => b.classList.remove('active'));
             const activeBtn = document.getElementById(`btn-sess-${index}`);
             if (activeBtn) activeBtn.classList.add('active');
@@ -436,40 +482,28 @@
             const localFolder = currentCompositionConfig._rootFolder;
 
             try {
-                // --- LÓGICA DO GROOVE (PRIORIDADE PARA PASTAS) ---
                 let fetchPath = "";
                 let displayLabel = "";
 
-                // 1. PRIORIDADE: Modo Novo (Pasta "OrionIatus" + Índice numérico 0.wav)
-                // Se existe um nome de Set definido, assumimos que a estrutura é de pastas.
                 if (currentCompositionConfig.sourceGrooveSetName) {
                     const setName = currentCompositionConfig.sourceGrooveSetName;
                     const idx = session.grooveIndex;
                     displayLabel = `${setName} [Var ${idx}]`;
                     fetchPath = `${GLOBAL_GROOVES_FOLDER}/${setName}/${idx}.wav`;
                 }
-                // 2. FALLBACK: Modo Antigo (Lista de nomes explicita no JSON)
-                // Só entra aqui se NÃO tiver sourceGrooveSetName
                 else if (currentCompositionConfig.grooveClipNames && currentCompositionConfig.grooveClipNames[session.grooveIndex]) {
                     const gName = currentCompositionConfig.grooveClipNames[session.grooveIndex];
                     displayLabel = gName;
                     fetchPath = `${GLOBAL_GROOVES_FOLDER}/${gName}.wav`;
                 }
                 else {
-                    // 3. DESESPERO: Tenta achar só pelo número na raiz
                     displayLabel = `Groove Index ${session.grooveIndex}`;
                     fetchPath = `${GLOBAL_GROOVES_FOLDER}/${session.grooveIndex}.wav`;
                 }
 
-                console.log(`Buscando Groove principal em: ${fetchPath}`);
-
-                // 1. Tenta o caminho calculado (Global)
                 let gRes = await fetch(fetchPath);
-
-                // 2. Fallback: Se falhar, tenta procurar na pasta LOCAL do projeto pelo índice
                 if (!gRes.ok) {
                     const localFallback = `${localFolder}/${session.grooveIndex}.wav`;
-                    console.warn(`Caminho principal falhou. Tentando Local: ${localFallback}`);
                     gRes = await fetch(localFallback);
                 }
 
@@ -484,11 +518,9 @@
                     offset: 0
                 };
 
-                // --- CARREGAMENTO DAS TRACKS ---
                 trackData = [];
                 const trackPromises = session.tracks.map(async (t) => {
                     try {
-                        // Tracks são sempre na pasta local
                         const tRes = await fetch(`${localFolder}/clip_${t.globalId}.wav`);
                         if (tRes.ok) {
                             const tBuf = await audioCtx.decodeAudioData(await tRes.arrayBuffer());
@@ -507,7 +539,7 @@
                 const loadedTracks = await Promise.all(trackPromises);
                 trackData = loadedTracks.filter(t => t !== null);
 
-                // Configura botão Play do Groove
+                // Reconfigura botão Groove Header
                 const grooveBtn = document.getElementById('groovePlayBtn');
                 const newBtn = grooveBtn.cloneNode(true);
                 grooveBtn.parentNode.replaceChild(newBtn, grooveBtn);
@@ -516,7 +548,7 @@
                     if (activeTrack === grooveData) {
                         togglePause(null, newBtn);
                     } else {
-                        playFromStart(grooveData, null, null, newBtn);
+                        playSingle(grooveData, null, null, newBtn);
                     }
                 };
 
@@ -530,72 +562,143 @@
             document.getElementById('loading').style.display = 'none';
         }
 
-        function playFromStart(data, btnPlay, btnPause, grooveBtn) {
-            stopAudioInternal(); 
+        // --- AUDIO ENGINE ATUALIZADA ---
+
+        function playSingle(data, btnPlay, btnPause, grooveBtn) {
+            stopAllAudio();
             resetUI();
             setZoomState(false);
-            activeTrack = data;
-            currentBuffer = data.buffer;
-            currentOffset = data.offset;
 
-            if(grooveBtn) {
+            activeTrack = data;
+
+            if (grooveBtn) {
                 grooveBtn.textContent = "[ PLAYING GROOVE ]";
                 grooveBtn.classList.add('groove-playing');
             } else if (btnPlay) {
                 btnPlay.textContent = "[ PLAYING ]";
-                btnPause.style.display = "block";
+                if (btnPause) btnPause.style.display = "block";
             }
-            startSource(0);
+
+            // Toca apenas 1 fonte
+            startSources([data], 0);
+        }
+
+        function playMaster() {
+            stopAllAudio();
+            resetUI();
+            setZoomState(false);
+
+            activeTrack = 'MASTER'; // Flag especial
+
+            const masterBtn = document.getElementById('masterPlayBtn');
+            if (masterBtn) {
+                masterBtn.textContent = "[ PLAYING ALL SEQUENCE ]";
+                masterBtn.style.background = "#fff";
+                masterBtn.style.color = "#000";
+            }
+
+            // Cria lista com Groove + Todas as Tracks
+            const allSources = [grooveData, ...trackData];
+            startSources(allSources, 0);
+        }
+
+        function startSources(dataList, offsetTime) {
+            // Limpa anteriores por segurança
+            activeSources.forEach(s => { try { s.stop() } catch (e) { } });
+            activeSources = [];
+
+            // Calcula tempo inicial
+            // No modo MASTER, usamos a duração do Groove como referência se quiser,
+            // mas aqui vamos assumir que cada um toca até acabar seu buffer.
+
+            startTime = audioCtx.currentTime - offsetTime;
+
+            dataList.forEach(data => {
+                const src = audioCtx.createBufferSource();
+                src.buffer = data.buffer;
+                src.connect(analyser); // Todos vão para o Scope
+
+                // Offset individual do clipe + offset do pause global
+                const startPoint = data.offset + offsetTime;
+
+                if (startPoint < data.buffer.duration) {
+                    src.start(0, startPoint);
+                    activeSources.push(src);
+                }
+            });
+
+            // Evento onended (só atrelamos ao primeiro para limpar UI, simplificação)
+            if (activeSources.length > 0) {
+                activeSources[0].onended = () => {
+                    // Verificação simples: se o groove acabou, assumimos fim
+                    // (Melhoria futura: verificar se todos acabaram)
+                    if (!isPaused && activeSources.length === 0) {
+                        resetUI();
+                        activeTrack = null;
+                    }
+                };
+            }
         }
 
         function togglePause(btnPause, grooveBtn) {
-            if (!currentBuffer) return; 
+            if (activeSources.length === 0 && !isPaused) return;
+
             if (isPaused) {
+                // RESUME
                 setZoomState(false);
-                startSource(pausedAt);
+
+                if (activeTrack === 'MASTER') {
+                    const allSources = [grooveData, ...trackData];
+                    startSources(allSources, pausedAt);
+                    const mb = document.getElementById('masterPlayBtn');
+                    if (mb) { mb.textContent = "[ PLAYING ALL SEQUENCE ]"; mb.style.background = "#fff"; mb.style.color = "#000"; }
+                } else if (activeTrack) {
+                    startSources([activeTrack], pausedAt);
+                }
+
                 isPaused = false;
-                if(btnPause) btnPause.textContent = "[ PAUSE ]";
-                if(grooveBtn) {
+
+                if (btnPause) btnPause.textContent = "[ PAUSE ]";
+                if (grooveBtn) {
                     grooveBtn.textContent = "[ PLAYING GROOVE ]";
                     grooveBtn.classList.add('groove-playing');
                 }
+
             } else {
-                if(currentSource) { currentSource.stop(); currentSource = null; }
-                pausedAt = audioCtx.currentTime - startTime;
+                // PAUSE
+                stopAllAudio(true); // true = mantém estado lógico, só para o som
                 isPaused = true;
-                if(btnPause) btnPause.textContent = "[ RESUME ]";
-                if(grooveBtn) {
+
+                if (btnPause) btnPause.textContent = "[ RESUME ]";
+                if (grooveBtn) {
                     grooveBtn.textContent = "[ RESUME GROOVE ]";
                     grooveBtn.classList.remove('groove-playing');
                 }
+
+                if (activeTrack === 'MASTER') {
+                    const mb = document.getElementById('masterPlayBtn');
+                    if (mb) { mb.textContent = "[ RESUME ALL ]"; mb.style.background = "#000"; mb.style.color = "#fff"; }
+                }
+
                 setZoomState(true);
             }
         }
 
-        function startSource(offsetTime) {
-            if (currentSource) { try { currentSource.stop(); } catch(e){} }
-            currentSource = audioCtx.createBufferSource();
-            currentSource.buffer = currentBuffer;
-            currentSource.connect(analyser);
-            const actualStartPoint = currentOffset + offsetTime;
-            if (actualStartPoint >= currentBuffer.duration) { resetUI(); return; }
-            currentSource.start(0, actualStartPoint);
-            startTime = audioCtx.currentTime - offsetTime;
-            
-            currentSource.onended = () => { 
-                if (!isPaused && currentSource) {
-                    resetUI();
-                    activeTrack = null;
-                }
-            };
-        }
+        function stopAllAudio(isPauseAction = false) {
+            activeSources.forEach(src => {
+                try { src.onended = null; src.stop(); } catch (e) { }
+            });
+            activeSources = [];
 
-        function stopAudioInternal() {
-            if (currentSource) { try { currentSource.onended = null; currentSource.stop(); } catch(e){} currentSource = null; }
-            isPaused = false;
-            pausedAt = 0;
-            lastWaveformData = null;
-            setZoomState(false); 
+            if (!isPauseAction) {
+                isPaused = false;
+                pausedAt = 0;
+                lastWaveformData = null;
+                setZoomState(false);
+                activeTrack = null;
+            } else {
+                pausedAt = audioCtx.currentTime - startTime;
+            }
         }
 
         function resetUI() {
@@ -603,83 +706,166 @@
                 if (!b.classList.contains('back-btn') && !b.classList.contains('btn-pause')) b.textContent = "[ PLAY ]";
             });
             document.querySelectorAll('.btn-pause').forEach(b => { b.style.display = "none"; b.textContent = "[ PAUSE ]"; });
-            
+
             const gBtn = document.getElementById('groovePlayBtn');
-            if(gBtn) {
+            if (gBtn) {
                 gBtn.textContent = "[ PLAY GROOVE ]";
                 gBtn.classList.remove('groove-playing');
             }
+
+            const mBtn = document.getElementById('masterPlayBtn');
+            if (mBtn) {
+                mBtn.textContent = "[ PLAY ALL - MASTER SEQUENCE ]";
+                mBtn.style.background = "#000";
+                mBtn.style.color = "#fff";
+            }
+
             const cursor = document.getElementById('cursor-g');
-            if(cursor) cursor.style.display = 'none';
+            if (cursor) cursor.style.display = 'none';
+
+            // Remove cursores de tracks individuais se houver (futuro)
         }
 
         function computeWave(buffer) {
             const data = buffer.getChannelData(0);
-            const step = Math.ceil(data.length / 400); 
+            const step = Math.ceil(data.length / 400);
             const wave = new Float32Array(400);
-            for(let i=0; i<400; i++) {
+            for (let i = 0; i < 400; i++) {
                 let max = 0;
-                for(let j=0; j<step; j++) {
-                    const v = Math.abs(data[i*step+j]);
-                    if(v > max) max = v;
+                for (let j = 0; j < step; j++) {
+                    const v = Math.abs(data[i * step + j]);
+                    if (v > max) max = v;
                 }
                 wave[i] = max;
             }
             return wave;
         }
 
+        // --- RENDERIZADOR ---
+
         function render() {
             const gCont = document.getElementById('grooveContainer');
             const tCont = document.getElementById('tracksContainer');
             gCont.innerHTML = ''; tCont.innerHTML = '';
 
-            const drawRow = (data, cont, isGroove) => {
+            // 1. Renderiza Groove Topo
+            if (grooveData) {
                 const row = document.createElement('div');
                 row.className = 'track-row';
-                
-                if(isGroove) {
-                    row.innerHTML = `
-                    <div class="canvas-container" style="position:relative;">
-                        <canvas id="canv-g" width="800" height="120"></canvas>
-                        <div id="cursor-g" class="cursor-groove"></div>
-                    </div>`;
-                    cont.appendChild(row);
-                } else {
-                    row.innerHTML = `
-                        <div class="track-info">
-                            <div class="track-label">${data.label}</div>
-                        </div>
-                        <div class="canvas-container">
-                            <canvas id="canv-${data.id}" width="800" height="100"></canvas>
-                        </div>
-                        <div class="btn-group"></div>`;
-                    const btnPlay = document.createElement('button');
-                    btnPlay.className = 'btn'; btnPlay.textContent = '[ PLAY ]';
-                    const btnPause = document.createElement('button');
-                    btnPause.className = 'btn btn-pause'; btnPause.textContent = '[ PAUSE ]';
+                row.innerHTML = `
+            <div class="canvas-container" style="position:relative;">
+                <canvas id="canv-g" width="800" height="120"></canvas>
+                <div id="cursor-g" class="cursor-groove"></div>
+            </div>`;
+                gCont.appendChild(row);
+                updateCanvas(grooveData, true);
+            }
 
-                    btnPlay.onclick = () => playFromStart(data, btnPlay, btnPause, null);
-                    btnPause.onclick = () => togglePause(btnPause, null);
+            // 2. Renderiza Tracks Individuais
+            trackData.forEach(data => {
+                const row = document.createElement('div');
+                row.className = 'track-row';
+                row.innerHTML = `
+                <div class="track-info">
+                    <div class="track-label">${data.label}</div>
+                </div>
+                <div class="canvas-container">
+                    <canvas id="canv-${data.id}" width="800" height="100"></canvas>
+                </div>
+                <div class="btn-group"></div>`;
 
-                    row.querySelector('.btn-group').append(btnPlay, btnPause);
-                    cont.appendChild(row);
-                }
-                updateCanvas(data, isGroove);
-            };
+                const btnPlay = document.createElement('button');
+                btnPlay.className = 'btn'; btnPlay.textContent = '[ PLAY ]';
+                const btnPause = document.createElement('button');
+                btnPause.className = 'btn btn-pause'; btnPause.textContent = '[ PAUSE ]';
 
-            drawRow(grooveData, gCont, true);
-            trackData.forEach(t => drawRow(t, tCont, false));
+                btnPlay.onclick = () => playSingle(data, btnPlay, btnPause, null);
+                btnPause.onclick = () => togglePause(btnPause, null);
+
+                row.querySelector('.btn-group').append(btnPlay, btnPause);
+                tCont.appendChild(row);
+                updateCanvas(data, false);
+            });
+
+            // 3. Renderiza MASTER / BOSS (No final da lista)
+            const masterContainer = document.createElement('div');
+            masterContainer.className = 'master-track-container';
+
+            if (!isMasterUnlocked) {
+                // MODO BLOQUEADO
+                masterContainer.innerHTML = `
+                <div class="master-locked">
+                    <span>COMPLETE A SESSION PARA RECEBER O CÓDIGO</span>
+                    <br><br>
+                    > <input type="text" class="master-input" maxlength="3" placeholder="000" />
+                </div>
+            `;
+                // Listener do Input
+                const input = masterContainer.querySelector('input');
+                input.oninput = (e) => {
+                    if (e.target.value === SECRET_CODE) {
+                        isMasterUnlocked = true;
+                        render(); // Re-renderiza para mostrar o player
+                    }
+                };
+            } else {
+                // MODO DESBLOQUEADO
+                masterContainer.innerHTML = `
+                <div class="master-unlocked">
+                    <div class="master-title">★ MASTER SEQUENCE UNLOCKED ★</div>
+                    <div class="canvas-container" style="margin: 0 auto; height: 100px;">
+                        <canvas id="canv-master" width="800" height="100"></canvas>
+                    </div>
+                    <button id="masterPlayBtn" class="btn" style="width:100%; margin-top:10px; font-weight:bold; border:1px solid #fff;">
+                        [ PLAY ALL - MASTER SEQUENCE ]
+                    </button>
+                </div>
+            `;
+                tCont.appendChild(masterContainer);
+
+                // Setup do Botão Master
+                const mBtn = masterContainer.querySelector('#masterPlayBtn');
+                mBtn.onclick = () => {
+                    if (activeTrack === 'MASTER') {
+                        togglePause(null, null); // Pause genérico
+                    } else {
+                        playMaster();
+                    }
+                };
+
+                // Desenha a waveform do Groove no Master (como referência)
+                setTimeout(() => {
+                    const cvsM = document.getElementById('canv-master');
+                    if (cvsM && grooveData) {
+                        const ctx = cvsM.getContext('2d');
+                        // Desenha waveform simples
+                        ctx.fillStyle = '#000'; ctx.fillRect(0, 0, 800, 100);
+                        ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.beginPath();
+                        const wave = grooveData.waveform;
+                        const step = 800 / wave.length;
+                        wave.forEach((v, i) => {
+                            ctx.moveTo(i * step, 50 - v * 40);
+                            ctx.lineTo(i * step, 50 + v * 40);
+                        });
+                        ctx.stroke();
+                    }
+                }, 50);
+                return; // Já dei append, saio
+            }
+
+            tCont.appendChild(masterContainer);
         }
 
         function updateCanvas(data, isGroove) {
-            const canvas = document.getElementById(`canv-${isGroove?'g':data.id}`);
+            const canvas = document.getElementById(`canv-${isGroove ? 'g' : data.id}`);
+            if (!canvas) return;
             const ctx = canvas.getContext('2d');
             const w = canvas.width;
             const h = canvas.height;
-            ctx.clearRect(0,0,w,h);
-            
+            ctx.clearRect(0, 0, w, h);
+
             const mainColor = isGroove ? '#fff' : '#000';
-            const marginY = isGroove ? 15 : 0; 
+            const marginY = isGroove ? 15 : 0;
             const boxHeight = h - (marginY * 2);
 
             ctx.strokeStyle = isGroove ? '#fff' : '#000';
@@ -692,67 +878,69 @@
 
             ctx.beginPath();
             data.waveform.forEach((v, i) => {
-                const amp = v * (waveMaxAmp/2) * visualGain;
-                ctx.moveTo(i*step, waveCenter - amp); 
-                ctx.lineTo(i*step, waveCenter + amp);
+                const amp = v * (waveMaxAmp / 2) * visualGain;
+                ctx.moveTo(i * step, waveCenter - amp);
+                ctx.lineTo(i * step, waveCenter + amp);
             });
             ctx.stroke();
 
-            if(isGroove) {
-                ctx.strokeStyle = mainColor; 
-                ctx.lineWidth = 1;         
-                ctx.setLineDash([5, 5]);  
-                for(let i=1; i<divisions; i++) {
+            if (isGroove) {
+                ctx.strokeStyle = mainColor;
+                ctx.lineWidth = 1;
+                ctx.setLineDash([5, 5]);
+                for (let i = 1; i < divisions; i++) {
                     const x = (w / divisions) * i;
-                    ctx.beginPath(); 
-                    ctx.moveTo(x, 0); 
+                    ctx.beginPath();
+                    ctx.moveTo(x, 0);
                     ctx.lineTo(x, h);
                     ctx.stroke();
                 }
-                ctx.setLineDash([]); 
+                ctx.setLineDash([]);
             }
         }
 
         function animate() {
             requestAnimationFrame(animate);
 
-            if (activeTrack === grooveData && !isPaused && currentSource) {
+            // Atualiza cursor do Groove (válido também para modo Master)
+            if (activeTrack && !isPaused && activeSources.length > 0 && grooveData) {
                 const progress = (audioCtx.currentTime - startTime) / grooveData.buffer.duration;
                 const el = document.getElementById('cursor-g');
-                if(el) { el.style.display = 'block'; el.style.left = (Math.min(progress, 1) * 100) + '%'; }
+                if (el) { el.style.display = 'block'; el.style.left = (Math.min(progress, 1) * 100) + '%'; }
             }
 
             const cvs = document.getElementById('liveScope');
             const sCtx = cvs.getContext('2d');
-            const w = 800; 
-            const h = cvs.height; 
-            
+            const w = 800;
+            const h = cvs.height;
+
             const dataArr = new Uint8Array(analyser.frequencyBinCount);
-            
-            if (!isPaused && currentSource) {
+
+            // Verifica se há algo tocando
+            if (!isPaused && activeSources.length > 0) {
                 analyser.getByteTimeDomainData(dataArr);
                 lastWaveformData = new Uint8Array(dataArr);
             } else if (isPaused && lastWaveformData) {
                 dataArr.set(lastWaveformData);
             } else {
-                sCtx.fillStyle = '#000'; sCtx.fillRect(0,0,w,h);
+                sCtx.fillStyle = '#000'; sCtx.fillRect(0, 0, w, h);
                 return;
             }
 
-            sCtx.fillStyle = '#000'; 
-            sCtx.fillRect(0,0,w,h);
+            sCtx.fillStyle = '#000';
+            sCtx.fillRect(0, 0, w, h);
 
-            const rulerHeight = 20; 
-            const waveAreaHeight = h - rulerHeight; 
+            const rulerHeight = 20;
+            const waveAreaHeight = h - rulerHeight;
             const waveCenter = waveAreaHeight / 2;
 
             sCtx.fillStyle = '#111';
             sCtx.fillRect(0, waveAreaHeight, w, rulerHeight);
 
-            const SPEED_OF_SOUND = 343; 
-            const totalSeconds = dataArr.length / audioCtx.sampleRate; 
+            const SPEED_OF_SOUND = 343;
+            const totalSeconds = dataArr.length / audioCtx.sampleRate;
             const totalMeters = totalSeconds * SPEED_OF_SOUND;
-            
+
             const basePixelsPerMeter = w / totalMeters;
             const scaledPixelsPerMeter = basePixelsPerMeter * scopeZoom;
 
@@ -760,40 +948,30 @@
             sCtx.font = "bold 10px Courier New";
             sCtx.textAlign = "left";
 
-            // --- Lógica de Steps: 1m, 0.5m ou 0.1m (limpo) ---
             let stepSize = 1;
             let precision = 0;
 
-            // MUDE O "400" PARA UM NÚMERO MENOR (Tente 150 ou 200)
             if (scaledPixelsPerMeter > 200) { stepSize = 0.1; precision = 1; }
-
-            // Ajuste aqui também para manter a coerência (ex: > 100)
             else if (scaledPixelsPerMeter > 100) { stepSize = 0.5; precision = 1; }
             else if (scaledPixelsPerMeter > 50) { stepSize = 0.5; precision = 1; }
 
             const maxVisibleMeters = (w - scopeOffset) / scaledPixelsPerMeter;
-            
-            for(let m = 0; m < maxVisibleMeters + stepSize; m += stepSize) {
-                m = Math.round(m * 100) / 100;
-                if(m === 0) continue; 
-                const xPos = (m * scaledPixelsPerMeter) + scopeOffset;
-                if(xPos < 0) continue;
-                if(xPos > w) break;
 
-                const isInteger = Number.isInteger(m);
-                
-                sCtx.strokeStyle = '#fff'; 
+            for (let m = 0; m < maxVisibleMeters + stepSize; m += stepSize) {
+                m = Math.round(m * 100) / 100;
+                if (m === 0) continue;
+                const xPos = (m * scaledPixelsPerMeter) + scopeOffset;
+                if (xPos < 0) continue;
+                if (xPos > w) break;
+
+                sCtx.strokeStyle = '#fff';
                 sCtx.beginPath();
-                sCtx.moveTo(xPos, waveAreaHeight); 
+                sCtx.moveTo(xPos, waveAreaHeight);
                 sCtx.lineTo(xPos, h);
                 sCtx.stroke();
 
-                // Lógica de "Decimation" para texto
-                // Se estivermos em 0.1, desenha texto apenas a cada 5 (0.5m)
                 let drawText = true;
                 if (stepSize === 0.1) {
-                    // m é float (ex: 1.1), multiplicamos por 10 para virar inteiro (11)
-                    // Se (11 % 5 != 0) -> não desenha
                     if (Math.round(m * 10) % 5 !== 0) drawText = false;
                 }
 
@@ -802,32 +980,31 @@
                     sCtx.fillText(m.toFixed(precision) + "m", xPos + 2, h - 5);
                 }
             }
-            
+
             sCtx.textAlign = "right";
-            sCtx.fillStyle = "#fffacd"; 
+            sCtx.fillStyle = "#fffacd";
             sCtx.fillText(`SCOPE: ${scopeZoom.toFixed(1)}x`, w - 5, 12);
 
             sCtx.save();
             sCtx.beginPath();
-            sCtx.rect(0, 0, w, waveAreaHeight); 
+            sCtx.rect(0, 0, w, waveAreaHeight);
             sCtx.clip();
 
-            sCtx.strokeStyle = '#fff'; 
+            sCtx.strokeStyle = '#fff';
             sCtx.lineWidth = 2;
             sCtx.beginPath();
-            
+
             const slice = (w / dataArr.length) * scopeZoom;
             let x = scopeOffset;
-            
-            for(let i = 0; i < dataArr.length; i++) {
-                const v = dataArr[i] / 128.0; 
+
+            for (let i = 0; i < dataArr.length; i++) {
                 const yCorrected = waveCenter + ((dataArr[i] - 128) / 128) * waveCenter * visualGain;
-                
+
                 if (x >= -slice && x <= w + slice) {
-                    if(i===0) sCtx.moveTo(x, yCorrected); 
+                    if (i === 0) sCtx.moveTo(x, yCorrected);
                     else sCtx.lineTo(x, yCorrected);
                 } else if (i === 0) {
-                     sCtx.moveTo(x, yCorrected); 
+                    sCtx.moveTo(x, yCorrected);
                 }
                 x += slice;
             }
@@ -848,7 +1025,7 @@
         document.getElementById('hZoomSlider').oninput = (e) => {
             scopeZoom = parseFloat(e.target.value);
             document.getElementById('zoomLabel').textContent = scopeZoom.toFixed(1) + "x";
-            scopeOffset = 0; 
+            scopeOffset = 0;
         };
     </script>
 </body>
