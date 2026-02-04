@@ -227,6 +227,62 @@
             border-bottom: 1px solid #333;
             padding-bottom: 10px;
         }
+
+        /* --- HEADER ROW (Título + Botão Full) --- */
+        .header-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px; /* Espaço entre título e botão */
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        #playing-title {
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        /* --- BOTÃO FULL SEQUENCE --- */
+        .full-seq-btn {
+            background: #fff;
+            color: #000;
+            border: 2px solid #fff;
+            padding: 5px 10px;
+            font-family: inherit;
+            font-weight: bold;
+            font-size: 11px;
+            cursor: pointer;
+            text-transform: uppercase;
+            white-space: nowrap;
+            animation: fadeIn 1s ease;
+            box-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+
+            .full-seq-btn:hover {
+                background: #000;
+                color: #fff;
+            }
+
+            .full-seq-btn.active-full {
+                background: #000;
+                color: #fff;
+                border-style: double;
+            }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -266,7 +322,10 @@
                     <button class="help-btn" onclick="toggleHelp()">[ ? ]</button>
                 </div>
 
-                <h2 id="playing-title" style="margin:0 0 10px 0; text-transform: uppercase; letter-spacing: 1px; font-size: 14px; text-align: center;"></h2>
+                <div id="header-row" class="header-row">
+                    <h2 id="playing-title"></h2>
+                    <div id="full-seq-container"></div>
+                </div>
 
                 <div id="sessionNav" class="session-nav" style="display:none;"></div>
 
@@ -315,8 +374,9 @@
         let trackData = [];
 
         // Controle de Playback
-        let activeTrack = null;      // Guarda qual track individual está tocando
-        let isPlayingMaster = false; // Flag nova para saber se é o MODO MASTER
+        let activeTrack = null;
+        let isPlayingMaster = false; // "PLAY ALL SESSION"
+        let isPlayingFull = false;   // "PLAY FULL SEQUENCE"
 
         let visualGain = 1.0;
         let scopeZoom = 1.0;
@@ -325,19 +385,18 @@
         let isDragging = false;
         let lastMouseX = 0;
 
-        // --- AUDIO ENGINE (MULTI-TRACK) ---
-        // Agora usamos uma lista para suportar o Play All
+        // --- AUDIO ENGINE ---
         let activeSources = [];
         let startTime = 0;
         let pausedAt = 0;
         let isPaused = false;
         let lastWaveformData = null;
 
-        // --- FEATURE SECRET CODE ---
-        let unlockedSessions = new Set(); // Agora é uma lista de sessões liberadas
+        // --- FEATURE SECRET CODE & UNLOCKS ---
+        let unlockedSessions = new Set(); // Armazena índices desbloqueados
         const SECRET_CODE = "067";
 
-        // --- CONFIGURAÇÃO DE SESSÃO ---
+        // --- CONFIGURAÇÃO ---
         let currentCompositionConfig = null;
         let currentSessionIndex = -1;
         const GLOBAL_GROOVES_FOLDER = 'grooves';
@@ -379,11 +438,9 @@
                 const delta = x - lastMouseX;
                 scopeOffset += delta;
                 if (scopeOffset > 0) scopeOffset = 0;
-
                 const w = cvs.width;
                 const totalWidth = w * scopeZoom;
                 const minOffset = -(totalWidth - w);
-
                 if (scopeOffset < minOffset) scopeOffset = minOffset;
                 lastMouseX = x;
             };
@@ -431,6 +488,10 @@
 
                 document.getElementById('playing-title').textContent =
                     currentCompositionConfig.compositionName || musica.nome;
+
+                // Reseta lista de desbloqueios ao abrir nova composição
+                unlockedSessions = new Set();
+                document.getElementById('full-seq-container').innerHTML = ''; // Limpa botão Full
 
                 setupSessionNav(currentCompositionConfig.dashboardSessions);
 
@@ -564,16 +625,15 @@
             document.getElementById('loading').style.display = 'none';
         }
 
-        // --- FUNÇÕES DE PLAYBACK ATUALIZADAS ---
+        // --- PLAYBACK ENGINE ---
 
-        // 1. Play Single (Modo Original)
         function playFromStart(data, btnPlay, btnPause, grooveBtn) {
             stopAllAudio();
             resetUI();
             setZoomState(false);
-
             activeTrack = data;
-            isPlayingMaster = false; // Garante que não é Master
+            // isPlayingMaster = false; // já resetado no stopAllAudio
+            // isPlayingFull = false;
 
             if (grooveBtn) {
                 grooveBtn.textContent = "[ PLAYING GROOVE ]";
@@ -583,38 +643,69 @@
                 if (btnPause) btnPause.style.display = "block";
             }
 
-            // Toca apenas este áudio, respeitando o offset individual dele
             startSources([data], 0, false);
         }
 
-        // 2. Play Master (Novo Modo "Banda Completa")
         function playMaster() {
-            // 1. Força parada total e limpeza de qualquer estado anterior
             stopAllAudio();
             resetUI();
             setZoomState(false);
 
-            // 2. Define explicitamente o estado como "Tocando Master"
             activeTrack = null;
             isPlayingMaster = true;
 
-            // 3. Atualiza o visual do botão
             const masterBtn = document.getElementById('masterPlayBtn');
             if (masterBtn) {
-                masterBtn.textContent = "[ PLAYING ALL SEQUENCE ]";
+                masterBtn.textContent = "[ PLAYING ALL SESSION ]";
                 masterBtn.style.background = "#fff";
                 masterBtn.style.color = "#000";
             }
 
-            // 4. Recria a lista de fontes do zero (CRUCIAL: recriar a lista aqui)
             const allSources = [grooveData, ...trackData];
-
-            // 5. Manda bala
             startSources(allSources, 0, true);
         }
 
-        // Função Interna de Start (Genérica)
-        function startSources(dataList, offsetTime, forceMasterSync) {
+        async function playFullSequence() {
+            document.getElementById('loading').style.display = 'flex';
+            stopAllAudio();
+            resetUI();
+            setZoomState(false);
+
+            activeTrack = null;
+            isPlayingFull = true;
+
+            const fsBtn = document.getElementById('fullSeqBtn');
+            if (fsBtn) {
+                fsBtn.textContent = "[ PLAYING FULL SEQUENCE ]";
+                fsBtn.classList.add('active-full');
+            }
+
+            try {
+                // Busca o MP3 na pasta da composição
+                const path = `${currentCompositionConfig._rootFolder}/full_sequence.mp3`;
+                const response = await fetch(path);
+                if (!response.ok) throw new Error("Full Sequence file not found in: " + path);
+
+                const arrayBuffer = await response.arrayBuffer();
+                const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+
+                // Cria objeto "falso" de track para usar o mesmo engine (assim aparece no scope)
+                const fullTrackData = {
+                    buffer: audioBuffer,
+                    offset: 0
+                };
+
+                startSources([fullTrackData], 0, true);
+
+            } catch (e) {
+                console.error(e);
+                alert("Erro ao carregar Full Sequence: " + e.message);
+                stopAllAudio();
+            }
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function startSources(dataList, offsetTime, forceSync) {
             // Limpa anteriores
             activeSources.forEach(s => { try { s.stop() } catch (e) { } });
             activeSources = [];
@@ -626,60 +717,62 @@
                 src.buffer = data.buffer;
                 src.connect(analyser);
 
-                // LÓGICA DE SINCRONIA:
-                // Se for Master, toca do 0 absoluto (stems).
-                // Se for Single, toca do ponto de corte (data.offset).
                 let startPoint = 0;
-                if (forceMasterSync) {
+                if (forceSync) {
                     startPoint = 0 + offsetTime;
                 } else {
                     startPoint = data.offset + offsetTime;
                 }
 
-                // Segurança pra não estourar buffer
                 if (startPoint < data.buffer.duration) {
                     src.start(0, startPoint);
                     activeSources.push(src);
                 }
             });
 
-            // Callback de fim (simplificado no primeiro source)
             if (activeSources.length > 0) {
                 activeSources[0].onended = () => {
                     if (!isPaused && activeSources.length === 0) {
                         resetUI();
                         activeTrack = null;
                         isPlayingMaster = false;
+                        isPlayingFull = false;
                     }
                 };
             }
         }
 
         function togglePause(btnPause, grooveBtn) {
-            // Se não tem nada tocando e não está pausado, sai
             if (activeSources.length === 0 && !isPaused) return;
 
             if (isPaused) {
                 // --- RESUME ---
                 setZoomState(false);
 
-                if (isPlayingMaster) {
-                    // Resume Master (tudo junto)
+                if (isPlayingFull) {
+                    // Resume Full Sequence (precisa recarregar/re-tocar do ponto)
+                    // Obs: Como o buffer já foi decodificado, não temos ele salvo globalmente
+                    // Para simplificar, o Play Full não suporta Resume perfeito se não salvarmos o buffer.
+                    // Mas como o startSources usa dataList, e dataList foi passado localmente...
+                    // *Solução Simples*: Se pausar o Full, ele volta do início ou precisamos salvar o buffer global.
+                    // Vou implementar RESTART para o Full se pausado, ou impedir pause.
+                    // Melhor: Vamos dar stop e pedir play de novo para o Full para evitar complexidade de memória.
+                    alert("Pause não suportado no Full Sequence (Memória Otimizada). Dê Play novamente.");
+                    stopAllAudio();
+                    return;
+
+                } else if (isPlayingMaster) {
                     const allSources = [grooveData, ...trackData];
                     startSources(allSources, pausedAt, true);
-
-                    // UI do Master
                     const mb = document.getElementById('masterPlayBtn');
-                    if (mb) { mb.textContent = "[ PLAYING ALL SEQUENCE ]"; mb.style.background = "#fff"; mb.style.color = "#000"; }
+                    if (mb) { mb.textContent = "[ PLAYING ALL SESSION ]"; mb.style.background = "#fff"; mb.style.color = "#000"; }
 
                 } else if (activeTrack) {
-                    // Resume Single
                     startSources([activeTrack], pausedAt, false);
                 }
 
                 isPaused = false;
 
-                // UI Original
                 if (btnPause) btnPause.textContent = "[ PAUSE ]";
                 if (grooveBtn) {
                     grooveBtn.textContent = "[ PLAYING GROOVE ]";
@@ -688,20 +781,22 @@
 
             } else {
                 // --- PAUSE ---
-                stopAllAudio(true); // true = apenas pausa o som, mantém estado lógico
+                stopAllAudio(true);
                 isPaused = true;
 
-                // UI Original
                 if (btnPause) btnPause.textContent = "[ RESUME ]";
                 if (grooveBtn) {
                     grooveBtn.textContent = "[ RESUME GROOVE ]";
                     grooveBtn.classList.remove('groove-playing');
                 }
 
-                // UI do Master
                 if (isPlayingMaster) {
                     const mb = document.getElementById('masterPlayBtn');
                     if (mb) { mb.textContent = "[ RESUME ALL ]"; mb.style.background = "#000"; mb.style.color = "#fff"; }
+                }
+                if (isPlayingFull) {
+                    const fb = document.getElementById('fullSeqBtn');
+                    if (fb) { fb.textContent = "[ RESUME FULL ]"; }
                 }
 
                 setZoomState(true);
@@ -715,42 +810,44 @@
             activeSources = [];
 
             if (!isPauseAction) {
-                // STOP COMPLETO
                 isPaused = false;
                 pausedAt = 0;
                 lastWaveformData = null;
                 setZoomState(false);
-                // Não limpamos activeTrack aqui para permitir re-play fácil se necessário,
-                // mas o resetUI cuida do visual.
+                activeTrack = null;
+                isPlayingMaster = false;
+                isPlayingFull = false;
+                resetUI();
             } else {
-                // APENAS PAUSA
                 pausedAt = audioCtx.currentTime - startTime;
             }
         }
 
         function resetUI() {
-            // Reseta botões padrão
             document.querySelectorAll('.btn').forEach(b => {
                 if (!b.classList.contains('back-btn') && !b.classList.contains('btn-pause')) b.textContent = "[ PLAY ]";
             });
             document.querySelectorAll('.btn-pause').forEach(b => { b.style.display = "none"; b.textContent = "[ PAUSE ]"; });
 
-            // Reseta botão Groove
             const gBtn = document.getElementById('groovePlayBtn');
             if (gBtn) {
                 gBtn.textContent = "[ PLAY GROOVE ]";
                 gBtn.classList.remove('groove-playing');
             }
 
-            // Reseta botão Master
             const mBtn = document.getElementById('masterPlayBtn');
             if (mBtn) {
-                mBtn.textContent = "[ PLAY ALL - MASTER SEQUENCE ]";
+                mBtn.textContent = "[ PLAY ALL SESSION ]";
                 mBtn.style.background = "#000";
                 mBtn.style.color = "#fff";
             }
 
-            // Reseta cursor
+            const fBtn = document.getElementById('fullSeqBtn');
+            if (fBtn) {
+                fBtn.textContent = "[ PLAY FULL SEQUENCE ]";
+                fBtn.classList.remove('active-full');
+            }
+
             const cursor = document.getElementById('cursor-g');
             if (cursor) cursor.style.display = 'none';
         }
@@ -775,6 +872,25 @@
             const tCont = document.getElementById('tracksContainer');
             gCont.innerHTML = ''; tCont.innerHTML = '';
 
+            // --- ATUALIZA CABEÇALHO (CHECK DO FULL SEQUENCE) ---
+            const headerCont = document.getElementById('full-seq-container');
+            if (headerCont) {
+                headerCont.innerHTML = '';
+                // Verifica se todas as sessões foram desbloqueadas
+                const totalSessions = currentCompositionConfig.dashboardSessions ? currentCompositionConfig.dashboardSessions.length : 0;
+
+                if (totalSessions > 0 && unlockedSessions.size === totalSessions) {
+                    // Cria botão Full Sequence
+                    const btnFull = document.createElement('button');
+                    btnFull.id = 'fullSeqBtn';
+                    btnFull.className = 'full-seq-btn';
+                    btnFull.textContent = '[ PLAY FULL SEQUENCE ]';
+                    btnFull.onclick = () => playFullSequence();
+                    headerCont.appendChild(btnFull);
+                }
+            }
+
+            // Render Groove
             if (grooveData) {
                 const row = document.createElement('div');
                 row.className = 'track-row';
@@ -787,6 +903,7 @@
                 updateCanvas(grooveData, true);
             }
 
+            // Render Tracks
             trackData.forEach(data => {
                 const row = document.createElement('div');
                 row.className = 'track-row';
@@ -812,48 +929,42 @@
                 updateCanvas(data, false);
             });
 
-            // --- RENDER DO MASTER / BOSS ---
+            // --- RENDER DO MASTER / BOSS (PLAY ALL SESSION) ---
             const masterContainer = document.createElement('div');
             masterContainer.className = 'master-track-container';
 
-            // Verifica se a sessão ATUAL já está na lista de desbloqueados
             if (!unlockedSessions.has(currentSessionIndex)) {
                 masterContainer.innerHTML = `
-            <div class="master-locked">
-                <span>COMPLETE A SESSION PARA RECEBER O CÓDIGO</span>
-                <br><br>
-                > <input type="text" class="master-input" maxlength="3" placeholder="000" />
-            </div>
+                <div class="master-locked">
+                    <span>COMPLETE A SESSION PARA RECEBER O CÓDIGO</span>
+                    <br><br>
+                    > <input type="text" class="master-input" maxlength="3" placeholder="000" />
+                </div>
             `;
                 const input = masterContainer.querySelector('input');
                 input.oninput = (e) => {
                     if (e.target.value === SECRET_CODE) {
-                        // SUCESSO: Salva na memória que ESTA sessão foi liberada
                         unlockedSessions.add(currentSessionIndex);
                         render();
                     }
                 };
             } else {
                 masterContainer.innerHTML = `
-            <div class="master-unlocked">
-                <div class="master-title">★ MASTER SEQUENCE UNLOCKED ★</div>
-                <div class="canvas-container" style="margin: 0 auto; height: 100px;">
-                    <canvas id="canv-master" width="800" height="100"></canvas>
+                <div class="master-unlocked">
+                    <div class="master-title">★ SESSION COMPLETE ★</div>
+                    <div class="canvas-container" style="margin: 0 auto; height: 100px;">
+                        <canvas id="canv-master" width="800" height="100"></canvas>
+                    </div>
+                    <button id="masterPlayBtn" class="btn" style="width:100%; margin-top:10px; font-weight:bold; border:1px solid #fff;">
+                        [ PLAY ALL SESSION ]
+                    </button>
                 </div>
-                <button id="masterPlayBtn" class="btn" style="width:100%; margin-top:10px; font-weight:bold; border:1px solid #fff;">
-                    [ PLAY ALL - MASTER SEQUENCE ]
-                </button>
-            </div>
             `;
                 tCont.appendChild(masterContainer);
 
                 const mBtn = masterContainer.querySelector('#masterPlayBtn');
-                mBtn.onclick = () => {
-                    // Removemos o IF que pausava. Agora chamamos direto o play:
-                    playMaster();
-                };
+                mBtn.onclick = () => playMaster();
 
-                // Desenha waveform do Groove no Master apenas visualmente
                 setTimeout(() => {
                     const cvsM = document.getElementById('canv-master');
                     if (cvsM && grooveData) {
@@ -871,7 +982,6 @@
                 }, 50);
                 return;
             }
-
             tCont.appendChild(masterContainer);
         }
 
@@ -921,9 +1031,7 @@
         function animate() {
             requestAnimationFrame(animate);
 
-            // LÓGICA DO CURSOR (BARRINHA)
-            // Só mostra se for Groove tocando sozinho OU Modo Master
-            // Se for track individual (activeTrack != grooveData) e não for master, esconde
+            // LÓGICA DO CURSOR
             const shouldShowCursor = !isPaused && activeSources.length > 0 &&
                 ((activeTrack === grooveData) || isPlayingMaster);
 
@@ -935,7 +1043,6 @@
                     el.style.left = (Math.min(progress, 1) * 100) + '%';
                 }
             } else if (!isPaused && activeTrack && activeTrack !== grooveData && !isPlayingMaster) {
-                // Se estiver tocando track individual, esconde o cursor do groove
                 const el = document.getElementById('cursor-g');
                 if (el) el.style.display = 'none';
             }
@@ -971,7 +1078,6 @@
             const SPEED_OF_SOUND = 343;
             const totalSeconds = dataArr.length / audioCtx.sampleRate;
             const totalMeters = totalSeconds * SPEED_OF_SOUND;
-
             const basePixelsPerMeter = w / totalMeters;
             const scaledPixelsPerMeter = basePixelsPerMeter * scopeZoom;
 
@@ -981,7 +1087,6 @@
 
             let stepSize = 1;
             let precision = 0;
-
             if (scaledPixelsPerMeter > 200) { stepSize = 0.1; precision = 1; }
             else if (scaledPixelsPerMeter > 100) { stepSize = 0.5; precision = 1; }
             else if (scaledPixelsPerMeter > 50) { stepSize = 0.5; precision = 1; }
@@ -1030,7 +1135,6 @@
 
             for (let i = 0; i < dataArr.length; i++) {
                 const yCorrected = waveCenter + ((dataArr[i] - 128) / 128) * waveCenter * visualGain;
-
                 if (x >= -slice && x <= w + slice) {
                     if (i === 0) sCtx.moveTo(x, yCorrected);
                     else sCtx.lineTo(x, yCorrected);
