@@ -599,7 +599,7 @@
                             const tBuf = await audioCtx.decodeAudioData(await tRes.arrayBuffer());
                             return {
                                 id: t.globalId,
-                                label: t.presetName || `CLIP_${t.globalId}`,
+                                label: `Track ${t.globalId}`,
                                 buffer: tBuf,
                                 waveform: computeWave(tBuf),
                                 offset: (t.startSample || 0) / tBuf.sampleRate
