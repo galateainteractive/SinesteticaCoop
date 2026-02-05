@@ -405,7 +405,6 @@
 
         // --- FEATURE SECRET CODE & UNLOCKS ---
         let unlockedSessions = new Set(); // Armazena índices desbloqueados
-        const SECRET_CODE = "067";
 
         // --- CONFIGURAÇÃO ---
         let currentCompositionConfig = null;
@@ -970,22 +969,37 @@
             const masterContainer = document.createElement('div');
             masterContainer.className = 'master-track-container';
 
+            // 1. Gera o código esperado para ESSA sessão específica
+            // Tenta pegar do config, ou usa o título da tela como fallback
+            const compName = (currentCompositionConfig && currentCompositionConfig.compositionName)
+                ? currentCompositionConfig.compositionName
+                : document.getElementById('playing-title').textContent;
+
+            const expectedCode = generateCoopCode(compName, currentSessionIndex);
+
+            // Debug no console pra você testar fácil no navegador
+            console.log(`[COOP] Sessão ${currentSessionIndex} (${compName}) -> Código Esperado: ${expectedCode}`);
+
             if (!unlockedSessions.has(currentSessionIndex)) {
                 masterContainer.innerHTML = `
                 <div class="master-locked">
                     <span>COMPLETE A SESSION PARA RECEBER O CÓDIGO</span>
                     <br><br>
-                    > <input type="text" class="master-input" maxlength="3" placeholder="000" />
+                    > <input type="text" class="master-input" maxlength="4" placeholder="0000" />
                 </div>
-            `;
+            `; // Note que mudei maxlength para 4 e placeholder para 0000
+
                 const input = masterContainer.querySelector('input');
+
+                // Lógica de verificação atualizada
                 input.oninput = (e) => {
-                    if (e.target.value === SECRET_CODE) {
+                    if (e.target.value === expectedCode) {
                         unlockedSessions.add(currentSessionIndex);
-                        render();
+                        render(); // Redesenha para mostrar desbloqueado
                     }
                 };
             } else {
+                // ... (O bloco 'else' do desbloqueado continua igual) ...
                 masterContainer.innerHTML = `
                 <div class="master-unlocked">
                     <div class="master-title">★ SESSION COMPLETE ★</div>
@@ -1199,6 +1213,42 @@
             document.getElementById('zoomLabel').textContent = scopeZoom.toFixed(1) + "x";
             scopeOffset = 0;
         };
+
+        // --- FUNÇÃO DO CÓDIGO COOP (Mesma lógica da Unity) ---
+        function generateCoopCode(compositionName, sessionIndex) {
+            if (!compositionName) return "0000";
+
+            // Limpeza: Trim e UpperCase
+            const name = compositionName.trim().toUpperCase();
+            const len = name.length;
+
+            if (len === 0) return "0000";
+
+            // D1: Tamanho do Nome
+            const d1 = len % 10;
+
+            // D2: Letra Rotativa (ASCII code % 10)
+            // charCodeAt(i) é o equivalente ao (int)char do C#
+            const charCodeAtIndex = name.charCodeAt(sessionIndex % len);
+            const d2 = charCodeAtIndex % 10;
+
+            // D3: Par/Ímpar
+            let d3 = 0;
+            if (sessionIndex % 2 === 0) {
+                // Par: Primeira letra + index
+                const firstCharVal = name.charCodeAt(0);
+                d3 = (firstCharVal + sessionIndex) % 10;
+            } else {
+                // Ímpar: Última letra + index
+                const lastCharVal = name.charCodeAt(len - 1);
+                d3 = (lastCharVal + sessionIndex) % 10;
+            }
+
+            // D4: Pulo
+            const d4 = (sessionIndex * 7) % 10;
+
+            return `${d1}${d2}${d3}${d4}`;
+        }
     </script>
 </body>
 </html>
