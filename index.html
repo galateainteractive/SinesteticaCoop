@@ -376,9 +376,23 @@
 
     <script>
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
         const analyser = audioCtx.createAnalyser();
         analyser.fftSize = 8192;
-        analyser.connect(audioCtx.destination);
+
+        // 1. Criamos o "Segurança" (Compressor)
+        const masterCompressor = audioCtx.createDynamicsCompressor();
+
+        // 2. Configuramos ele para agir como um Limiter
+        masterCompressor.threshold.value = -3.0; // Começa a segurar quando chega em -3dB
+        masterCompressor.knee.value = 12.0;      // Curva suave
+        masterCompressor.ratio.value = 20.0;     // Taxa de compressão bem forte para não deixar passar
+        masterCompressor.attack.value = 0.005;   // Reage em 5 milissegundos
+        masterCompressor.release.value = 0.1;    // Solta rápido depois que o pico passa
+
+        // 3. Conectamos: O Analyser manda pro Compressor, e o Compressor manda pras caixas de som
+        analyser.connect(masterCompressor);
+        masterCompressor.connect(audioCtx.destination);
 
         // --- ESTADO GLOBAL ---
         let grooveData = null;
