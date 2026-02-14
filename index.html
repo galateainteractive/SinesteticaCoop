@@ -618,9 +618,15 @@
                 grooveBtn.parentNode.replaceChild(newBtn, grooveBtn);
 
                 newBtn.onclick = () => {
-                    if (activeTrack === grooveData) {
+                    // Calcula se o tempo tocado já passou da duração total do áudio
+                    const elapsedTime = audioCtx.currentTime - startTime;
+                    const isFinished = (activeTrack === grooveData) && (elapsedTime >= grooveData.buffer.duration);
+
+                    // Se for o groove e AINDA não terminou, aciona o Pause/Resume
+                    if (activeTrack === grooveData && !isFinished) {
                         togglePause(null, newBtn);
                     } else {
+                        // Se não for o groove, ou se já tiver acabado, dá o Play do zero
                         playFromStart(grooveData, null, null, newBtn);
                     }
                 };
@@ -753,9 +759,10 @@
             // Se FOR loop, ele nunca acaba sozinho, só no Stop manual.
             if (!shouldLoop && activeSources.length > 0) {
                 activeSources[0].onended = () => {
-                    if (!isPaused && activeSources.length === 0) {
-                        resetUI();
-                        activeTrack = null;
+                    if (!isPaused) {
+                        activeSources = []; // Esvazia a array manualmente
+                        resetUI();          // Reseta a interface
+                        activeTrack = null; // Limpa a trilha ativa, consertando o play do groove!
                         isPlayingMaster = false;
                         isPlayingFull = false;
                     }
