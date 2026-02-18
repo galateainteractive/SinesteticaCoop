@@ -953,8 +953,12 @@
 
         function resetUI() {
             document.querySelectorAll('.btn').forEach(b => {
-                if (!b.classList.contains('back-btn') && !b.classList.contains('btn-pause')) b.textContent = "[ PLAY ]";
+                // Adicionei b.id !== 'btn-sync-on' e 'btn-sync-off' para eles escaparem do reset!
+                if (!b.classList.contains('back-btn') && !b.classList.contains('btn-pause') && b.id !== 'btn-sync-on' && b.id !== 'btn-sync-off') {
+                    b.textContent = "[ PLAY ]";
+                }
             });
+
             document.querySelectorAll('.btn-pause').forEach(b => { b.style.display = "none"; b.textContent = "[ PAUSE ]"; });
 
             const gBtn = document.getElementById('groovePlayBtn');
