@@ -17,16 +17,17 @@
         .comp-card:hover { background: #fff; color: #000; }
         
         .main-layout { display: flex; flex-direction: column; height: 100%; }
-        
+
         /* --- PAINEL SUPERIOR --- */
         .top-panel {
             flex-shrink: 0;
-            max-height: 55vh; /* O painel fixo nunca terá mais que 55% da altura da tela */
-            overflow-y: auto; /* Se o conteúdo do painel for grande, ele escoa internamente */
+            max-height: 55vh;
+            overflow-y: auto;
             border-bottom: 4px solid #fff;
-            padding: 10px;
+            padding: 15px 27px 15px 15px; /* Igualou em 15px, e somou 12px na direita para imitar o scrollbar! */
             background: #000;
-        }        
+            box-sizing: border-box; /* Fundamental para o padding não quebrar a tela */
+        }  
         .nav-header { display: flex; justify-content: space-between; margin-bottom: 15px; }
         .back-btn { background: #000; color: #fff; border: 1px solid #fff; padding: 5px 10px; cursor: pointer; font-family: inherit; text-transform: uppercase; font-size: 10px; }
         .help-btn { background: #000; color: #fff; border: 1px solid #fff; padding: 5px 12px; cursor: pointer; font-family: inherit; font-weight: bold; font-size: 14px; }
@@ -148,6 +149,18 @@
         .cheat-sheet td, .cheat-sheet th { border: 1px solid #444; padding: 6px 4px; text-align: center; }
         .cheat-sheet th { color: #fff; background: #222; }
         .cheat-sheet tr:nth-child(even) { background: #111; }
+
+        /* --- CLASSES FANTASMAS PARA ALINHAMENTO --- */
+        .ghost-block {
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        @media (max-width: 767px) {
+            .ghost-block {
+                display: none !important;
+            }
+        }
 
         @media (min-width: 768px) {
             .track-row { flex-direction: row; align-items: center; }
@@ -1037,21 +1050,20 @@
                 }
             }
 
-            /// Render Groove
+            // Render Groove
             if (grooveData) {
                 const row = document.createElement('div');
                 row.className = 'track-row';
-                // Adicionamos os elementos invisíveis (label e botões) para o flexbox
-                // espremer este canvas mantendo a largura exatamente igual a das tracks abaixo!
+                // Usando o ghost-block: no desktop alinha perfeito com as tracks, no celular some pra não esticar a altura!
                 row.innerHTML = `
-                <div class="track-info">
-                    <div class="track-label" style="visibility: hidden;">GROOVE</div>
+                <div class="track-info ghost-block">
+                    <div class="track-label">GROOVE</div>
                 </div>
                 <div class="canvas-container">
                     <canvas id="canv-g" width="800" height="100"></canvas>
                     <div id="cursor-g" class="cursor-groove"></div>
                 </div>
-                <div class="btn-group" style="visibility: hidden; pointer-events: none;">
+                <div class="btn-group ghost-block">
                     <button class="btn">[ PLAY ]</button>
                     <button class="btn btn-pause">[ PAUSE ]</button>
                 </div>`;
