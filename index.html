@@ -789,8 +789,32 @@
             startSources(allSources, 0, true);
         }
 
+        // Função que junta todos os Bounces em um arquivo só
+        function concatAudioBuffers(buffers) {
+            // Descobre o tamanho total somando a duração de todas as sessões
+            const totalLength = buffers.reduce((acc, buf) => acc + buf.length, 0);
+
+            // Cria um buffer vazio grandão
+            const result = audioCtx.createBuffer(
+                buffers[0].numberOfChannels,
+                totalLength,
+                buffers[0].sampleRate
+            );
+
+            // Copia os dados de cada sessão em ordem para dentro do buffer grandão
+            for (let channel = 0; channel < result.numberOfChannels; channel++) {
+                const channelData = result.getChannelData(channel);
+                let offset = 0;
+                buffers.forEach(buf => {
+                    channelData.set(buf.getChannelData(channel), offset);
+                    offset += buf.length;
+                });
+            }
+            return result;
+        }
+
         async function playFullSequence() {
-            // Se já estiver tocando, funciona como STOP
+            // Se já estiver tocando, funciona como STOP (igual aos outros botões)
             if (isPlayingFull) {
                 stopAllAudio();
                 return;
@@ -805,38 +829,29 @@
 
             const fsBtn = document.getElementById('fullSeqBtn');
             if (fsBtn) {
-                fsBtn.textContent = "[ STOP FULL SEQUENCE ]"; // Tirei o (LOOP) do texto temporariamente
+                fsBtn.textContent = "[ STOP FULL SEQUENCE ]"; // Agora atua como Stop!
                 fsBtn.classList.add('active-full');
             }
 
-            // --- O SEGREDO DO CORTE SECO (GAPLESS) ---
-            let timeCursor = audioCtx.currentTime; // Tempo exato de "agora"
+            // Pega as mixagens guardadas e garante que não tem nenhuma vazia
+            const validBuffers = bouncedSessionsBuffers.filter(b => b != null);
+            if (validBuffers.length === 0) return;
 
-            // Iteramos em ordem por todas as sessões da composição
-            for (let i = 0; i < currentCompositionConfig.dashboardSessions.length; i++) {
-                const buf = bouncedSessionsBuffers[i];
-                if (!buf) continue; // Segurança caso pule alguma
+            // Cola tudo em uma faixa contínua instantaneamente
+            const finalMasterBuffer = concatAudioBuffers(validBuffers);
 
-                const src = audioCtx.createBufferSource();
-                src.buffer = buf;
-                src.connect(analyser); // Conecta no master normal pra agulha do visualizador ainda pular
+            // Cria o tocador
+            const src = audioCtx.createBufferSource();
+            src.buffer = finalMasterBuffer;
 
-                // Manda tocar no futuro!
-                src.start(timeCursor);
+            // A MÁGICA DO LOOP INFINITO AQUI
+            src.loop = true;
 
-                // Avança o cursor do tempo exatamente com a duração da faixa
-                timeCursor += buf.duration;
+            src.connect(analyser);
+            src.start(0);
 
-                activeSources.push(src); // Guarda para o Stop funcionar normalmente
-            }
-
-            // Faz o player resetar sozinho quando a última emenda terminar
-            if (activeSources.length > 0) {
-                const lastSource = activeSources[activeSources.length - 1];
-                lastSource.onended = () => {
-                    if (!isPaused) stopAllAudio();
-                };
-            }
+            // Adiciona na lista de fontes ativas para o Stop funcionar perfeitamente
+            activeSources.push(src);
         }
 
         function startSources(dataList, offsetTime, forceSync, shouldLoop = false) {
