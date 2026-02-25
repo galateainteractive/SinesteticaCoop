@@ -1,0 +1,368 @@
+{
+    "compositionName": "Novo Protocolo_81",
+    "originSeed": 12346,
+    "isMetronome": false,
+    "bpm": 73.0,
+    "numberOfBars": 1,
+    "grooveName": "natesmith73bpmGRV1",
+    "numberOfGrooves": 7,
+    "grooveClipNames": [
+        "natesmith73bpmGRV1",
+        "natesmith73bpmGRV2",
+        "natesmith73bpmGRV3",
+        "natesmith73bpmGRV4",
+        "natesmith73bpmGRV5",
+        "natesmith73bpmGRV6",
+        "natesmith73bpmGRV7"
+    ],
+    "numberOfSinesteticasPerGroove": [
+        0,
+        10,
+        10,
+        0,
+        10,
+        10,
+        0
+    ],
+    "maxPlayerHeight": 1.0300573110580445,
+    "sourceGrooveSetName": "Nate",
+    "dashboardSessions": [
+        {
+            "sessionId": 0,
+            "grooveIndex": 1,
+            "grooveVolume": 1.0,
+            "isGrooveMuted": false,
+            "tracks": [
+                {
+                    "globalId": 1,
+                    "startSample": 39452,
+                    "generatorType": 1,
+                    "presetName": "MT Organ 2",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 2,
+                    "startSample": 78904,
+                    "generatorType": 1,
+                    "presetName": "EscadasDesafinadasR",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 3,
+                    "startSample": 118356,
+                    "generatorType": 1,
+                    "presetName": "EscadasDesafinadasR",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 4,
+                    "startSample": 78904,
+                    "generatorType": 1,
+                    "presetName": "RobotaR",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 5,
+                    "startSample": 118356,
+                    "generatorType": 1,
+                    "presetName": "RobotaR",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 6,
+                    "startSample": 0,
+                    "generatorType": 1,
+                    "presetName": "SineStutterR",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 7,
+                    "startSample": 39452,
+                    "generatorType": 1,
+                    "presetName": "MT Organ 2",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 8,
+                    "startSample": 0,
+                    "generatorType": 1,
+                    "presetName": "EscadasDesafinadasR",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 9,
+                    "startSample": 78904,
+                    "generatorType": 1,
+                    "presetName": "SineStutterR",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 10,
+                    "startSample": 0,
+                    "generatorType": 1,
+                    "presetName": "MT Organ 2",
+                    "frequencyRange": ""
+                }
+            ]
+        },
+        {
+            "sessionId": 1,
+            "grooveIndex": 2,
+            "grooveVolume": 1.0,
+            "isGrooveMuted": false,
+            "tracks": [
+                {
+                    "globalId": 11,
+                    "startSample": 118356,
+                    "generatorType": 1,
+                    "presetName": "RobotaR",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 12,
+                    "startSample": 78904,
+                    "generatorType": 1,
+                    "presetName": "SineStutterR",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 13,
+                    "startSample": 118356,
+                    "generatorType": 1,
+                    "presetName": "MT Organ 2",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 14,
+                    "startSample": 0,
+                    "generatorType": 1,
+                    "presetName": "RobotaR",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 15,
+                    "startSample": 39452,
+                    "generatorType": 1,
+                    "presetName": "MT Organ 2",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 16,
+                    "startSample": 118356,
+                    "generatorType": 1,
+                    "presetName": "SineStutterR",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 17,
+                    "startSample": 78904,
+                    "generatorType": 1,
+                    "presetName": "EscadasDesafinadasR",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 18,
+                    "startSample": 118356,
+                    "generatorType": 1,
+                    "presetName": "EscadasDesafinadasR",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 19,
+                    "startSample": 39452,
+                    "generatorType": 1,
+                    "presetName": "EscadasDesafinadasR",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 20,
+                    "startSample": 39452,
+                    "generatorType": 1,
+                    "presetName": "MT Organ 2",
+                    "frequencyRange": ""
+                }
+            ]
+        },
+        {
+            "sessionId": 2,
+            "grooveIndex": 4,
+            "grooveVolume": 1.0,
+            "isGrooveMuted": false,
+            "tracks": [
+                {
+                    "globalId": 21,
+                    "startSample": 0,
+                    "generatorType": 1,
+                    "presetName": "MT Organ 2",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 22,
+                    "startSample": 78904,
+                    "generatorType": 1,
+                    "presetName": "RobotaR",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 23,
+                    "startSample": 78904,
+                    "generatorType": 1,
+                    "presetName": "SineStutterR",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 24,
+                    "startSample": 0,
+                    "generatorType": 1,
+                    "presetName": "EscadasDesafinadasR",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 25,
+                    "startSample": 78904,
+                    "generatorType": 1,
+                    "presetName": "MT Organ 2",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 26,
+                    "startSample": 39452,
+                    "generatorType": 1,
+                    "presetName": "MT Organ 2",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 27,
+                    "startSample": 118356,
+                    "generatorType": 1,
+                    "presetName": "SineStutterR",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 28,
+                    "startSample": 118356,
+                    "generatorType": 1,
+                    "presetName": "RobotaR",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 29,
+                    "startSample": 0,
+                    "generatorType": 1,
+                    "presetName": "EscadasDesafinadasR",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 30,
+                    "startSample": 118356,
+                    "generatorType": 1,
+                    "presetName": "EscadasDesafinadasR",
+                    "frequencyRange": ""
+                }
+            ]
+        },
+        {
+            "sessionId": 3,
+            "grooveIndex": 5,
+            "grooveVolume": 1.0,
+            "isGrooveMuted": false,
+            "tracks": [
+                {
+                    "globalId": 31,
+                    "startSample": 0,
+                    "generatorType": 1,
+                    "presetName": "MT Organ 2",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 32,
+                    "startSample": 0,
+                    "generatorType": 1,
+                    "presetName": "MT Organ 2",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 33,
+                    "startSample": 78904,
+                    "generatorType": 1,
+                    "presetName": "RobotaR",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 34,
+                    "startSample": 78904,
+                    "generatorType": 1,
+                    "presetName": "SineStutterR",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 35,
+                    "startSample": 0,
+                    "generatorType": 1,
+                    "presetName": "MT Organ 2",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 36,
+                    "startSample": 39452,
+                    "generatorType": 1,
+                    "presetName": "RobotaR",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 37,
+                    "startSample": 78904,
+                    "generatorType": 1,
+                    "presetName": "SineStutterR",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 38,
+                    "startSample": 78904,
+                    "generatorType": 1,
+                    "presetName": "EscadasDesafinadasR",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 39,
+                    "startSample": 78904,
+                    "generatorType": 1,
+                    "presetName": "EscadasDesafinadasR",
+                    "frequencyRange": ""
+                },
+                {
+                    "globalId": 40,
+                    "startSample": 0,
+                    "generatorType": 1,
+                    "presetName": "EscadasDesafinadasR",
+                    "frequencyRange": ""
+                }
+            ]
+        }
+    ],
+    "continuousTracks": [],
+    "presetNames": [
+        "SineStutterR",
+        "PatchoulyR",
+        "PengR",
+        "QuaseQuadradoR",
+        "SenoR",
+        "SerraDancanteR",
+        "MiauMetal",
+        "FlinR",
+        "BorbulhandoR",
+        "CigarraDefeituosaR",
+        "EscadasDesafinadasR",
+        "FM",
+        "RobotaR",
+        "SinaisExtraterrestresR",
+        "COA Trumpet",
+        "COA Pluck Tom",
+        "MT Organ 2",
+        "MT Wandering Lost",
+        "SF Clarinet",
+        "COA Soft Neo Church Organ",
+        "OZ Platinum",
+        "COA Tension 3"
+    ]
+}

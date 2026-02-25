@@ -503,6 +503,7 @@
 
         // --- FEATURE SECRET CODE & UNLOCKS ---
         let unlockedSessions = new Set(); // Armazena índices desbloqueados
+        let bouncedSessionsBuffers = [];
 
         // --- CONFIGURAÇÃO ---
         let currentCompositionConfig = null;
@@ -599,6 +600,8 @@
 
                 // Reseta lista de desbloqueios ao abrir nova composição
                 unlockedSessions = new Set();
+                bouncedSessionsBuffers = []; // <--- ADICIONE ESTA LINHA AQUI
+
                 document.getElementById('full-seq-container').innerHTML = ''; // Limpa botão Full
 
                 setupSessionNav(currentCompositionConfig.dashboardSessions);
@@ -793,7 +796,6 @@
                 return;
             }
 
-            document.getElementById('loading').style.display = 'flex';
             stopAllAudio();
             resetUI();
             setZoomState(false);
@@ -803,34 +805,38 @@
 
             const fsBtn = document.getElementById('fullSeqBtn');
             if (fsBtn) {
-                fsBtn.textContent = "[ STOP FULL SEQUENCE (LOOP) ]"; // Muda texto para STOP
+                fsBtn.textContent = "[ STOP FULL SEQUENCE ]"; // Tirei o (LOOP) do texto temporariamente
                 fsBtn.classList.add('active-full');
-                // Muda cor para vermelho ou algo que indique 'parar'? 
-                // Por enquanto mantive o padrão 'active-full' (branco/preto invertido)
             }
 
-            try {
-                const path = encodeURI(`${currentCompositionConfig._rootFolder}/full_sequence.mp3`);
-                const response = await fetch(path);
-                if (!response.ok) throw new Error("Full Sequence file not found in: " + path);
+            // --- O SEGREDO DO CORTE SECO (GAPLESS) ---
+            let timeCursor = audioCtx.currentTime; // Tempo exato de "agora"
 
-                const arrayBuffer = await response.arrayBuffer();
-                const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+            // Iteramos em ordem por todas as sessões da composição
+            for (let i = 0; i < currentCompositionConfig.dashboardSessions.length; i++) {
+                const buf = bouncedSessionsBuffers[i];
+                if (!buf) continue; // Segurança caso pule alguma
 
-                const fullTrackData = {
-                    buffer: audioBuffer,
-                    offset: 0
+                const src = audioCtx.createBufferSource();
+                src.buffer = buf;
+                src.connect(analyser); // Conecta no master normal pra agulha do visualizador ainda pular
+
+                // Manda tocar no futuro!
+                src.start(timeCursor);
+
+                // Avança o cursor do tempo exatamente com a duração da faixa
+                timeCursor += buf.duration;
+
+                activeSources.push(src); // Guarda para o Stop funcionar normalmente
+            }
+
+            // Faz o player resetar sozinho quando a última emenda terminar
+            if (activeSources.length > 0) {
+                const lastSource = activeSources[activeSources.length - 1];
+                lastSource.onended = () => {
+                    if (!isPaused) stopAllAudio();
                 };
-
-                // O ultimo parâmetro 'true' ativa o LOOP
-                startSources([fullTrackData], 0, true, true);
-
-            } catch (e) {
-                console.error(e);
-                alert("Erro ao carregar Full Sequence: " + e.message);
-                stopAllAudio();
             }
-            document.getElementById('loading').style.display = 'none';
         }
 
         function startSources(dataList, offsetTime, forceSync, shouldLoop = false) {
@@ -1127,6 +1133,7 @@
                 input.oninput = (e) => {
                     if (e.target.value === expectedCode) {
                         unlockedSessions.add(currentSessionIndex);
+                        bounceCurrentSession(currentSessionIndex);
                         render(); // Redesenha para mostrar desbloqueado
                     }
                 };
@@ -1386,6 +1393,36 @@
             const d4 = (sessionIndex * 7) % 10;
 
             return `${d1}${d2}${d3}${d4}`;
+        }
+
+        async function bounceCurrentSession(index) {
+            if (!grooveData) return;
+
+            // Pega a duração do groove, que será o tamanho exato do nosso "Bounce"
+            const duration = grooveData.buffer.duration;
+            const sampleRate = audioCtx.sampleRate;
+
+            // Cria o "Estúdio Offline" invisível
+            const offlineCtx = new OfflineAudioContext(2, sampleRate * duration, sampleRate);
+
+            // Toca o Groove lá dentro
+            const gSrc = offlineCtx.createBufferSource();
+            gSrc.buffer = grooveData.buffer;
+            gSrc.connect(offlineCtx.destination);
+            gSrc.start(0);
+
+            // Toca as Tracks lá dentro (todas sincronizadas no tempo 0, igual ao master)
+            trackData.forEach(t => {
+                const tSrc = offlineCtx.createBufferSource();
+                tSrc.buffer = t.buffer;
+                tSrc.connect(offlineCtx.destination);
+                tSrc.start(0);
+            });
+
+            // Renderiza e salva o buffer pesando quase nada na memória RAM!
+            const renderedBuffer = await offlineCtx.startRendering();
+            bouncedSessionsBuffers[index] = renderedBuffer;
+            console.log(`[SINESTÉTICA] Sessão ${index} mixada e salva na memória!`);
         }
     </script>
 </body>
