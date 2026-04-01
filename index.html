@@ -1393,18 +1393,23 @@
 
         function resetUI() {
             document.querySelectorAll('.btn').forEach(b => {
-                // Adicionei b.id !== 'btn-sync-on' e 'btn-sync-off' para eles escaparem do reset!
                 if (!b.classList.contains('back-btn') && !b.classList.contains('btn-pause') && b.id !== 'btn-sync-on' && b.id !== 'btn-sync-off') {
                     b.textContent = "[ PLAY ]";
+                    b.blur(); // <--- MÁGICA: Tira o foco do botão para o fundo voltar a ser transparente
                 }
             });
 
-            document.querySelectorAll('.btn-pause').forEach(b => { b.style.display = "none"; b.textContent = "[ PAUSE ]"; });
+            document.querySelectorAll('.btn-pause').forEach(b => {
+                b.style.display = "none";
+                b.textContent = "[ PAUSE ]";
+                b.blur();
+            });
 
             const gBtn = document.getElementById('groovePlayBtn');
             if (gBtn) {
                 gBtn.textContent = "[ PLAY GROOVE ]";
                 gBtn.classList.remove('groove-playing');
+                gBtn.blur();
             }
 
             const mBtn = document.getElementById('masterPlayBtn');
@@ -1412,15 +1417,16 @@
                 mBtn.textContent = "[ PLAY ALL SESSION ]";
                 mBtn.style.background = "#000";
                 mBtn.style.color = "#fff";
+                mBtn.blur();
             }
 
             const fBtn = document.getElementById('fullSeqBtn');
             if (fBtn) {
-                // Só volta o texto para Play Full Sequence se ele NÃO estiver bloqueado!
                 if (!fBtn.classList.contains('locked')) {
                     fBtn.textContent = "[ PLAY FULL SEQUENCE ]";
                     fBtn.classList.remove('active-full');
                 }
+                fBtn.blur();
             }
 
             const cursor = document.getElementById('cursor-g');
