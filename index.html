@@ -362,21 +362,26 @@
                 background: rgba(255, 255, 255, 0.2) !important; /* Fica um branco bem transparente */
             }
 
+        /* --- BOTÕES DAS TRACKS (Fundo Preto) --- */
         .tracks-scroll .btn {
-            background: transparent;
-            color: #000;
-            border-color: #000;
+            background: #000 !important; /* Fundo totalmente preto */
+            color: #fff !important; /* Letra branca para dar leitura */
+            border: 1px solid #555 !important; /* Borda cinza chumbo */
             font-weight: bold;
         }
 
+            /* Efeito sutil ao passar o mouse ou clicar no Play/Playing */
+            .tracks-scroll .btn:hover,
             .tracks-scroll .btn:active {
-                background: #000;
-                color: #fff;
+                background: #1a1a1a !important; /* Um preto só um tiquinho mais claro */
+                border-color: #fff !important; /* A borda acende em branco */
             }
 
+        /* Estilo específico do botão de Pause (para diferenciar do Play) */
         .btn-pause {
-            border-color: #666;
-            color: #ccc;
+            background: #000 !important;
+            border-color: #333 !important; /* Borda mais escura */
+            color: #888 !important; /* Letra mais apagada */
             display: none;
         }
 
