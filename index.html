@@ -698,12 +698,25 @@
                         const tRes = await fetch(`${localFolder}/clip_${t.globalId}.wav`);
                         if (tRes.ok) {
                             const tBuf = await audioCtx.decodeAudioData(await tRes.arrayBuffer());
+
+                            // --- NOVO: Procura onde o som realmente começa (pula o silêncio) ---
+                            let autoTrimTime = 0;
+                            const channelData = tBuf.getChannelData(0);
+                            // Verifica sample por sample até achar um volume audível (acima de 1%)
+                            for (let i = 0; i < channelData.length; i++) {
+                                if (Math.abs(channelData[i]) > 0.01) {
+                                    autoTrimTime = i / tBuf.sampleRate;
+                                    break;
+                                }
+                            }
+
                             return {
                                 id: t.globalId,
                                 label: `Track ${t.globalId}`,
                                 buffer: tBuf,
                                 waveform: computeWave(tBuf),
-                                offset: (t.startSample || 0) / tBuf.sampleRate
+                                offset: (t.startSample || 0) / tBuf.sampleRate,
+                                trimOffset: autoTrimTime // Guarda o tempo sem silêncio para o Solo
                             };
                         }
                     } catch (e) { }
@@ -869,9 +882,13 @@
 
                 let startPoint = 0;
                 if (forceSync) {
+                    // MODO SYNC (Track + Groove): Começa do zero absoluto, mantendo 
+                    // o silêncio original para alinhar no tempo do Groove.
                     startPoint = 0 + offsetTime;
                 } else {
-                    startPoint = data.offset + offsetTime;
+                    // MODO SOLO: Pula o silêncio e vai direto pra onde tem som!
+                    const baseOffset = (data.trimOffset !== undefined) ? data.trimOffset : data.offset;
+                    startPoint = baseOffset + offsetTime;
                 }
 
                 // Se for loop, não precisamos checar duração vs startPoint com tanto rigor
