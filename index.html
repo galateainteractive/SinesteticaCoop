@@ -18,7 +18,7 @@
             padding: 0;
             color: #fff;
             font-family: 'Science Gothic', sans-serif; /* FONTE NOVA */
-            font-size: 12px;
+            font-size: 8px;
 
             overflow-x: hidden;
             /* IMAGEM DE FUNDO */
@@ -84,9 +84,10 @@
             border-bottom: 4px solid #fff;
             padding: 15px 27px 15px 15px;
             box-sizing: border-box;
-            /* TROQUE O FUNDO AQUI: */
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(5px);
+            /* IMAGEM DO TOPO + EFEITO FUMÊ DE 60% PARA LER OS TEXTOS */
+            background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('FundoEscuroPartitulas.png');
+            background-size: cover;
+            background-position: center;
         }
 
         .nav-header {
@@ -248,12 +249,15 @@
         .tracks-scroll {
             flex: 1;
             overflow-y: auto;
+            color: #fff; /* Mantém o texto branco */
             padding: 15px;
             -webkit-overflow-scrolling: touch;
             position: relative;
-            /* TROQUE O FUNDO E A COR AQUI: */
-            background: rgba(20, 20, 20, 0.4);
-            color: #fff; /* Muda o texto para branco para dar leitura na imagem */
+            /* IMAGEM DE BAIXO + EFEITO FUMÊ DE 70% */
+            background-image: linear-gradient(rgba(20, 20, 20, 0.7), rgba(20, 20, 20, 0.7)), url('AcoEscovado.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: local; /* Faz a imagem rolar junto com as tracks */
         }
 
             .tracks-scroll::-webkit-scrollbar {
