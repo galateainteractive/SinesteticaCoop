@@ -372,9 +372,16 @@
         }
 
             /* Efeito ao passar o mouse ou clicar no Play/Playing */
+            .tracks-scroll .btn:hover,
             .tracks-scroll .btn:active {
                 background: #000 !important; /* Preenche de preto ao passar o mouse */
                 color: #fff !important; /* Texto vira branco para dar contraste */
+            }
+
+            /* Classe ativada via JavaScript enquanto a track estiver tocando */
+            .tracks-scroll .btn.track-playing {
+                background: #000 !important;
+                color: #fff !important;
             }
 
         /* Estilo específico do botão de Pause (para diferenciar do Play) */
@@ -1165,6 +1172,7 @@
                 grooveBtn.classList.add('groove-playing');
             } else if (btnPlay) {
                 btnPlay.textContent = "[ PLAYING ]";
+                btnPlay.classList.add('track-playing'); // <-- ADICIONAMOS ISSO
                 if (btnPause) btnPause.style.display = "block";
             }
 
@@ -1395,6 +1403,8 @@
                 // Adicionei b.id !== 'btn-sync-on' e 'btn-sync-off' para eles escaparem do reset!
                 if (!b.classList.contains('back-btn') && !b.classList.contains('btn-pause') && b.id !== 'btn-sync-on' && b.id !== 'btn-sync-off') {
                     b.textContent = "[ PLAY ]";
+                    b.classList.remove('track-playing'); // <-- TIRA O FUNDO PRETO
+                    b.blur(); // <-- TIRA O "HOVER" PRESO DO CELULAR
                 }
             });
 
