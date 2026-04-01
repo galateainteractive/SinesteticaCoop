@@ -18,6 +18,8 @@
             padding: 0;
             color: #fff;
             font-family: 'Science Gothic', sans-serif; /* FONTE NOVA */
+            font-size: 14px;
+
             overflow-x: hidden;
             /* IMAGEM DE FUNDO */
             background-image: url('FundoEscuroPartitulas.png');
@@ -71,16 +73,16 @@
             height: 100%;
         }
 
-        /* --- PAINEL SUPERIOR --- */
         .top-panel {
             flex-shrink: 0;
             max-height: 55vh;
             overflow-y: auto;
             border-bottom: 4px solid #fff;
             padding: 15px 27px 15px 15px;
-            background: rgba(0, 0, 0, 0.8); /* PRETO TRANSPARENTE */
-            backdrop-filter: blur(8px); /* EFEITO DE DESFOQUE NO FUNDO */
             box-sizing: border-box;
+            /* TROQUE O FUNDO AQUI: */
+            background: rgba(0, 0, 0, 0.75); /* Preto com 75% de transparência */
+            backdrop-filter: blur(5px); /* Opcional: dá um efeitinho embaçado legal no fundo */
         }
 
         .nav-header {
@@ -242,11 +244,12 @@
         .tracks-scroll {
             flex: 1;
             overflow-y: auto;
-            background: rgba(20, 20, 20, 0.7); /* ESCURO TRANSPARENTE */
-            color: #fff; /* MUDEI PARA BRANCO PARA LER MELHOR NO FUNDO ESCURO */
             padding: 15px;
             -webkit-overflow-scrolling: touch;
             position: relative;
+            /* TROQUE O FUNDO E A COR AQUI: */
+            background: rgba(20, 20, 20, 0.6); /* Cinza escuro semi-transparente */
+            color: #fff; /* Muda o texto para branco para dar leitura na imagem */
         }
 
             .tracks-scroll::-webkit-scrollbar {
