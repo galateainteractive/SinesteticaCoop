@@ -856,7 +856,7 @@
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
         const analyser = audioCtx.createAnalyser();
-        analyser.fftSize = 4096;
+        analyser.fftSize = 2048;
 
         // 1. Criamos o "Segurança" (Compressor)
         const masterCompressor = audioCtx.createDynamicsCompressor();
