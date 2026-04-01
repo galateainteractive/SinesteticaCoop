@@ -362,26 +362,27 @@
                 background: rgba(255, 255, 255, 0.2) !important; /* Fica um branco bem transparente */
             }
 
-        /* --- BOTÕES DAS TRACKS (Fundo Preto) --- */
+        /* --- BOTÕES DAS TRACKS (Transparente com contorno preto) --- */
         .tracks-scroll .btn {
-            background: #000 !important; /* Fundo totalmente preto */
-            color: #fff !important; /* Letra branca para dar leitura */
-            border: 1px solid #555 !important; /* Borda cinza chumbo */
+            background: transparent !important; /* Fundo invisível */
+            color: #000 !important; /* Texto preto */
+            border: 1px solid #000 !important; /* Borda preta */
             font-weight: bold;
+            transition: 0.3s;
         }
 
-            /* Efeito sutil ao passar o mouse ou clicar no Play/Playing */
+            /* Efeito ao passar o mouse ou clicar no Play/Playing */
             .tracks-scroll .btn:hover,
             .tracks-scroll .btn:active {
-                background: #1a1a1a !important; /* Um preto só um tiquinho mais claro */
-                border-color: #fff !important; /* A borda acende em branco */
+                background: #000 !important; /* Preenche de preto ao passar o mouse */
+                color: #fff !important; /* Texto vira branco para dar contraste */
             }
 
         /* Estilo específico do botão de Pause (para diferenciar do Play) */
         .btn-pause {
-            background: #000 !important;
-            border-color: #333 !important; /* Borda mais escura */
-            color: #888 !important; /* Letra mais apagada */
+            background: transparent !important;
+            border-color: #555 !important; /* Borda cinza escuro */
+            color: #555 !important; /* Texto cinza escuro */
             display: none;
         }
 
@@ -1415,8 +1416,11 @@
 
             const fBtn = document.getElementById('fullSeqBtn');
             if (fBtn) {
-                fBtn.textContent = "[ PLAY FULL SEQUENCE ]";
-                fBtn.classList.remove('active-full');
+                // Só volta o texto para Play Full Sequence se ele NÃO estiver bloqueado!
+                if (!fBtn.classList.contains('locked')) {
+                    fBtn.textContent = "[ PLAY FULL SEQUENCE ]";
+                    fBtn.classList.remove('active-full');
+                }
             }
 
             const cursor = document.getElementById('cursor-g');
