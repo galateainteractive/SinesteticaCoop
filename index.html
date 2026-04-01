@@ -1294,15 +1294,24 @@
             });
 
             // Se NÃO for loop, mantém o comportamento de acabar sozinho.
-            // Se FOR loop, ele nunca acaba sozinho, só no Stop manual.
             if (!shouldLoop && activeSources.length > 0) {
-                // Pega a última trilha da lista (A Track longa, e não o Groove que é curto!)
-                const mainSource = activeSources[activeSources.length - 1];
-                mainSource.onended = () => {
+                // MÁGICA: Acha o áudio mais longo que está tocando agora para ser a referência
+                let longestSource = activeSources[0];
+                let maxDuration = 0;
+
+                activeSources.forEach(src => {
+                    if (src.buffer && src.buffer.duration > maxDuration) {
+                        maxDuration = src.buffer.duration;
+                        longestSource = src;
+                    }
+                });
+
+                // Só reseta a interface quando o áudio mais longo acabar de verdade
+                longestSource.onended = () => {
                     if (!isPaused) {
-                        activeSources = []; // Esvazia a array manualmente
-                        resetUI();          // Reseta a interface
-                        activeTrack = null; // Limpa a trilha ativa, consertando o play do groove!
+                        activeSources = [];
+                        resetUI();
+                        activeTrack = null;
                         isPlayingMaster = false;
                         isPlayingFull = false;
                     }
