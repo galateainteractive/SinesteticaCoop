@@ -1289,7 +1289,15 @@
                 const src = audioCtx.createBufferSource();
                 src.buffer = data.buffer;
                 src.loop = shouldLoop; // <--- NOVA LINHA: Ativa o Loop se pedido
-                src.connect(analyser);
+
+                // --- SEPARAÇÃO DO ÁUDIO ---
+                if (data === grooveData) {
+                    // Se for o groove, manda direto pro compressor final (pula o osciloscópio)
+                    src.connect(masterCompressor);
+                } else {
+                    // Se for uma track, passa pelo analyser para aparecer no visual
+                    src.connect(analyser);
+                }
 
                 let startPoint = 0;
                 if (forceSync) {
@@ -1680,8 +1688,11 @@
         function animate() {
             requestAnimationFrame(animate);
 
-            // --- LÓGICA DO CURSOR (Mantida) ---
+            // LÓGICA DO CURSOR
+            // 1. Descobrimos se estamos tocando uma track no modo sincronizado
             const isPlayingSync = isSyncMode && activeTrack && activeTrack !== grooveData;
+
+            // 2. O cursor aparece se: for o Groove solo, for o Play All (Master) OU for o modo Sync
             const shouldShowCursor = !isPaused && activeSources.length > 0 &&
                 ((activeTrack === grooveData) || isPlayingMaster || isPlayingSync);
 
@@ -1692,12 +1703,14 @@
                     el.style.display = 'block';
                     el.style.left = (Math.min(progress, 1) * 100) + '%';
                 }
-            } else if (!isPaused && activeTrack && activeTrack !== grooveData && !isPlayingMaster && !isPlayingSync) {
+            }
+            // 3. Só esconde o cursor se estivermos tocando uma track e NÃO estivermos no modo Sync
+            else if (!isPaused && activeTrack && activeTrack !== grooveData && !isPlayingMaster && !isPlayingSync) {
                 const el = document.getElementById('cursor-g');
                 if (el) el.style.display = 'none';
             }
 
-            // --- OSCILOSCÓPIO SINESTÉTICO OTIMIZADO ---
+            // --- OSCILOSCÓPIO ---
             const cvs = document.getElementById('liveScope');
             const sCtx = cvs.getContext('2d');
             const w = 800;
@@ -1722,43 +1735,55 @@
             const waveAreaHeight = h - rulerHeight;
             const waveCenter = waveAreaHeight / 2;
 
+            sCtx.fillStyle = '#111';
+            sCtx.fillRect(0, waveAreaHeight, w, rulerHeight);
+
             const SPEED_OF_SOUND = 343;
             const totalSeconds = dataArr.length / audioCtx.sampleRate;
             const totalMeters = totalSeconds * SPEED_OF_SOUND;
-
-            // O pulo do gato: calculamos o zoom baseado no total de metros do buffer
             const basePixelsPerMeter = w / totalMeters;
             const scaledPixelsPerMeter = basePixelsPerMeter * scopeZoom;
 
-            // --- DESENHO DA RÉGUA (METROS) ---
-            sCtx.fillStyle = '#111';
-            sCtx.fillRect(0, waveAreaHeight, w, rulerHeight);
             sCtx.lineWidth = 1;
             sCtx.font = "bold 10px Courier New";
+            sCtx.textAlign = "left";
 
-            // Sincronizamos a régua com o final do buffer (Tempo Real)
-            // Se o scopeOffset for 0, o 0m (Agora) fica na direita da tela.
-            let stepSize = (scopeZoom > 5) ? 0.5 : 1;
-            const maxVisibleMeters = w / scaledPixelsPerMeter;
+            let stepSize = 1;
+            let precision = 0;
+            if (scaledPixelsPerMeter > 200) { stepSize = 0.1; precision = 1; }
+            else if (scaledPixelsPerMeter > 100) { stepSize = 0.5; precision = 1; }
+            else if (scaledPixelsPerMeter > 50) { stepSize = 0.5; precision = 1; }
 
-            for (let m = 0; m <= totalMeters; m += stepSize) {
-                // Calculamos a posição X de trás para frente
-                // (totalMeters - m) faz com que 0m seja o final do buffer
-                const xPos = w - (m * scaledPixelsPerMeter) + scopeOffset;
+            const maxVisibleMeters = (w - scopeOffset) / scaledPixelsPerMeter;
 
-                if (xPos >= 0 && xPos <= w) {
-                    sCtx.strokeStyle = '#fff';
-                    sCtx.beginPath();
-                    sCtx.moveTo(xPos, waveAreaHeight);
-                    sCtx.lineTo(xPos, h);
-                    sCtx.stroke();
+            for (let m = 0; m < maxVisibleMeters + stepSize; m += stepSize) {
+                m = Math.round(m * 100) / 100;
+                if (m === 0) continue;
+                const xPos = (m * scaledPixelsPerMeter) + scopeOffset;
+                if (xPos < 0) continue;
+                if (xPos > w) break;
+
+                sCtx.strokeStyle = '#fff';
+                sCtx.beginPath();
+                sCtx.moveTo(xPos, waveAreaHeight);
+                sCtx.lineTo(xPos, h);
+                sCtx.stroke();
+
+                let drawText = true;
+                if (stepSize === 0.1) {
+                    if (Math.round(m * 10) % 5 !== 0) drawText = false;
+                }
+
+                if (drawText) {
                     sCtx.fillStyle = '#fff';
-                    sCtx.textAlign = "center";
-                    sCtx.fillText(m + "m", xPos, h - 5);
+                    sCtx.fillText(m.toFixed(precision) + "m", xPos + 2, h - 5);
                 }
             }
 
-            // --- DESENHO DA ONDA (TRIGGER NO FINAL) ---
+            sCtx.textAlign = "right";
+            sCtx.fillStyle = "#fffacd";
+            sCtx.fillText(`SCOPE: ${scopeZoom.toFixed(1)}x`, w - 5, 12);
+
             sCtx.save();
             sCtx.beginPath();
             sCtx.rect(0, 0, w, waveAreaHeight);
@@ -1768,29 +1793,21 @@
             sCtx.lineWidth = 2;
             sCtx.beginPath();
 
-            // Aqui está a mágica: desenhamos de TRÁS para FRENTE
-            // i = dataArr.length - 1 é o som de AGORA.
             const slice = (w / dataArr.length) * scopeZoom;
+            let x = scopeOffset;
 
-            // Começamos o X na direita da tela
-            let x = w + scopeOffset;
-
-            for (let i = dataArr.length - 1; i >= 0; i--) {
+            for (let i = 0; i < dataArr.length; i++) {
                 const yCorrected = waveCenter + ((dataArr[i] - 128) / 128) * waveCenter * visualGain;
-
                 if (x >= -slice && x <= w + slice) {
-                    if (i === dataArr.length - 1) sCtx.moveTo(x, yCorrected);
+                    if (i === 0) sCtx.moveTo(x, yCorrected);
                     else sCtx.lineTo(x, yCorrected);
+                } else if (i === 0) {
+                    sCtx.moveTo(x, yCorrected);
                 }
-                x -= slice; // Caminhamos para a esquerda (passado)
+                x += slice;
             }
-
             sCtx.stroke();
             sCtx.restore();
-
-            sCtx.textAlign = "right";
-            sCtx.fillStyle = "#fffacd";
-            sCtx.fillText(`REAL-TIME WAVE | ZOOM: ${scopeZoom.toFixed(1)}x`, w - 10, 15);
         }
 
         document.getElementById('divisionSlider').oninput = (e) => {
