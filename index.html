@@ -371,11 +371,10 @@
             transition: 0.3s;
         }
 
-            /* Efeito ao passar o mouse ou clicar no Play/Playing */
-            .tracks-scroll .btn:hover,
+            /* Efeito APENAS ao tocar na tela (Ideal para Celular) */
             .tracks-scroll .btn:active {
-                background: #000 !important; /* Preenche de preto ao passar o mouse */
-                color: #fff !important; /* Texto vira branco para dar contraste */
+                background: #000 !important;
+                color: #fff !important;
             }
 
             /* Classe ativada via JavaScript enquanto a track estiver tocando */
@@ -1297,7 +1296,9 @@
             // Se NÃO for loop, mantém o comportamento de acabar sozinho.
             // Se FOR loop, ele nunca acaba sozinho, só no Stop manual.
             if (!shouldLoop && activeSources.length > 0) {
-                activeSources[0].onended = () => {
+                // Pega a última trilha da lista (A Track longa, e não o Groove que é curto!)
+                const mainSource = activeSources[activeSources.length - 1];
+                mainSource.onended = () => {
                     if (!isPaused) {
                         activeSources = []; // Esvazia a array manualmente
                         resetUI();          // Reseta a interface
