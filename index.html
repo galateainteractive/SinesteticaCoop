@@ -4,19 +4,72 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Sinestética Player - Final v16</title>
-    <script src="manual.js" charset="utf-8"></script> 
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Science+Gothic:wght@100..900&display=swap" rel="stylesheet">
+
+    <script src="manual.js" charset="utf-8"></script>
     <style>
         /* --- ESTILO GERAL --- */
-        html, body { height: 100%; margin: 0; padding: 0; background: #000; color: #fff; font-family: 'Courier New', Courier, monospace; overflow-x: hidden; }
-        
-        #menu-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100%; text-align: center; padding: 20px; box-sizing: border-box; }
-        #player-screen { display: none; height: 100%; padding: 0; box-sizing: border-box; }
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            color: #fff;
+            font-family: 'Science Gothic', sans-serif; /* FONTE NOVA */
+            overflow-x: hidden;
+            /* IMAGEM DE FUNDO */
+            background-image: url('nome-da-sua-imagem.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
 
-        .comp-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; width: 100%; max-width: 800px; margin-top: 30px; }
-        .comp-card { border: 1px solid #fff; padding: 20px; cursor: pointer; transition: 0.3s; }
-        .comp-card:hover { background: #fff; color: #000; }
-        
-        .main-layout { display: flex; flex-direction: column; height: 100%; }
+        #menu-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100%;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        #player-screen {
+            display: none;
+            height: 100%;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .comp-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            width: 100%;
+            max-width: 800px;
+            margin-top: 30px;
+        }
+
+        .comp-card {
+            border: 1px solid #fff;
+            padding: 20px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+            .comp-card:hover {
+                background: #fff;
+                color: #000;
+            }
+
+        .main-layout {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
 
         /* --- PAINEL SUPERIOR --- */
         .top-panel {
@@ -24,43 +77,151 @@
             max-height: 55vh;
             overflow-y: auto;
             border-bottom: 4px solid #fff;
-            padding: 15px 27px 15px 15px; /* Igualou em 15px, e somou 12px na direita para imitar o scrollbar! */
+            padding: 15px 27px 15px 15px;
+            background: rgba(0, 0, 0, 0.8); /* PRETO TRANSPARENTE */
+            backdrop-filter: blur(8px); /* EFEITO DE DESFOQUE NO FUNDO */
+            box-sizing: border-box;
+        }
+
+        .nav-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .back-btn {
             background: #000;
-            box-sizing: border-box; /* Fundamental para o padding não quebrar a tela */
-        }  
-        .nav-header { display: flex; justify-content: space-between; margin-bottom: 15px; }
-        .back-btn { background: #000; color: #fff; border: 1px solid #fff; padding: 5px 10px; cursor: pointer; font-family: inherit; text-transform: uppercase; font-size: 10px; }
-        .help-btn { background: #000; color: #fff; border: 1px solid #fff; padding: 5px 12px; cursor: pointer; font-family: inherit; font-weight: bold; font-size: 14px; }
-        .help-btn:hover { background: #fff; color: #000; }
+            color: #fff;
+            border: 1px solid #fff;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-family: inherit;
+            text-transform: uppercase;
+            font-size: 10px;
+        }
+
+        .help-btn {
+            background: #000;
+            color: #fff;
+            border: 1px solid #fff;
+            padding: 5px 12px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+            .help-btn:hover {
+                background: #fff;
+                color: #000;
+            }
 
         /* --- CONTROLES SCOPE --- */
-        .scope-controls { display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end; margin: 0 0 10px 0; border: 1px solid #222; padding: 10px; }
-        .control-group { display: flex; flex-direction: column; gap: 5px; font-size: 10px; text-transform: uppercase; flex: 1; min-width: 90px; }
-        input[type=range] { width: 100%; height: 20px; accent-color: #fff; cursor: pointer; }
-
-        .control-disabled { opacity: 0.5; pointer-events: none; filter: grayscale(100%); }
-        .zoom-warning { 
-            color: #ff9900; font-size: 10px; font-weight: bold; margin-top: 5px; display: none; 
-            text-shadow: 0 0 5px #ff9900; animation: blink 2s infinite;
+        .scope-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: flex-end;
+            margin: 0 0 10px 0;
+            border: 1px solid #222;
+            padding: 10px;
         }
-        @keyframes blink { 0% {opacity:1;} 50% {opacity:0.5;} 100% {opacity:1;} }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            font-size: 10px;
+            text-transform: uppercase;
+            flex: 1;
+            min-width: 90px;
+        }
+
+        input[type=range] {
+            width: 100%;
+            height: 20px;
+            accent-color: #fff;
+            cursor: pointer;
+        }
+
+        .control-disabled {
+            opacity: 0.5;
+            pointer-events: none;
+            filter: grayscale(100%);
+        }
+
+        .zoom-warning {
+            color: #ff9900;
+            font-size: 10px;
+            font-weight: bold;
+            margin-top: 5px;
+            display: none;
+            text-shadow: 0 0 5px #ff9900;
+            animation: blink 2s infinite;
+        }
+
+        @keyframes blink {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
 
         /* --- BARRA GROOVE --- */
         .groove-toolbar {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-top: 15px; margin-bottom: 5px; padding: 10px 5px 0 5px;
-            border-top: 1px dashed #333; gap: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            margin-bottom: 5px;
+            padding: 10px 5px 0 5px;
+            border-top: 1px dashed #333;
+            gap: 20px;
         }
-        .groove-control-group { display: flex; align-items: center; gap: 10px; font-size: 10px; text-transform: uppercase; text-align: right; }
-        .groove-control-group input { width: 100px; margin-left: 5px; }
+
+        .groove-control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 10px;
+            text-transform: uppercase;
+            text-align: right;
+        }
+
+            .groove-control-group input {
+                width: 100px;
+                margin-left: 5px;
+            }
 
         .play-groove-btn {
-            background: #000; color: #fff; border: 1px solid #fff;
-            padding: 8px 15px; font-family: inherit; font-weight: bold; font-size: 11px;
-            cursor: pointer; text-transform: uppercase; white-space: nowrap;
+            background: #000;
+            color: #fff;
+            border: 1px solid #fff;
+            padding: 8px 15px;
+            font-family: inherit;
+            font-weight: bold;
+            font-size: 11px;
+            cursor: pointer;
+            text-transform: uppercase;
+            white-space: nowrap;
         }
-        .play-groove-btn:active { background: #333; }
-        .groove-playing { background: #fff; color: #000; border-color: #000; }
+
+            .play-groove-btn:active {
+                background: #333;
+            }
+
+        .groove-playing {
+            background: #fff;
+            color: #000;
+            border-color: #000;
+        }
 
         /* --- CANVAS --- */
         .top-panel .canvas-container {
@@ -81,8 +242,8 @@
         .tracks-scroll {
             flex: 1;
             overflow-y: auto;
-            background: #e0e0e0;
-            color: #000;
+            background: rgba(20, 20, 20, 0.7); /* ESCURO TRANSPARENTE */
+            color: #fff; /* MUDEI PARA BRANCO PARA LER MELHOR NO FUNDO ESCURO */
             padding: 15px;
             -webkit-overflow-scrolling: touch;
             position: relative;
@@ -114,41 +275,218 @@
                 box-sizing: border-box;
             }
 
-        .track-row { display: flex; flex-direction: column; gap: 8px; padding: 15px 0; border-bottom: 2px solid #999; }
-        canvas { display: block; width: 100%; height: 100%; box-sizing: border-box; }
-        
-        .track-info { display: flex; justify-content: space-between; align-items: center; }
-        .track-label { font-size: 9px; text-transform: uppercase; font-weight: bold; }
-        .tracks-scroll .track-label { color: #000; }
-        .top-panel .track-label { color: #888; }
-        
-        .cursor-groove { position: absolute; top: 0; left: 0; width: 2px; height: 100%; background: #fff; pointer-events: none; display: none; z-index: 10; box-shadow: 0 0 5px #fff; }
-        
-        .btn-group { display: flex; gap: 5px; margin-top: 5px; }
-        .btn { cursor: pointer; padding: 12px 10px; font-size: 10px; text-transform: uppercase; flex: 1; text-align: center; border: 1px solid; }
-        .tracks-scroll .btn { background: transparent; color: #000; border-color: #000; font-weight: bold; }
-        .tracks-scroll .btn:active { background: #000; color: #fff; }
-        .btn-pause { border-color: #666; color: #ccc; display: none; }
+        .track-row {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 15px 0;
+            border-bottom: 2px solid #999;
+        }
 
-        #liveScope { width: 100%; height: 80px; border: 1px solid #555; background: #000; cursor: grab; }
-        #liveScope:active { cursor: grabbing; }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            box-sizing: border-box;
+        }
 
-        .loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: #000; display:none; align-items:center; justify-content:center; z-index:1000; color: #fff; }
+        .track-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .track-label {
+            font-size: 9px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        .tracks-scroll .track-label {
+            color: #000;
+        }
+
+        .top-panel .track-label {
+            color: #888;
+        }
+
+        .cursor-groove {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 2px;
+            height: 100%;
+            background: #fff;
+            pointer-events: none;
+            display: none;
+            z-index: 10;
+            box-shadow: 0 0 5px #fff;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 5px;
+            margin-top: 5px;
+        }
+
+        .btn {
+            cursor: pointer;
+            padding: 12px 10px;
+            font-size: 10px;
+            text-transform: uppercase;
+            flex: 1;
+            text-align: center;
+            border: 1px solid;
+        }
+
+        .tracks-scroll .btn {
+            background: transparent;
+            color: #000;
+            border-color: #000;
+            font-weight: bold;
+        }
+
+            .tracks-scroll .btn:active {
+                background: #000;
+                color: #fff;
+            }
+
+        .btn-pause {
+            border-color: #666;
+            color: #ccc;
+            display: none;
+        }
+
+        #liveScope {
+            width: 100%;
+            height: 80px;
+            border: 1px solid #555;
+            background: #000;
+            cursor: grab;
+        }
+
+            #liveScope:active {
+                cursor: grabbing;
+            }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            color: #fff;
+        }
 
         /* --- HELP OVERLAY --- */
-        #help-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 999; display: none; overflow-y: auto; color: #fff; padding: 20px; box-sizing: border-box; }
-        .help-section { margin-bottom: 30px; border-bottom: 1px dashed #444; padding-bottom: 20px; }
-        .help-box { border: 1px solid #fff; padding: 15px; margin-bottom: 15px; background: rgba(20,20,20,0.95); position: relative; }
-        .help-title-main { color: #fff; font-size: 16px; margin: 0 0 10px 0; text-transform: uppercase; border: 2px solid #fff; display: inline-block; padding: 5px 10px; }
-        .help-subtitle { color: #aaa; font-size: 11px; margin-top: 5px; margin-bottom: 15px; max-width: 600px; }
-        .help-box h3 { margin: 0 0 10px 0; color: #ffff00; text-transform: uppercase; font-size: 13px; border-bottom: 1px solid #555; padding-bottom: 5px; letter-spacing: 1px; }
-        .help-box p { font-size: 11px; line-height: 1.5; margin: 8px 0; color: #ddd; }
-        .help-box strong { color: #fff; font-weight: bold; }
-        .help-formula { background: #222; padding: 8px; font-family: monospace; text-align: center; margin: 10px 0; border: 1px solid #666; font-size: 11px; color: #0f0; }
-        .cheat-sheet { width: 100%; border-collapse: collapse; font-size: 10px; margin-top: 10px; color: #aaa; font-family: monospace; }
-        .cheat-sheet td, .cheat-sheet th { border: 1px solid #444; padding: 6px 4px; text-align: center; }
-        .cheat-sheet th { color: #fff; background: #222; }
-        .cheat-sheet tr:nth-child(even) { background: #111; }
+        #help-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 999;
+            display: none;
+            overflow-y: auto;
+            color: #fff;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .help-section {
+            margin-bottom: 30px;
+            border-bottom: 1px dashed #444;
+            padding-bottom: 20px;
+        }
+
+        .help-box {
+            border: 1px solid #fff;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: rgba(20,20,20,0.95);
+            position: relative;
+        }
+
+        .help-title-main {
+            color: #fff;
+            font-size: 16px;
+            margin: 0 0 10px 0;
+            text-transform: uppercase;
+            border: 2px solid #fff;
+            display: inline-block;
+            padding: 5px 10px;
+        }
+
+        .help-subtitle {
+            color: #aaa;
+            font-size: 11px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            max-width: 600px;
+        }
+
+        .help-box h3 {
+            margin: 0 0 10px 0;
+            color: #ffff00;
+            text-transform: uppercase;
+            font-size: 13px;
+            border-bottom: 1px solid #555;
+            padding-bottom: 5px;
+            letter-spacing: 1px;
+        }
+
+        .help-box p {
+            font-size: 11px;
+            line-height: 1.5;
+            margin: 8px 0;
+            color: #ddd;
+        }
+
+        .help-box strong {
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .help-formula {
+            background: #222;
+            padding: 8px;
+            font-family: monospace;
+            text-align: center;
+            margin: 10px 0;
+            border: 1px solid #666;
+            font-size: 11px;
+            color: #0f0;
+        }
+
+        .cheat-sheet {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10px;
+            margin-top: 10px;
+            color: #aaa;
+            font-family: monospace;
+        }
+
+            .cheat-sheet td, .cheat-sheet th {
+                border: 1px solid #444;
+                padding: 6px 4px;
+                text-align: center;
+            }
+
+            .cheat-sheet th {
+                color: #fff;
+                background: #222;
+            }
+
+            .cheat-sheet tr:nth-child(even) {
+                background: #111;
+            }
 
         /* --- CLASSES FANTASMAS PARA ALINHAMENTO --- */
         .ghost-block {
@@ -163,12 +501,33 @@
         }
 
         @media (min-width: 768px) {
-            .track-row { flex-direction: row; align-items: center; }
-            .track-info { display: contents; }
-            .track-label { width: 150px; text-align: right; margin-right: 15px; }
-            .canvas-container { width: 600px; }
-            .btn-group { margin-top: 0; }
-            .btn { flex: none; min-width: 100px; }
+            .track-row {
+                flex-direction: row;
+                align-items: center;
+            }
+
+            .track-info {
+                display: contents;
+            }
+
+            .track-label {
+                width: 150px;
+                text-align: right;
+                margin-right: 15px;
+            }
+
+            .canvas-container {
+                width: 600px;
+            }
+
+            .btn-group {
+                margin-top: 0;
+            }
+
+            .btn {
+                flex: none;
+                min-width: 100px;
+            }
         }
 
         /* Ajustes para telas com pouca altura vertical (celulares) */
@@ -348,7 +707,6 @@
             box-shadow: none;
             font-size: 10px;
         }
-
     </style>
 </head>
 <body>
