@@ -18,7 +18,7 @@
             padding: 0;
             color: #fff;
             font-family: 'Science Gothic', sans-serif; /* FONTE NOVA */
-            font-size: 8px;
+            font-size: 14px;
 
             overflow-x: hidden;
             /* IMAGEM DE FUNDO */
@@ -85,7 +85,7 @@
             padding: 15px 27px 15px 15px;
             box-sizing: border-box;
             /* IMAGEM DO TOPO + EFEITO FUMÊ DE 60% PARA LER OS TEXTOS */
-            background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('FundoEscuroPartitulas.png');
+            background-image: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0)), url('FundoEscuroPartitulas.png');
             background-size: cover;
             background-position: center;
         }
@@ -249,15 +249,11 @@
         .tracks-scroll {
             flex: 1;
             overflow-y: auto;
-            color: #fff; /* Mantém o texto branco */
+            background: rgba(20, 20, 20, 0.4); /* Fundo escuro leve */
+            color: #fff;
             padding: 15px;
             -webkit-overflow-scrolling: touch;
             position: relative;
-            /* IMAGEM DE BAIXO + EFEITO FUMÊ DE 70% */
-            background-image: linear-gradient(rgba(20, 20, 20, 0.7), rgba(20, 20, 20, 0.7)), url('AcoEscovado.png');
-            background-size: cover;
-            background-position: center;
-            background-attachment: local; /* Faz a imagem rolar junto com as tracks */
         }
 
             .tracks-scroll::-webkit-scrollbar {
@@ -290,8 +286,15 @@
             display: flex;
             flex-direction: column;
             gap: 8px;
-            padding: 15px 0;
-            border-bottom: 2px solid #999;
+            /* Afastei um pouco as bordas para o texto não grudar na imagem */
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid #666;
+            border-radius: 8px; /* Cantos levemente arredondados para dar cara de "card" */
+            /* AQUI ENTRA A SUA IMAGEM (com aquele fumê de leve pra não sumir com as letras) */
+            background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('AcoEscovado.png');
+            background-size: cover;
+            background-position: center;
         }
 
         canvas {
@@ -347,8 +350,17 @@
             text-transform: uppercase;
             flex: 1;
             text-align: center;
-            border: 1px solid;
+            /* BOTÕES TRANSPARENTES COM TEXTO E BORDA BRANCA */
+            background: transparent !important;
+            color: #fff !important;
+            border: 1px solid #fff !important;
+            transition: 0.3s; /* Deixa a mudança de cor suave quando passar o mouse */
         }
+
+            /* Efeito quando clica ou passa o mouse em cima do botão */
+            .btn:hover, .btn:active {
+                background: rgba(255, 255, 255, 0.2) !important; /* Fica um branco bem transparente */
+            }
 
         .tracks-scroll .btn {
             background: transparent;
