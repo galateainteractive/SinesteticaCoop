@@ -85,7 +85,7 @@
             padding: 15px 27px 15px 15px;
             box-sizing: border-box;
             /* IMAGEM DO TOPO + EFEITO FUMÊ DE 60% PARA LER OS TEXTOS */
-            background-image: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0)), url('FundoEscuroPartitulas.png');
+            background-image: url('FundoEscuroPartitulas.png');
             background-size: cover;
             background-position: center;
         }
@@ -292,7 +292,7 @@
             border: 1px solid #666;
             border-radius: 8px; /* Cantos levemente arredondados para dar cara de "card" */
             /* AQUI ENTRA A SUA IMAGEM (com aquele fumê de leve pra não sumir com as letras) */
-            background-image: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0)), url('AcoEscovado.png');
+            background-image: url('AcoEscovado.png');
             background-size: cover;
             background-position: center;
         }
@@ -585,7 +585,7 @@
         .session-nav {
             display: flex;
             justify-content: center;
-            gap: 10px;
+            gap: 4px; /* ERA 10px: Aproximamos os botões para economizar espaço */
             margin-bottom: 10px;
             padding-bottom: 10px;
             border-bottom: 1px solid #333;
@@ -596,10 +596,10 @@
             background: #000;
             color: #666;
             border: 1px solid #333;
-            padding: 5px 10px;
+            padding: 5px 6px; /* ERA 5px 10px: Deixamos o botão um pouquinho mais magro */
             cursor: pointer;
             font-family: inherit;
-            font-size: 10px;
+            font-size: 9px; /* ERA 10px: Reduzimos um pontinho para compensar a largura da fonte */
             text-transform: uppercase;
         }
 
@@ -720,15 +720,17 @@
             }
         }
 
-        /* --- ESTADO BLOQUEADO DO BOTÃO FULL --- */
         .full-seq-btn.locked {
             background: #000;
-            color: #666; /* Cinza igual session inativa */
-            border: 1px solid #333; /* Borda sólida igual session */
+            color: #666;
+            border: 1px solid #333;
             cursor: not-allowed;
             pointer-events: none;
             box-shadow: none;
-            font-size: 10px;
+            /* MUDANÇAS AQUI PARA CABER A NOVA FONTE: */
+            font-size: 8px; /* Diminuímos de 10px para 8px */
+            padding: 5px 6px; /* Tiramos um pouco do espaço nas laterais do botão */
+            letter-spacing: 0px; /* Garante que as letras fiquem juntinhas */
         }
     </style>
 </head>
