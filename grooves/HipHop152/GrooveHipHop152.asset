@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30112c130580d8642bc0f3be1e1c701b, type: 3}
+  m_Name: GrooveHipHop152
+  m_EditorClassIdentifier: 
+  displayName: HipHop152
+  bpm: 152
+  previewClip: {fileID: 8300000, guid: d59b9f995d1aba64a9bcfd3542d115c6, type: 3}
+  variations:
+  - {fileID: 8300000, guid: d59b9f995d1aba64a9bcfd3542d115c6, type: 3}
+  - {fileID: 8300000, guid: db31e040954786e40911f761e774e4ac, type: 3}
+  - {fileID: 8300000, guid: e764c26c846871e49bc735b638fd4d4a, type: 3}
+  - {fileID: 8300000, guid: 6c41a4bdc3554eb479a097c32ccb46a6, type: 3}
+  - {fileID: 8300000, guid: f4056431a2253e448b7ba5341bd90e68, type: 3}
+  - {fileID: 8300000, guid: b9b7e212996c3dc47b9f6187f1432fca, type: 3}

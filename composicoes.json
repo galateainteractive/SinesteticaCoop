@@ -1,5 +1,29 @@
 [
     {
+        "nome": "02_Match",
+        "pasta": "musicas/02_Match"
+    },
+    {
+        "nome": "03_Oitavas",
+        "pasta": "musicas/03_Oitavas"
+    },
+    {
+        "nome": "04_Tercas_E_Quintas",
+        "pasta": "musicas/04_Tercas_E_Quintas"
+    },
+    {
+        "nome": "05_Timbres",
+        "pasta": "musicas/05_Timbres"
+    },
+    {
+        "nome": "06_Move_Your_Hand_2",
+        "pasta": "musicas/06_Move_Your_Hand_2"
+    },
+    {
+        "nome": "07_Glissando_3",
+        "pasta": "musicas/07_Glissando_3"
+    },
+    {
         "nome": "1NateIvi_27",
         "pasta": "musicas/1NateIvi_27"
     },

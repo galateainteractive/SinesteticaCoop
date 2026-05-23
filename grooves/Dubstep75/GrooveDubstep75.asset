@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30112c130580d8642bc0f3be1e1c701b, type: 3}
+  m_Name: GrooveDubstep75
+  m_EditorClassIdentifier: 
+  displayName: Dubstep75
+  bpm: 75
+  previewClip: {fileID: 8300000, guid: 02b070a16bd10934b98035cf59d10af4, type: 3}
+  variations:
+  - {fileID: 8300000, guid: 02b070a16bd10934b98035cf59d10af4, type: 3}
+  - {fileID: 8300000, guid: 44bf32c93151a404db6a88dd33b559db, type: 3}
