@@ -824,7 +824,7 @@
         <div class="main-layout">
             <div class="top-panel">
                 <div class="nav-header">
-                    <button class="back-btn" onclick="window.location.reload()">[ BACK TO MENU ]</button>
+                    <button class="back-btn" onclick="navigateBackToMenu()">[ BACK TO MENU ]</button>
                     <button class="help-btn" onclick="toggleHelp()">[ ? ]</button>
                 </div>
 
@@ -952,10 +952,52 @@
         let currentSessionIndex = -1;
         const GLOBAL_GROOVES_FOLDER = 'grooves';
 
-        function toggleHelp() {
-            const el = document.getElementById('help-overlay');
-            el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+        function applyNavigationState(state) {
+            const view = state && state.view ? state.view : 'menu';
+            const helpOverlay = document.getElementById('help-overlay');
+            const menuScreen = document.getElementById('menu-screen');
+            const playerScreen = document.getElementById('player-screen');
+
+            helpOverlay.style.display = (view === 'help') ? 'block' : 'none';
+
+            if (view === 'menu') {
+                stopAllAudio();
+                menuScreen.style.display = 'flex';
+                playerScreen.style.display = 'none';
+            } else {
+                menuScreen.style.display = 'none';
+                playerScreen.style.display = 'block';
+            }
         }
+
+        function navigateBackToMenu() {
+            if (history.state && history.state.view === 'composition') {
+                history.back();
+            } else {
+                applyNavigationState({ view: 'menu' });
+            }
+        }
+
+        function toggleHelp() {
+            const helpOverlay = document.getElementById('help-overlay');
+            const isOpen = helpOverlay.style.display === 'block';
+
+            if (isOpen) {
+                if (history.state && history.state.view === 'help') {
+                    history.back();
+                } else {
+                    helpOverlay.style.display = 'none';
+                }
+                return;
+            }
+
+            history.pushState({ view: 'help' }, '', window.location.href);
+            helpOverlay.style.display = 'block';
+        }
+
+        window.addEventListener('popstate', (event) => {
+            applyNavigationState(event.state);
+        });
 
         let currentManualLanguage = 'en';
 
@@ -1016,6 +1058,8 @@
         }
 
         window.onload = async () => {
+            history.replaceState({ view: 'menu' }, '', window.location.href);
+
             try {
                 loadTexts();
             } catch (error) {
@@ -1050,7 +1094,13 @@
                     const card = document.createElement('div');
                     card.className = 'comp-card';
                     card.innerHTML = `<h3>${m.nome}</h3><p style="font-size:9px; opacity:0.5">${m.pasta}</p>`;
-                    card.onclick = () => { audioCtx.resume(); startApp(m); };
+                    card.onclick = async () => {
+                        audioCtx.resume();
+                        const didStart = await startApp(m);
+                        if (didStart) {
+                            history.pushState({ view: 'composition', composition: m.pasta }, '', window.location.href);
+                        }
+                    };
                     document.getElementById('comp-list').appendChild(card);
                 });
             } catch (e) { console.error("Erro ao carregar catálogo."); }
@@ -1074,6 +1124,9 @@
         async function startApp(musica) {
             document.getElementById('loading').style.display = 'flex';
             try {
+                stopAllAudio();
+                currentSessionIndex = -1;
+
                 const resJson = await fetch(`${musica.pasta}/settings.json`);
                 currentCompositionConfig = await resJson.json();
                 currentCompositionConfig._rootFolder = musica.pasta;
@@ -1097,13 +1150,20 @@
 
                 document.getElementById('menu-screen').style.display = 'none';
                 document.getElementById('player-screen').style.display = 'block';
-                animate();
+                if (!animationStarted) {
+                    animationStarted = true;
+                    animate();
+                }
+
+                return true;
 
             } catch (err) {
                 console.error(err);
                 alert("Error starting: " + err.message);
+                return false;
+            } finally {
+                document.getElementById('loading').style.display = 'none';
             }
-            document.getElementById('loading').style.display = 'none';
         }
 
         function setupSessionNav(sessions) {
@@ -1757,6 +1817,8 @@
                 ctx.setLineDash([]);
             }
         }
+
+        let animationStarted = false;
 
         function animate() {
             requestAnimationFrame(animate);
