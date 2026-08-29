@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30112c130580d8642bc0f3be1e1c701b, type: 3}
+  m_Name: ForwardBreak
+  m_EditorClassIdentifier: 
+  displayName: ForwardBreak
+  bpm: 88
+  previewClip: {fileID: 8300000, guid: 5cdc9a1cf05bb9b46af9e5ebede9a85f, type: 3}
+  variations:
+  - {fileID: 8300000, guid: 5cdc9a1cf05bb9b46af9e5ebede9a85f, type: 3}
+  - {fileID: 8300000, guid: 949945bbecde8c64dbe20919b92c8532, type: 3}
