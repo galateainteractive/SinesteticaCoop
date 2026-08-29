@@ -445,6 +445,28 @@
             padding-bottom: 20px;
         }
 
+        .help-language-switch {
+            display: flex;
+            gap: 8px;
+            margin: 10px 0 14px 0;
+        }
+
+        .help-language-btn {
+            background: #000;
+            color: #fff;
+            border: 1px solid #fff;
+            padding: 6px 10px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+            .help-language-btn.active {
+                background: #fff;
+                color: #000;
+            }
+
         .help-box {
             border: 1px solid #fff;
             padding: 15px;
@@ -770,16 +792,20 @@
 
     <div id="help-overlay" onclick="toggleHelp()">
         <div class="help-section" style="text-align:left; margin-top: 10px;">
+            <div class="help-language-switch" onclick="event.stopPropagation()">
+                <button id="lang-pt-btn" class="help-language-btn" onclick="setManualLanguage('pt-BR')">PT-BR</button>
+                <button id="lang-en-btn" class="help-language-btn active" onclick="setManualLanguage('en')">ENG</button>
+            </div>
             <h1 class="help-title-main" id="txt-title">...</h1>
             <p class="help-subtitle" id="txt-subtitle">...</p>
-            <p style="font-size: 10px; color:#666; margin-top:10px;">[ TAP ANYWHERE TO CLOSE ]</p>
+            <p id="txt-close-help" style="font-size: 10px; color:#666; margin-top:10px;">[ TAP ANYWHERE TO CLOSE ]</p>
         </div>
         <div class="help-box">
             <h3 id="txt-sec1-title">...</h3>
             <p id="txt-sec1-content">...</p>
             <div class="help-formula" id="txt-formula">...</div>
             <table class="cheat-sheet">
-                <thead><tr><th>NOTE</th><th>FREQ (Hz)</th><th>WAVELENGTH (m)</th></tr></thead>
+                <thead><tr><th id="txt-note-header">NOTE</th><th id="txt-freq-header">FREQ (Hz)</th><th id="txt-length-header">WAVELENGTH (m)</th></tr></thead>
                 <tbody id="notes-table-body"></tbody>
             </table>
             <p style="font-size:10px; margin-top:8px; border-top:1px dashed #555; padding-top:5px;" id="txt-octave">...</p>
@@ -930,25 +956,47 @@
             el.style.display = (el.style.display === 'block') ? 'none' : 'block';
         }
 
+        let currentManualLanguage = 'en';
+
+        function setManualLanguage(language) {
+            currentManualLanguage = language;
+            loadTexts();
+
+            const ptBtn = document.getElementById('lang-pt-btn');
+            const enBtn = document.getElementById('lang-en-btn');
+            if (ptBtn) ptBtn.classList.toggle('active', language === 'pt-BR');
+            if (enBtn) enBtn.classList.toggle('active', language === 'en');
+        }
+
         function loadTexts() {
-            if (typeof GAME_TEXTS !== 'undefined') {
-                document.getElementById('txt-title').innerHTML = GAME_TEXTS.overlayTitle;
-                document.getElementById('txt-subtitle').innerHTML = GAME_TEXTS.overlaySubtitle;
-                document.getElementById('txt-sec1-title').innerHTML = GAME_TEXTS.section1Title;
-                document.getElementById('txt-sec1-content').innerHTML = GAME_TEXTS.section1Content;
-                document.getElementById('txt-formula').innerHTML = GAME_TEXTS.formula;
-                const tbody = document.getElementById('notes-table-body');
-                GAME_TEXTS.notesTable.forEach(row => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `<td>${row.note}</td><td>${row.freq}</td><td>${row.meters}</td>`;
-                    tbody.appendChild(tr);
-                });
-                document.getElementById('txt-octave').innerHTML = GAME_TEXTS.octaveLogic;
-                document.getElementById('txt-sec2-title').innerHTML = GAME_TEXTS.section2Title;
-                document.getElementById('txt-sec2-content').innerHTML = GAME_TEXTS.section2Content;
-                document.getElementById('txt-sec3-title').innerHTML = GAME_TEXTS.section3Title;
-                document.getElementById('txt-sec3-content').innerHTML = GAME_TEXTS.section3Content;
-            }
+            if (typeof GAME_TEXTS === 'undefined') return;
+
+            const texts = GAME_TEXTS[currentManualLanguage] || GAME_TEXTS.en;
+
+            document.getElementById('txt-title').innerHTML = texts.overlayTitle;
+            document.getElementById('txt-subtitle').innerHTML = texts.overlaySubtitle;
+            document.getElementById('txt-sec1-title').innerHTML = texts.section1Title;
+            document.getElementById('txt-sec1-content').innerHTML = texts.section1Content;
+            document.getElementById('txt-formula').innerHTML = texts.formula;
+
+            document.getElementById('txt-close-help').innerHTML = texts.closeHelp;
+            document.getElementById('txt-note-header').innerHTML = texts.tableHeaders.note;
+            document.getElementById('txt-freq-header').innerHTML = texts.tableHeaders.freq;
+            document.getElementById('txt-length-header').innerHTML = texts.tableHeaders.length;
+
+            const tbody = document.getElementById('notes-table-body');
+            tbody.innerHTML = '';
+            texts.notesTable.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${row.note}</td><td>${row.freq}</td><td>${row.meters}</td>`;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('txt-octave').innerHTML = texts.octaveLogic;
+            document.getElementById('txt-sec2-title').innerHTML = texts.section2Title;
+            document.getElementById('txt-sec2-content').innerHTML = texts.section2Content;
+            document.getElementById('txt-sec3-title').innerHTML = texts.section3Title;
+            document.getElementById('txt-sec3-content').innerHTML = texts.section3Content;
         }
 
         window.onload = async () => {
