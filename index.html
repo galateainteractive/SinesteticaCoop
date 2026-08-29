@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Science+Gothic:wght@100..900&display=swap" rel="stylesheet">
 
-    <script src="manual.js" charset="utf-8"></script>
+    <script src="manual.js?v=20260829-2" charset="utf-8"></script>
     <style>
         /* --- ESTILO GERAL --- */
         html, body {
@@ -45,7 +45,7 @@
             padding: 0;
             box-sizing: border-box;
             /* SUA NOVA IMAGEM SÓ PARA A PARTE DE DENTRO: */
-            background-image: url('AcoExcovado.png');
+            background-image: url('AcoEscovado.png');
             background-size: cover;
             background-position: center;
         }
@@ -972,36 +972,55 @@
         function loadTexts() {
             if (typeof GAME_TEXTS === 'undefined') return;
 
-            const texts = GAME_TEXTS[currentManualLanguage] || GAME_TEXTS.en;
+            // Aceita tanto o formato bilíngue atual quanto o formato antigo/legado.
+            // Assim, um manual.js em cache nunca impede o catálogo de abrir.
+            const texts = GAME_TEXTS[currentManualLanguage]
+                || GAME_TEXTS.en
+                || GAME_TEXTS['pt-BR']
+                || GAME_TEXTS;
+            if (!texts || typeof texts !== 'object') return;
 
-            document.getElementById('txt-title').innerHTML = texts.overlayTitle;
-            document.getElementById('txt-subtitle').innerHTML = texts.overlaySubtitle;
-            document.getElementById('txt-sec1-title').innerHTML = texts.section1Title;
-            document.getElementById('txt-sec1-content').innerHTML = texts.section1Content;
-            document.getElementById('txt-formula').innerHTML = texts.formula;
+            const setText = (id, value) => {
+                const element = document.getElementById(id);
+                if (element && typeof value === 'string') element.innerHTML = value;
+            };
 
-            document.getElementById('txt-close-help').innerHTML = texts.closeHelp;
-            document.getElementById('txt-note-header').innerHTML = texts.tableHeaders.note;
-            document.getElementById('txt-freq-header').innerHTML = texts.tableHeaders.freq;
-            document.getElementById('txt-length-header').innerHTML = texts.tableHeaders.length;
+            setText('txt-title', texts.overlayTitle);
+            setText('txt-subtitle', texts.overlaySubtitle);
+            setText('txt-sec1-title', texts.section1Title);
+            setText('txt-sec1-content', texts.section1Content);
+            setText('txt-formula', texts.formula);
+            setText('txt-close-help', texts.closeHelp);
+
+            if (texts.tableHeaders) {
+                setText('txt-note-header', texts.tableHeaders.note);
+                setText('txt-freq-header', texts.tableHeaders.freq);
+                setText('txt-length-header', texts.tableHeaders.length);
+            }
 
             const tbody = document.getElementById('notes-table-body');
-            tbody.innerHTML = '';
-            texts.notesTable.forEach(row => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${row.note}</td><td>${row.freq}</td><td>${row.meters}</td>`;
-                tbody.appendChild(tr);
-            });
+            if (tbody && Array.isArray(texts.notesTable)) {
+                tbody.innerHTML = '';
+                texts.notesTable.forEach(row => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td>${row.note}</td><td>${row.freq}</td><td>${row.meters}</td>`;
+                    tbody.appendChild(tr);
+                });
+            }
 
-            document.getElementById('txt-octave').innerHTML = texts.octaveLogic;
-            document.getElementById('txt-sec2-title').innerHTML = texts.section2Title;
-            document.getElementById('txt-sec2-content').innerHTML = texts.section2Content;
-            document.getElementById('txt-sec3-title').innerHTML = texts.section3Title;
-            document.getElementById('txt-sec3-content').innerHTML = texts.section3Content;
+            setText('txt-octave', texts.octaveLogic);
+            setText('txt-sec2-title', texts.section2Title);
+            setText('txt-sec2-content', texts.section2Content);
+            setText('txt-sec3-title', texts.section3Title);
+            setText('txt-sec3-content', texts.section3Content);
         }
 
         window.onload = async () => {
-            loadTexts();
+            try {
+                loadTexts();
+            } catch (error) {
+                console.warn('Manual indisponível; o catálogo continuará carregando.', error);
+            }
             setZoomState(false);
 
             const cvs = document.getElementById('liveScope');
@@ -1952,4 +1971,3 @@
     </script>
 </body>
 </html>
-
