@@ -19,6 +19,7 @@
             color: #fff;
             font-family: 'Science Gothic', sans-serif; /* FONTE NOVA */
             font-size: 14px;
+
             overflow-x: hidden;
             /* IMAGEM DE FUNDO */
             background-image: url('FundoEscuroPartitulas.png');
@@ -462,10 +463,10 @@
             font-weight: bold;
         }
 
-            .help-language-btn.active {
-                background: #fff;
-                color: #000;
-            }
+        .help-language-btn.active {
+            background: #fff;
+            color: #000;
+        }
 
         .help-box {
             border: 1px solid #fff;
@@ -1354,7 +1355,7 @@
 
                 let startPoint = 0;
                 if (forceSync) {
-                    // MODO SYNC (Track + Groove): Começa do zero absoluto, mantendo
+                    // MODO SYNC (Track + Groove): Começa do zero absoluto, mantendo 
                     // o silêncio original para alinhar no tempo do Groove.
                     startPoint = 0 + offsetTime;
                 } else {
@@ -1582,17 +1583,17 @@
                 row.className = 'track-row';
                 // Usando o ghost-block: no desktop alinha perfeito com as tracks, no celular some pra não esticar a altura!
                 row.innerHTML = `
-                    <div class="track-info ghost-block">
-                        <div class="track-label">GROOVE</div>
-                    </div>
-                    <div class="canvas-container">
-                        <canvas id="canv-g" width="800" height="100"></canvas>
-                        <div id="cursor-g" class="cursor-groove"></div>
-                    </div>
-                    <div class="btn-group ghost-block">
-                        <button class="btn">[ PLAY ]</button>
-                        <button class="btn btn-pause">[ PAUSE ]</button>
-                    </div>`;
+                <div class="track-info ghost-block">
+                    <div class="track-label">GROOVE</div>
+                </div>
+                <div class="canvas-container">
+                    <canvas id="canv-g" width="800" height="100"></canvas>
+                    <div id="cursor-g" class="cursor-groove"></div>
+                </div>
+                <div class="btn-group ghost-block">
+                    <button class="btn">[ PLAY ]</button>
+                    <button class="btn btn-pause">[ PAUSE ]</button>
+                </div>`;
                 gCont.appendChild(row);
                 updateCanvas(grooveData, true);
             }
@@ -1602,13 +1603,13 @@
                 const row = document.createElement('div');
                 row.className = 'track-row';
                 row.innerHTML = `
-                    <div class="track-info">
-                        <div class="track-label">${data.label}</div>
-                    </div>
-                    <div class="canvas-container">
-                        <canvas id="canv-${data.id}" width="800" height="100"></canvas>
-                    </div>
-                    <div class="btn-group"></div>`;
+                <div class="track-info">
+                    <div class="track-label">${data.label}</div>
+                </div>
+                <div class="canvas-container">
+                    <canvas id="canv-${data.id}" width="800" height="100"></canvas>
+                </div>
+                <div class="btn-group"></div>`;
 
                 const btnPlay = document.createElement('button');
                 btnPlay.className = 'btn'; btnPlay.textContent = '[ PLAY ]';
@@ -1640,12 +1641,12 @@
 
             if (!unlockedSessions.has(currentSessionIndex)) {
                 masterContainer.innerHTML = `
-                    <div class="master-locked">
-                        <span>COMPLETE THE BLOCK TO RECEIVE THE CODE</span>
-                        <br><br>
-                        > <input type="text" class="master-input" maxlength="4" placeholder="0000" />
-                    </div>
-                `; // Note que mudei maxlength para 4 e placeholder para 0000
+                <div class="master-locked">
+                    <span>COMPLETE THE BLOCK TO RECEIVE THE CODE</span>
+                    <br><br>
+                    > <input type="text" class="master-input" maxlength="4" placeholder="0000" />
+                </div>
+            `; // Note que mudei maxlength para 4 e placeholder para 0000
 
                 const input = masterContainer.querySelector('input');
 
@@ -1660,16 +1661,16 @@
             } else {
                 // ... (O bloco 'else' do desbloqueado continua igual) ...
                 masterContainer.innerHTML = `
-                    <div class="master-unlocked">
-                        <div class="master-title">★ BLOCK COMPLETE ★</div>
-                        <div class="canvas-container" style="margin: 0 auto; height: 100px;">
-                            <canvas id="canv-master" width="800" height="100"></canvas>
-                        </div>
-                        <button id="masterPlayBtn" class="btn" style="width:100%; margin-top:10px; font-weight:bold; border:1px solid #fff; background: #000; color: #fff;">
-                                 [ PLAY ALL BLOCK ]
-                           </button>
+                <div class="master-unlocked">
+                    <div class="master-title">★ BLOCK COMPLETE ★</div>
+                    <div class="canvas-container" style="margin: 0 auto; height: 100px;">
+                        <canvas id="canv-master" width="800" height="100"></canvas>
                     </div>
-                `;
+                    <button id="masterPlayBtn" class="btn" style="width:100%; margin-top:10px; font-weight:bold; border:1px solid #fff; background: #000; color: #fff;">
+                             [ PLAY ALL BLOCK ]
+                       </button>
+                </div>
+            `;
                 tCont.appendChild(masterContainer);
 
                 const mBtn = masterContainer.querySelector('#masterPlayBtn');
